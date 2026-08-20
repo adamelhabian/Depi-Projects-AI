@@ -6,7 +6,6 @@ Location: src/models/patient.py
 
 from typing import List, Optional
 
-# استيراد كلاس Person من نفس المجلد
 try:
     from .person import Person
 except ImportError:
