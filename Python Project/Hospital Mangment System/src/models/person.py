@@ -25,3 +25,10 @@ class Person:
 
     def get_info(self) -> str:
         return f"ID: {self.person_id} | Name: {self.name} | Age: {self.age} | Phone: {self.phone}"
+
+    def update_contact(self, phone: Optional[str] = None, email: Optional[str] = None) -> None:
+       
+        if phone is not None:
+            self.phone = phone
+        if email is not None:
+            self.email = email
