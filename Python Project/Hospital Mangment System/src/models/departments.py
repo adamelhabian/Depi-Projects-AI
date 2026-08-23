@@ -28,6 +28,10 @@ class Department:
     @property
     def capacity(self) -> int:
         return self._capacity
+    
+    @property
+    def location(self) -> str:
+        return self._location
 
     def add_patient(self, patient: Patient) -> None:
         if self.get_available_capacity() <= 0:
