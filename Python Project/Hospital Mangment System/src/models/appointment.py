@@ -61,7 +61,7 @@ class Appointment:
 
 
     def schedule(self) -> None:
-     
+
         self._status = "Scheduled"
 
     def cancel(self) -> None:
@@ -75,7 +75,6 @@ class Appointment:
             self._doctor.appointments.remove(self)
 
     def reschedule(self, new_date: str, new_time: str) -> None:
-       
         self._date = new_date
         self._time = new_time
         self._status = "Rescheduled"

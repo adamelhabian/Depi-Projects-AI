@@ -1,9 +1,9 @@
-
 from typing import Optional, TYPE_CHECKING
 from models.person import Person
 
 if TYPE_CHECKING:
     from models.departments import Department
+
 
 class Staff(Person):
     """
@@ -20,7 +20,7 @@ class Staff(Person):
         salary: float,
         email: Optional[str] = None,
         gender: str = "Unspecified",
-        department: Optional[Department] = None
+        department: Optional["Department"] = None
     ):
         super().__init__(
             id=id,
@@ -33,7 +33,7 @@ class Staff(Person):
 
         self._position: str = position
         self._salary: float = salary
-        self._department: Optional[Department] = department
+        self._department: Optional["Department"] = department
 
     @property
     def position(self) -> str:
@@ -44,10 +44,10 @@ class Staff(Person):
         return self._salary
 
     @property
-    def department(self) -> Optional[Department]:
+    def department(self) -> Optional["Department"]:
         return self._department
 
-    def assign_department(self, department: Department) -> None:
+    def assign_department(self, department: "Department") -> None:
         """Assign or change the staff member's department."""
         self._department = department
 
@@ -55,4 +55,7 @@ class Staff(Person):
         """Override get_info to include staff specifics."""
         base_info = super().get_info()
         dept_name = self._department.name if self._department else "None"
-        return f"{base_info} | Position: {self._position} | Salary: ${self._salary:.2f} | Dept: {dept_name}"
+        return (
+            f"{base_info} | Position: {self._position} "
+            f"| Salary: ${self._salary:.2f} | Dept: {dept_name}"
+        )

@@ -7,7 +7,7 @@ class Hospital:
         name: str,
         address: str,
         phone: str,
-        capicity: int
+        capacity: int
     ) -> None:
         """
         Initialize a hospital.
@@ -17,14 +17,26 @@ class Hospital:
             name: The name of the hospital.
             address: The physical address of the hospital.
             phone: The contact phone number of the hospital.
-            capicity: The maximum number of patients the hospital can accommodate.
+            capacity: The maximum number of patients the hospital can accommodate.
         """
-        self.id = id
-        self.departments = []
-        self.name = name
-        self.address = address
-        self.phone = phone
-        self.capicity = capicity
+        self._id = id
+        self._name = name
+        self._address = address
+        self._phone = phone
+        self._capacity = capacity
+        self._departments = []
+
+    @property
+    def id(self) -> int:
+        return self._id
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def capacity(self) -> int:
+        return self._capacity
 
     def add_department(self, department: object) -> None:
         """
@@ -33,7 +45,8 @@ class Hospital:
         Args:
             department: The department object to add.
         """
-        self.departments.append(department)
+        if department not in self._departments:
+            self._departments.append(department)
 
     def remove_department(self, department: object) -> None:
         """
@@ -42,7 +55,8 @@ class Hospital:
         Args:
             department: The department object to remove.
         """
-        self.departments.remove(department)
+        if department in self._departments:
+            self._departments.remove(department)
 
     def get_department_count(self) -> int:
         """
@@ -51,60 +65,34 @@ class Hospital:
         Returns:
             The total number of departments.
         """
-        count = 0
+        return len(self._departments)
 
-        for department in self.departments:
-            count += 1
-
-        return count
-
-    def get_patient_count(self, patients: list) -> int:
+    def get_patient_count(self) -> int:
         """
-        Return the number of patients.
-
-        Args:
-            patients: A list containing patient objects.
+        Return the number of patients across all departments.
 
         Returns:
             The total number of patients.
         """
-        count = 0
+        return sum(dept.get_patient_count() for dept in self._departments)
 
-        for patient in patients:
-            count += 1
-
-        return count
-
-    def get_staff_count(self, doctors: list) -> int:
+    def get_staff_count(self) -> int:
         """
-        Return the number of staff members.
-
-        Args:
-            doctors: A list containing doctor objects.
+        Return the number of staff members across all departments.
 
         Returns:
             The total number of staff members.
         """
-        count = 0
+        return sum(dept.get_staff_count() for dept in self._departments)
 
-        for doctor in doctors:
-            count += 1
-
-        return count
-
-    def get_available_capicity(self, patients: list) -> int:
+    def get_available_capacity(self) -> int:
         """
         Calculate the remaining patient capacity of the hospital.
-
-        Args:
-            patients: A list containing patient objects.
 
         Returns:
             The number of available places for additional patients.
         """
-        count = self.capicity - self.get_patient_count(patients)
-
-        return count
+        return self._capacity - self.get_patient_count()
 
     def get_info(self) -> str:
         """
@@ -114,7 +102,8 @@ class Hospital:
             A string containing the hospital name, address, and phone number.
         """
         return (
-            f"Name: {self.name}, "
-            f"Address: {self.address}, "
-            f"Phone Number: {self.phone}"
+            f"Name: {self._name}, "
+            f"Address: {self._address}, "
+            f"Phone Number: {self._phone}, "
+            f"Capacity: {self.get_patient_count()}/{self._capacity}"
         )

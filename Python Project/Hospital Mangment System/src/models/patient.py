@@ -6,32 +6,7 @@ Location: src/models/patient.py
 
 from typing import List, Optional
 
-try:
-    from .person import Person
-except ImportError:
-    try:
-        from person import Person
-    except ImportError:
-        class Person:
-            def __init__(
-                self,
-                id: int,
-                name: str,
-                age: int,
-                phone: str,
-                email: Optional[str] = None,
-                gender: str = "Unspecified"
-            ):
-                self.person_id = id
-                self.name = name
-                self.age = age
-                self.gender = gender
-                self.phone = phone
-                self.email = email
-
-            def get_info(self) -> str:
-                return f"ID: {self.person_id} | Name: {self.name} | Age: {self.age} | Phone: {self.phone}"
-
+from models.person import Person
 
 class Patient(Person):
     """Patient class inheriting from Person, managing blood type and medical history."""
