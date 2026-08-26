@@ -7,7 +7,7 @@ The project simulates the core entities and relationships within a hospital whil
 ## Technologies & Tools
 
 - Python
-- CustomTkinter
+- Streamlit
 - Git & GitHub
 - UML
 - diagrams.net (draw.io)
@@ -28,8 +28,6 @@ The project simulates the core entities and relationships within a hospital whil
 hospital-management-system/
 │
 ├── src/
-│   ├── __init__.py
-│   │
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── person.py
@@ -40,45 +38,104 @@ hospital-management-system/
 │   │   ├── hospital.py
 │   │   └── appointment.py
 │   │
-│   └── ui/
-│       ├── __init__.py
-│       ├── app.py
-│       ├── dashboard.py
-│       ├── patients.py
-│       ├── staff.py
-│       ├── departments.py
-│       └── appointments.py
+│   ├── ui/
+│   │   ├── __init__.py
+│   │   ├── ui_appointment.py
+│   │   ├── ui_dashboard.py
+│   │   ├── ui_medical_operations.py
+│   │   ├── ui_patient.py
+│   │   ├── ui_reports.py
+│   │   └── ui_staffs_and_doctors.py
+│   │
+│   ├── utility/
+│   │   ├── __init__.py
+│   │   └── helpers.py
+│   │
+│   ├── main.py
+│   └── ui_main.py
 │
 ├── diagrams/
-│   ├── class-diagram.png
-│   └── activity-diagram.png
+│   └── class-diagram.png
 │
+├── .gitignore
 ├── README.md
-├── requirements.txt
-└── .gitignore
+└── requirements.txt
 ```
-
-## UML Diagrams
-
-### Class Diagram
-
-The UML Class Diagram represents the system classes, attributes, methods, and relationships.
-
-![Class Diagram](diagrams/class-diagram.png)
-
-### Activity Diagram
-
-The Activity Diagram represents the main workflow and user interactions within the system.
-
-![Activity Diagram](diagrams/activity-diagram.png)
 
 ## Installation
 
-> Installation instructions will be added here.
+Follow these steps to install and run the project locally.
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+```
+
+### 2. Navigate to the Project Directory
+
+```bash
+cd hospital-management-system
+```
+
+### 3. Create a Virtual Environment
+
+```bash
+python -m venv .venv
+```
+
+### 4. Activate the Virtual Environment
+
+#### Windows
+
+```bash
+.venv\Scripts\activate
+```
+
+#### macOS / Linux
+
+```bash
+source .venv/bin/activate
+```
+
+### 5. Install Dependencies
+
+Install all required Python packages using:
+
+```bash
+pip install -r requirements.txt
+```
+
+## How to Run
+
+After activating the virtual environment and installing the dependencies, run the Streamlit application:
+
+```bash
+streamlit run src/ui_main.py
+```
+
+Streamlit will start the application and provide a local URL in the terminal.
+
+Usually, the application will be available at:
+
+```text
+http://localhost:8501
+```
+
+Open the URL in your web browser to access the Hospital Management System.
 
 ## How to Use
 
-> Instructions for running and using the application will be added here.
+After launching the application, you can navigate through the different sections of the system, including:
+
+- Dashboard
+- Patients
+- Staff and Doctors
+- Appointments
+- Medical Operations
+- Reports
+
+The application provides a graphical interface for managing and interacting with the hospital's main entities.
 
 ## Project Status
 
@@ -90,15 +147,17 @@ The Activity Diagram represents the main workflow and user interactions within t
 - Additional hospital management features
 - Improved UI and user experience
 - Automated testing
+- Authentication and user roles
+- Data persistence
 
 ## Contributors
 
 This project is developed collaboratively by a team of five developers as part of the DEPI Python/OOP project.
 
-| Contributor | Responsibility  |
-| ----------- | --------------- |
-| Name        | Class / Feature |
-| Name        | Class / Feature |
-| Name        | Class / Feature |
-| Name        | Class / Feature |
-| Name        | Class / Feature |
+| Contributor               |
+| ------------------------- |
+| Adam Elhabian             |
+| Mina Safwat               |
+| Maya Amged                |
+| Youssef Mohamed Abdelkrem |
+| Tasbeeh Hassan            |
