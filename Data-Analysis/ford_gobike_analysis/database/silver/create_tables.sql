@@ -25,6 +25,3 @@ CREATE TABLE silver.trips (
 
     bike_share_for_all_trip VARCHAR(10) NOT NULL
 );
-SELECT *
-FROM silver.trips
-LIMIT 5;

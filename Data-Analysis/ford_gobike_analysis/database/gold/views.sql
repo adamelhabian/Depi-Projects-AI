@@ -99,9 +99,3 @@ JOIN warehouse.dim_user u
 
 
 
-SELECT *
-FROM gold.trip_analytics
-LIMIT 10;
-
-SELECT COUNT(*) AS total_rows
-FROM gold.trip_analytics;

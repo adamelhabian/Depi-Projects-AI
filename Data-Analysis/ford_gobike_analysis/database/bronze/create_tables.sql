@@ -23,9 +23,3 @@ CREATE TABLE bronze.trips(
 
 )
 
-SELECT COUNT(*)
-FROM bronze.trips;
-
-SELECT *
-FROM bronze.trips
-LIMIT 5;

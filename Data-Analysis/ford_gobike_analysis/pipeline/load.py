@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
@@ -10,6 +11,53 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # =========================================
 # Database Connection
 # =========================================
+
+# =========================================
+# Database Initialization
+# =========================================
+
+def initialize_database(engine):
+    """
+    Create database schemas, tables, and Gold view
+    using the SQL files stored in the project.
+    """
+
+    project_root = Path(__file__).resolve().parent.parent
+
+    sql_files = [
+        project_root / "database" / "bronze" / "create_tables.sql",
+        project_root / "database" / "silver" / "create_tables.sql",
+        project_root / "database" / "warehouse" / "dimensions.sql",
+        project_root / "database" / "warehouse" / "facts.sql",
+        project_root / "database" / "gold" / "views.sql",
+    ]
+
+    with engine.begin() as connection:
+
+        # Create schemas
+        connection.exec_driver_sql("""
+            CREATE SCHEMA IF NOT EXISTS bronze;
+            CREATE SCHEMA IF NOT EXISTS silver;
+            CREATE SCHEMA IF NOT EXISTS warehouse;
+            CREATE SCHEMA IF NOT EXISTS gold;
+        """)
+
+        print("Database schemas created.")
+
+        # Execute project SQL files
+        for sql_file in sql_files:
+
+            print(
+                f"Executing: {sql_file.relative_to(project_root)}"
+            )
+
+            sql = sql_file.read_text(
+                encoding="utf-8"
+            )
+
+            connection.exec_driver_sql(sql)
+
+    print("Database structure initialized successfully.")
 
 def get_engine():
     return create_engine(DATABASE_URL)
@@ -521,48 +569,61 @@ def validate_load(engine):
 # Standalone Test
 # =========================================
 
+# if __name__ == "__main__":
+
+#     engine = get_engine()
+
+#     print("Testing load.py...")
+
+#     # Read existing Bronze
+#     df = pd.read_sql(
+#         "SELECT * FROM bronze.trips",
+#         engine
+#     )
+
+#     # Read timestamp source
+#     df_dates = pd.read_csv(
+#         "data/raw/201902-fordgobike-tripdata.csv"
+#     )
+
+#     # Transform Bronze -> Silver
+#     from transform import transform_to_silver
+
+#     silver_df = transform_to_silver(
+#         df,
+#         df_dates
+#     )
+
+#     # Load Silver
+#     load_to_silver(
+#         silver_df,
+#         engine
+#     )
+
+#     # Load dimensions
+#     load_dimensions(
+#         engine
+#     )
+
+#     # Load fact
+#     load_fact(
+#         engine
+#     )
+
+#     # Validate
+#     validate_load(
+#         engine
+#     )
+
+
 if __name__ == "__main__":
 
     engine = get_engine()
 
-    print("Testing load.py...")
+    with engine.connect() as connection:
+        result = connection.execute(
+            text("SELECT 1")
+        )
 
-    # Read existing Bronze
-    df = pd.read_sql(
-        "SELECT * FROM bronze.trips",
-        engine
-    )
-
-    # Read timestamp source
-    df_dates = pd.read_csv(
-        "data/raw/201902-fordgobike-tripdata.csv"
-    )
-
-    # Transform Bronze -> Silver
-    from transform import transform_to_silver
-
-    silver_df = transform_to_silver(
-        df,
-        df_dates
-    )
-
-    # Load Silver
-    load_to_silver(
-        silver_df,
-        engine
-    )
-
-    # Load dimensions
-    load_dimensions(
-        engine
-    )
-
-    # Load fact
-    load_fact(
-        engine
-    )
-
-    # Validate
-    validate_load(
-        engine
-    )
+        print("Supabase connection successful!")
+        print(result.scalar())

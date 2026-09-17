@@ -2,6 +2,7 @@ from extract import extract_bronze, extract_dates
 from transform import transform_to_silver
 from load import (
     get_engine,
+    initialize_database,
     load_bronze,
     load_to_silver,
     load_dimensions,
@@ -31,9 +32,18 @@ def run_pipeline():
     # =========================================
 
     engine = get_engine()
+    # =========================================
+    # 3. Initialize Database
+    # =========================================
+
+    print("\n2. Initializing database structure...")
+
+    initialize_database(
+        engine
+    )
 
     # =========================================
-    # 3. Load Bronze
+    # 4. Load Bronze
     # =========================================
 
     print("\n2. Loading Bronze...")
