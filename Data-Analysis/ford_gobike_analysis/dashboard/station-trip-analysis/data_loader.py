@@ -76,13 +76,16 @@ def _load_from_supabase() -> pd.DataFrame | None:
         cols_str = ", ".join(_M5_COLUMNS)
         query = f"SELECT {cols_str} FROM gold.trip_analytics"
         
-        logger.info("[Member 5] Fetching data from Supabase gold.trip_analytics...")
+        print("\n" + "=" * 65, flush=True)
+        print(">> [SUPABASE LIVE CONNECTION] Querying 'gold.trip_analytics'...", flush=True)
         df = pd.read_sql(query, engine)
         if not df.empty:
-            logger.info("[Member 5] Fetched %d records directly from Supabase!", len(df))
+            print(f">> [SUCCESS] Loaded {len(df):,} trips directly from Supabase Cloud Database!", flush=True)
+            print("=" * 65 + "\n", flush=True)
             return _standardize_column_names(df)
 
     except Exception as err:
+        print(f">> [WARNING] Supabase query failed: {err}. Using local fallback.", flush=True)
         logger.warning("[Member 5] Supabase query failed: %s. Using local fallback.", err)
 
     return None

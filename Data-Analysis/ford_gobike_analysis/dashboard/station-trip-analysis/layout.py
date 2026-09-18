@@ -52,10 +52,36 @@ def create_layout() -> html.Div:
             html.Div(
                 className="section-header",
                 children=[
-                    html.H2("Station & Trip Analysis", className="section-title"),
-                    html.P(
-                        "Youssef Mohamed Member 5 · Network traffic hubs, corridor flows, spatial rebalancing, and station deep dives.",
-                        className="section-subtitle",
+                    html.Div(
+                        style={"display": "flex", "justifyContent": "space-between", "alignItems": "flex-start", "flexWrap": "wrap", "gap": "12px"},
+                        children=[
+                            html.Div([
+                                html.H2("Station & Trip Analysis", className="section-title"),
+                                html.P(
+                                    "Youssef Mohamed Member 5 · Network traffic hubs, corridor flows, spatial rebalancing, and station deep dives.",
+                                    className="section-subtitle",
+                                ),
+                            ]),
+                            html.Div(
+                                style={
+                                    "display": "inline-flex",
+                                    "alignItems": "center",
+                                    "gap": "7px",
+                                    "backgroundColor": "#ECFDF5",
+                                    "border": "1px solid #A7F3D0",
+                                    "borderRadius": "20px",
+                                    "padding": "6px 14px",
+                                    "fontSize": "11px",
+                                    "fontWeight": "650",
+                                    "color": "#047857",
+                                    "boxShadow": "0 1px 3px rgba(0, 0, 0, 0.04)",
+                                },
+                                children=[
+                                    html.Span("🟢", style={"fontSize": "8px"}),
+                                    html.Span("LIVE: Supabase Cloud (gold.trip_analytics)"),
+                                ],
+                            ),
+                        ],
                     ),
                 ],
             ),

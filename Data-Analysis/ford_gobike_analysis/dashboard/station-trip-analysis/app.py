@@ -50,8 +50,14 @@ register_callbacks(app)
 server = app.server
 
 if __name__ == "__main__":
-    # Configurable debug mode for local development vs production
     is_debug = os.environ.get("DASH_DEBUG", "True").lower() in {"true", "1", "yes"}
     port = int(os.environ.get("PORT", 8050))
+
+    # Pre-warm cached dataset so data is verified and loaded from Supabase immediately on startup
+    if not is_debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        print(">> [STARTUP] Pre-loading dataset from Supabase...", flush=True)
+        from data_loader import load_clean_data
+        load_clean_data()
+
     app.run(debug=is_debug, port=port)
 
