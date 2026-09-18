@@ -1,7 +1,7 @@
 # Ford GoBike Analytics — Station & Trip Analysis (Member 5)
 
-> **Collaborative 5-Member Data Analytics Project | DEPI Final Project**  
-> Comprehensive geospatial network analysis, corridor trip patterns, spatial rebalancing dispatch, and station drill-downs.
+> **Collaborative Data Analytics Project | DEPI Final Project**  
+> Modern, interactive geospatial analytics, transit corridor flow mapping, spatial fleet rebalancing dispatch, and station deep-dive profiling built with **Dash**, **Plotly**, and **Tailwind CSS**.
 
 ---
 
@@ -9,161 +9,175 @@
 
 | Role | Member | Scope |
 |---|---|---|
-| Member 1 | Database Engineering | PostgreSQL Database Architecture & Queries |
-| Member 2 | Data Engineering | Data Processing, Cleaning & Master Dataset Preparation |
-| Member 3 | BI & KPI Design | Dashboard Filters, Global KPIs & Key Insights |
-| Member 4 | Behavioral Analytics | Time Analysis & User Demographics (Age/Gender) |
-| **Member 5** | **Station & Trip Analysis** | **Network Traffic Hubs, Route Corridors, Rebalancing & Station Deep Dives** |
+| Member 1 | Database Engineering | PostgreSQL Database Architecture, Views & SQL Pipeline |
+| Member 2 | Data Engineering | Data Cleaning, Pipeline Processing & Master Datasets |
+| Member 3 | BI & KPI Design | High-Level KPI Tiles, Global Filters & Executive Metrics |
+| Member 4 | Behavioral Analytics | Time-Series Trends, Peak Hours & User Demographics |
+| **Member 5** | **Station & Trip Analysis** | **Network Traffic Hubs, Flow Corridors, Rebalancing & Station Deep Dives** |
 
 ---
 
-## 🚀 Key Features & Advanced Capabilities (7 Enhancements)
+## 🚀 Key Features & Capabilities
 
-1. **Station Traffic & Flow Corridor Map (Geospatial Network)**
-   * **Node Sizing & Coloring**: Size encodes total traffic ($\text{Departures} + \text{Arrivals}$); color encodes Net Flow (Green = Surplus, Red = Deficit).
-   * **Flow Corridor Lines**: Renders transit line arcs between top origin–destination hubs directly on the map.
-   * **Click-to-Inspect**: Clicking any station node immediately triggers the deep-dive inspector.
+### 1. Station Traffic & Flow Corridor Map
+* **Dynamic Circle Markers**: Radius proportional to total traffic ($\text{Departures} + \text{Arrivals}$); color represents Net Flow (Emerald Green = Inbound Surplus, Crimson Red = Outbound Deficit).
+* **Flow Corridor Transit Lines**: Visualizes top origin–destination routes directly over the map with line thickness and opacity reflecting trip density.
+* **Smart Click-to-Inspect**: Clicking any station circle on the map or bar in the ranking charts opens the Station Deep Dive Side Drawer.
 
-2. **Metro Region Cluster Selector (Auto-centering & Zoom)**
-   * Filters the entire dashboard seamlessly across three discrete Bay Area metropolitan clusters:
-     - **All Bay Area** (329 stations)
-     - **San Francisco** (156 stations)
-     - **East Bay (Oakland / Berkeley)** (127 stations)
-     - **San Jose** (46 stations)
-   * Automatically re-centers and zooms the viewport to the selected metropolitan area.
+### 2. Interactive Station Deep Dive Side Drawer
+* **Slide-In Map Drawer**: Elegant floating panel overlaying the map with smooth CSS slide transitions.
+* **Station Header**: Station name, regional badge (`SF`, `EB`, `SJ`), regional traffic rank, and close button.
+* **Dual KPI Summary Tiles**: Total trips (with network share %) and Net Imbalance (with status badge).
+* **Trip Flow Split Bar**: Stacked proportional visualization of Inbound vs. Outbound flow with exact journey counts.
+* **Top 3 Connected Destinations**: Ranked list of the station's highest-volume journey destinations.
+* **Round-Trip Ratio & Rebalancing Suggestion**: Percentage of loop journeys starting and ending at the dock, paired with automated operational guidance.
+* **"Focus Map on Station" Action**: Re-centers and zooms the map directly onto the selected station.
 
-3. **Interactive Station Profile Inspector (`clickData` Drill-Down)**
-   * Click any station on the geospatial map or the Top Stations ranking chart to reveal:
-     - Real-time KPI stat badges: Total Trips, Departures, Arrivals, Net Flow, Imbalance Ratio %, and Round-Trip %.
-     - **Top 5 Destinations**: Where riders travel to after unlocking bikes at this station.
-     - **Top 5 Origins**: Where incoming riders originate from when returning bikes here.
+### 3. Flexible Top Ranking Scope (Step = 1)
+* **Continuous Range Slider**: Allows selecting **any integer from 1 to 30** (`TOP_N_STEP = 1`) without arbitrary jump constraints.
+* **Live Dynamic Badge & Tooltip**: Instant real-time label updates (`Top 7`, `Top 13`, `Top 24`).
+* **Auto-Expanding Chart Cards**: Cards dynamically adapt their height (`max(340, n_bars * 28 + 60)`) to eliminate bar overlap and squishing.
 
-4. **Prescriptive Smart Fleet Rebalancing (Haversine Spatial Matching)**
-   * Automated rebalancing engine matching high-deficit stations with nearby high-surplus neighbors within the same metropolitan cluster.
-   * Computes great-circle Haversine distances in kilometers/meters and calculates optimal bike transfer quantities ($\text{Net Flow} // 2$).
+### 4. Strictly Ordered Analytical Charts
+* **Top Stations by Total Traffic**: Ranked descending from highest volume at the top, styled with rank-opacity gradients.
+* **Top Origin–Destination Corridors**: Clean single-line route labels with standard typography arrows (`→`).
+* **Station Network Flow Imbalance**: Diverging horizontal bar chart strictly descending from highest surplus down to largest deficit. Dynamically partitions odd and even Top-N scopes.
+* **Leisure & Tourism Hotspots**: Highlights loop journeys ($\text{start} == \text{end}$) indicative of scenic and recreational riding (e.g. Golden Gate Park docks), filtered for statistically significant volume.
 
-5. **Leisure & Tourism Hotspots (Round-Trip Journey Analysis)**
-   * Identifies recreational loops ($\text{start\_station} == \text{end\_station}$) indicative of tourist activity.
-   * Highlights landmarks like *Fell St at Stanyan St* (Golden Gate Park) with elevated loop percentages (~17.4%).
+### 5. Prescriptive Smart Fleet Rebalancing Dispatch
+* **Algorithmic Haversine Spatial Matching**: Automatically pairs high-deficit docks with their nearest high-surplus neighbor within the same metropolitan cluster.
+* **Actionable Truck Dispatch Cards**: Specifies exact recommended transfer quantities ($\text{Net Flow} // 2$) and spatial distance in kilometers.
 
-6. **Normalized Station Flow Imbalance Ratio %**
-   $$\text{Imbalance Ratio} = \left(\frac{\text{Net Flow}}{\text{Total Traffic}}\right) \times 100$$
-   * Normalizes inbound/outbound pressure relative to station scale, allowing fair comparison between giant hubs and smaller peripheral docks.
+### 6. Professional SVG Icon System (Zero Emojis)
+* **Self-Contained SVG Library**: Built in `components/icons.py` using SVG data URIs.
+* **100% Dash-Native & Dependency-Free**: No external font files or third-party component wrappers needed.
 
-7. **One-Click CSV Data Export**
-   * Built-in `dcc.Download` button generating on-the-fly CSV downloads of the active filtered station metrics dataset.
+### 7. High-Performance Data Layer (Supabase + Smart Fallback)
+* **Direct Cloud Ingestion**: Queries `gold.trip_analytics` directly from Supabase PostgreSQL database in ~2-3 seconds.
+* **Resilient Offline Fallback**: Automatically switches to local CSV if internet or credentials are unavailable.
 
 ---
 
-## 📐 Mathematical Definitions & Metric Rules
+## 📐 Analytical Math & Rules
 
 $$\text{Total Traffic} = \text{Departures} + \text{Arrivals}$$
 
 $$\text{Net Flow} = \text{Arrivals} - \text{Departures}$$
 
-* **Canonical Station Identity**: Stations are grouped strictly by canonical `station_name`. Coordinates are aggregated as station attributes (median GPS position) rather than grouping keys, preventing station duplication caused by GPS noise.
-* **Coordinate Independence**: Stations with missing or unrecorded GPS coordinates are **not** excluded from ranking or imbalance analyses; they are gracefully filtered only from the geospatial map.
-* **Strict Imbalance Classification**:
-  * $\text{Deficit (Outbound Pressure)} \implies \text{Net Flow} < 0$
-  * $\text{Surplus (Inbound Pressure)} \implies \text{Net Flow} > 0$
-  * Neutral stations ($\text{Net Flow} = 0$) are never fabricated into either category.
-* **No Fake Routes**: Routes are only generated when both origin and destination stations are non-null and valid.
+$$\text{Flow Imbalance Ratio (\%)} = \left(\frac{|\text{Net Flow}|}{\text{Total Traffic}}\right) \times 100$$
+
+* **Canonical Station Grouping**: Stations are grouped strictly by name. GPS coordinates are computed via median position to prevent duplication caused by sensor drift.
+* **Coordinate Independence**: Stations missing GPS coordinates remain fully ranked in all bar charts; they are excluded only from the spatial map.
+* **Strict Classification**:
+  * $\text{Outbound Deficit} \implies \text{Net Flow} < 0$
+  * $\text{Inbound Surplus} \implies \text{Net Flow} > 0$
 
 ---
 
-## 📁 Clean Repository Structure
+## 📁 Repository Structure
 
 ```text
-member5/
-├── app.py                      # Standalone entry point & WSGI server instance
+station-trip-analysis/
+├── app.py                      # Dash application entry point & local development server
 ├── config.py                   # Central theme colors, region presets, and component IDs
-├── data_loader.py              # Single-load cached data loader with schema validation
-├── layout.py                   # Modular layout hierarchy (Map -> Rankings -> Hotspots -> Inspector)
-├── requirements.txt            # Pinned, production-ready dependencies
-├── .gitignore                  # Git ignore rules (cache, venv, large CSV files)
-├── README.md                   # Complete module documentation and team contract
+├── data_loader.py              # Supabase cloud loader with caching & CSV fallback
+├── layout.py                   # Master Tailwind CSS layout (Controls -> Map/Drawer -> Charts -> Dispatch)
+├── requirements.txt            # Python dependencies
+├── README.md                   # Documentation & integration guide
 │
 ├── callbacks/
 │   ├── __init__.py
-│   └── dashboard_callbacks.py  # Reactive controller for filters, inspector, and CSV export
+│   └── dashboard_callbacks.py  # Reactive controller for filters, inspector drawer, and export
 │
 ├── components/
 │   ├── __init__.py
-│   ├── chart_card.py           # Standardized card wrapper with hover modebars
-│   ├── dispatch_panel.py       # Prescriptive Haversine rebalancing transfer cards
-│   ├── filter_panel.py         # Dropdowns (User, Region), toggle, slider, and export button
-│   └── station_inspector.py    # Deep-dive station profile inspector card
+│   ├── chart_card.py           # Clean white card wrapper with dynamic card height
+│   ├── dispatch_panel.py       # Smart rebalancing dispatch recommendation cards
+│   ├── filter_panel.py         # Tailwind 12-column filter bar with flexible slider
+│   ├── icons.py                # Standalone SVG data URI icon library (no emojis)
+│   └── station_inspector.py    # Slide-in deep-dive station profile drawer
 │
 ├── charts/
 │   ├── __init__.py
-│   ├── geo_map.py              # Map with corridor lines & dynamic regional auto-centering
-│   ├── station_analysis.py     # Top Stations, Imbalance Diverging Bar & Leisure Hotspots
-│   └── trip_analysis.py        # Top Corridors horizontal ranking bar chart
+│   ├── geo_map.py              # Mapbox scatter map with corridor transit arcs
+│   ├── station_analysis.py     # Top Stations, Flow Imbalance & Leisure Hotspots
+│   └── trip_analysis.py        # Top Corridors horizontal ranking chart
 │
 ├── utils/
 │   ├── __init__.py
 │   ├── data_processing.py      # Analytical engine (Haversine, regions, metrics, deep-dive)
-│   └── theme.py                # Plotly dark theme and graceful empty-state figure generator
-│
-├── assets/
-│   └── style.css               # Scoped dark theme stylesheet with responsive CSS grid
+│   └── theme.py                # Plotly clean light theme & empty state builder
 │
 └── tests/
     ├── test_analytics.py       # 7 unit tests for mathematical correctness & edge cases
-    ├── test_full_pipeline.py   # Full pipeline test against 174,738 master records
-    ├── test_advanced_features.py # Verification for 7 advanced capabilities
-    └── verify_chart_fixes.py   # Verification for label formatting & monotonic sorting
+    ├── test_full_pipeline.py   # End-to-end pipeline validation on 174k+ trips
+    ├── test_advanced_features.py # Validation for regional clusters, deep dive & dispatch
+    └── verify_chart_fixes.py   # Verification for descending order & distinct station names
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start Guide
 
-### 1. Installation
-Ensure Python 3.10+ is installed, then install the dependencies:
+### 1. Clone / Checkout Branch
+```bash
+git fetch origin
+git checkout feat/station-trip-analysis
+git pull origin feat/station-trip-analysis
+```
+
+### 2. Navigate to Directory
+```bash
+cd Data-Analysis/ford_gobike_analysis/dashboard/station-trip-analysis
+```
+
+### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Run Dashboard
+### 4. Configure Database Credentials (Optional for Live Supabase)
+Ensure your `.env` file in this directory contains:
+```env
+DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres
+```
+*(If no `.env` is supplied, the loader gracefully loads local CSV data).*
+
+### 5. Launch Dashboard
 ```bash
 python app.py
 ```
-Open your browser and navigate to:
+Open your browser at:
 👉 **`http://127.0.0.1:8050/`**
 
 ---
 
 ## 🔗 Team Integration Guide (Members 3 & 4)
 
-To merge Member 5 into the collaborative master dashboard:
+To embed this module into the collaborative team master dashboard:
 
 ```python
 from member5.layout import create_layout
 from member5.callbacks.dashboard_callbacks import register_callbacks
 
-# 1. Embed Member 5 section inside your main dashboard layout:
-team_app.layout = html.Div([
-    # ... Member 3 KPIs & Filters ...
-    # ... Member 4 Time Analysis ...
-    create_layout(),  # Member 5 Station & Trip Analysis
-])
+# 1. Embed Member 5 section into the master dashboard layout:
+main_layout.children.append(create_layout())
 
-# 2. Register Member 5 callbacks onto the shared team Dash app:
+# 2. Register Member 5 reactive callbacks onto the shared Dash instance:
 register_callbacks(team_app)
 ```
 
-All component IDs in this module use the isolated `m5-*` prefix (`m5-user-filter`, `m5-region-filter`, `m5-top-n-slider`, `m5-station-map`, etc.), guaranteeing zero namespace collisions.
+> **Isolation Guarantee**: All component IDs use the unique `m5-*` prefix (`m5-user-filter`, `m5-top-n-slider`, `m5-station-map`, `m5-inspector-container`, etc.), guaranteeing zero collisions with other team sections.
 
 ---
 
 ## 🧪 Automated Testing
 
-Run the test suite to verify analytical math, pipeline health, and all 7 advanced features:
+Run the comprehensive test suite locally:
 ```bash
 python tests/test_analytics.py
-python tests/test_full_pipeline.py
 python tests/test_advanced_features.py
+python tests/test_full_pipeline.py
 python tests/verify_chart_fixes.py
 ```
-All tests report `[PASS]`.
+All tests should return `[PASS]`.
