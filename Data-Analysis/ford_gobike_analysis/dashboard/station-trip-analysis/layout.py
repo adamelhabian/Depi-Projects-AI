@@ -93,11 +93,45 @@ def create_layout() -> html.Div:
             html.Div(
                 className="grid-full",
                 children=[
-                    chart_card(
-                        graph_id=ID_MAP,
-                        title="Station Traffic & Flow Corridor Map",
-                        subtitle="Marker size indicates total traffic; color indicates net flow (inbound vs outbound pressure). Purple lines connect top origin–destination transit corridors.",
-                        height=CHART_HEIGHT_MAP,
+                    html.Div(
+                        className="dashboard-card map-card-container",
+                        style={"position": "relative", "overflow": "hidden"},
+                        children=[
+                            html.Div(
+                                [
+                                    html.H3("Station Traffic & Flow Corridor Map", className="card-title"),
+                                    html.P(
+                                        "Bubble radius indicates total traffic volume; color indicates net flow rebalancing (deficit vs surplus). Top transit corridors connect key origin–destination hubs.",
+                                        className="card-subtitle",
+                                    ),
+                                ],
+                                className="card-header",
+                            ),
+                            html.Div(
+                                style={"position": "relative", "width": "100%", "height": f"{CHART_HEIGHT_MAP}px", "borderRadius": "12px", "overflow": "hidden"},
+                                children=[
+                                    dcc.Graph(
+                                        id=ID_MAP,
+                                        style={"height": f"{CHART_HEIGHT_MAP}px", "width": "100%"},
+                                        config={
+                                            "displayModeBar": "hover",
+                                            "displaylogo": False,
+                                            "modeBarButtonsToRemove": [
+                                                "select2d",
+                                                "lasso2d",
+                                                "autoScale2d",
+                                            ],
+                                        },
+                                    ),
+                                    # Slide-in Side Drawer container positioned over map
+                                    html.Div(
+                                        id=ID_INSPECTOR_CONTAINER,
+                                        className="station-drawer drawer-closed",
+                                        children=render_station_inspector(None),
+                                    ),
+                                ],
+                            ),
+                        ],
                     ),
                 ],
             ),
@@ -140,16 +174,10 @@ def create_layout() -> html.Div:
                 ],
             ),
 
-            # ── 6. Interactive Inspector & Prescriptive Dispatch ────────
+            # ── 6. Prescriptive Fleet Dispatch & Rebalancing ────────────
             html.Div(
-                className="grid-two-col",
+                className="grid-full",
                 children=[
-                    # Station Profile Inspector (Populated via clickData)
-                    html.Div(
-                        id=ID_INSPECTOR_CONTAINER,
-                        children=render_station_inspector(None),
-                    ),
-
                     # Prescriptive Dispatch Rebalancing Panel
                     html.Div(
                         id=ID_DISPATCH_CONTAINER,

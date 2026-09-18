@@ -12,7 +12,9 @@ Design Principles:
 
 from __future__ import annotations
 
+import copy
 import logging
+import pandas as pd
 import dash
 from dash import Input, Output, State, ctx, dcc
 
@@ -31,6 +33,8 @@ from config import (
     ID_MAP_FLOW_LINES_TOGGLE,
     ID_DOWNLOAD_BTN,
     ID_DOWNLOAD_DATA,
+    ID_DRAWER_CLOSE_BTN,
+    ID_DRAWER_FOCUS_BTN,
 )
 from data_loader import load_clean_data
 from utils.data_processing import (
@@ -194,48 +198,119 @@ def register_callbacks(app: dash.Dash) -> None:
         )
 
     # -----------------------------------------------------------------------
-    # 2. Station Selection Store (Captures clicks from Map & Bar Chart)
+    # 2. Station Selection Store (Captures clicks from Map, Bar Chart, & Close Button)
     # -----------------------------------------------------------------------
     @app.callback(
         Output(ID_SELECTED_STATION_STORE, "data"),
         [
             Input(ID_MAP, "clickData"),
             Input(ID_TOP_STATIONS, "clickData"),
+            Input(ID_DRAWER_CLOSE_BTN, "n_clicks"),
         ],
         prevent_initial_call=True,
     )
-    def handle_station_click(map_click, bar_click):
-        """Extract station name from the most recent user interaction."""
+    def handle_station_click(map_click, bar_click, close_clicks):
+        """Extract station name from the most recent user interaction, or reset on close."""
         triggered = ctx.triggered_id
-        if triggered == ID_MAP and map_click:
+        if triggered == ID_DRAWER_CLOSE_BTN:
+            return None
+        elif triggered == ID_MAP and map_click:
             return _extract_station_name(map_click)
         elif triggered == ID_TOP_STATIONS and bar_click:
             return _extract_station_name(bar_click)
         return dash.no_update
 
     # -----------------------------------------------------------------------
-    # 3. Interactive Station Profile Inspector
+    # 3. Interactive Station Profile Inspector (Side Drawer)
     # -----------------------------------------------------------------------
     @app.callback(
-        Output(ID_INSPECTOR_CONTAINER, "children"),
+        [
+            Output(ID_INSPECTOR_CONTAINER, "children"),
+            Output(ID_INSPECTOR_CONTAINER, "className"),
+        ],
         [
             Input(ID_SELECTED_STATION_STORE, "data"),
             Input(ID_USER_FILTER, "value"),
+            Input(ID_REGION_FILTER, "value"),
+            Input(ID_TOP_N_SLIDER, "value"),
         ],
     )
-    def update_station_inspector(selected_station: str | None, selected_user: str | None):
-        """Update drill-down inspector card whenever station or user filter changes."""
+    def update_station_inspector(
+        selected_station: str | None,
+        selected_user: str | None,
+        selected_region: str | None,
+        top_n: int | None,
+    ):
+        """Update drill-down drawer whenever station or filter parameters change."""
         if not selected_station:
-            return render_station_inspector(None)
+            return render_station_inspector(None), "station-drawer drawer-closed"
 
         df = load_clean_data()
         user_filter = selected_user or "All"
         if user_filter != "All" and "user_type" in df.columns:
-            df = df[df["user_type"] == user_filter]
+            df_filtered = df[df["user_type"] == user_filter]
+        else:
+            df_filtered = df
 
-        station_metrics = compute_canonical_station_metrics(df)
-        profile = compute_station_deep_dive(df, selected_station, station_metrics)
-        return render_station_inspector(profile)
+        station_metrics = compute_canonical_station_metrics(df_filtered)
+
+        region_filter = selected_region or "All"
+        if region_filter != "All":
+            region_stns = set(
+                station_metrics[station_metrics["region"] == region_filter]["station_name"]
+            )
+            station_metrics_view = station_metrics[station_metrics["region"] == region_filter]
+            df_view = df_filtered[df_filtered["start_station_name"].isin(region_stns)]
+        else:
+            station_metrics_view = station_metrics
+            df_view = df_filtered
+
+        # If station is not present in the current regional view, dismiss drawer
+        if selected_station not in station_metrics_view["station_name"].values:
+            return render_station_inspector(None), "station-drawer drawer-closed"
+
+        profile = compute_station_deep_dive(df_view, selected_station, station_metrics_view)
+        return render_station_inspector(profile), "station-drawer drawer-open"
+
+    # -----------------------------------------------------------------------
+    # 3b. Focus Map on Selected Station
+    # -----------------------------------------------------------------------
+    @app.callback(
+        Output(ID_MAP, "figure", allow_duplicate=True),
+        Input(ID_DRAWER_FOCUS_BTN, "n_clicks"),
+        [
+            State(ID_SELECTED_STATION_STORE, "data"),
+            State(ID_MAP, "figure"),
+        ],
+        prevent_initial_call=True,
+    )
+    def focus_map_on_station(n_clicks: int | None, selected_station: str | None, current_fig: dict | None):
+        """Re-center and zoom map viewport directly onto the inspected station."""
+        if not n_clicks or not selected_station or not current_fig:
+            return dash.no_update
+
+        df = load_clean_data()
+        stn_match = df[df["start_station_name"] == selected_station]
+        if stn_match.empty:
+            stn_match = df[df["end_station_name"] == selected_station]
+
+        if stn_match.empty:
+            return dash.no_update
+
+        lat = float(stn_match.iloc[0]["start_station_latitude"]) if "start_station_latitude" in stn_match.columns else None
+        lon = float(stn_match.iloc[0]["start_station_longitude"]) if "start_station_longitude" in stn_match.columns else None
+
+        if lat is None or lon is None or pd.isna(lat) or pd.isna(lon):
+            return dash.no_update
+
+        fig_dict = copy.deepcopy(current_fig)
+        map_key = "map" if "map" in fig_dict.get("layout", {}) else "mapbox"
+
+        if "layout" in fig_dict and map_key in fig_dict["layout"]:
+            fig_dict["layout"][map_key]["center"] = {"lat": lat, "lon": lon}
+            fig_dict["layout"][map_key]["zoom"] = 15.0
+
+        return fig_dict
 
     # -----------------------------------------------------------------------
     # 4. CSV Dataset Export

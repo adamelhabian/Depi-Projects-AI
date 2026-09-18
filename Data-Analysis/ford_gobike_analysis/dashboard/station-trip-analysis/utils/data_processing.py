@@ -313,6 +313,7 @@ def compute_station_deep_dive(
 ) -> dict:
     """
     Extract comprehensive station profile for drill-down analysis upon clicking.
+    Computes ranking, network share %, flow split, top destinations, and operational suggestion.
     """
     empty_result = {
         "station_name": station_name or "None Selected",
@@ -322,64 +323,133 @@ def compute_station_deep_dive(
         "net_flow": 0,
         "imbalance_ratio": 0.0,
         "region": "Unknown",
+        "region_code": "SF",
+        "rank": 1,
+        "total_stations": 0,
+        "network_share_pct": 0.0,
+        "inbound_pct": 50.0,
+        "outbound_pct": 50.0,
+        "status_label": "Balanced",
         "round_trip_count": 0,
         "round_trip_pct": 0.0,
+        "recommendation": "Select a station to inspect operational suggestions.",
         "top_destinations": [],
         "top_origins": [],
+        "lat": 37.7749,
+        "lon": -122.4194,
     }
 
-    if df.empty or not station_name:
+    if df.empty or not station_name or station_metrics.empty:
         return empty_result
 
     # 1. Base metrics
     match = station_metrics[station_metrics["station_name"] == station_name]
     if not match.empty:
         row = match.iloc[0]
-        empty_result.update({
-            "station_name": station_name,
-            "total_traffic": int(row["total_traffic"]),
-            "departures": int(row["departures"]),
-            "arrivals": int(row["arrivals"]),
-            "net_flow": int(row["net_flow"]),
-            "imbalance_ratio": float(row.get("imbalance_ratio", 0.0)),
-            "region": str(row.get("region", "Unknown")),
-        })
+        total_traffic = int(row["total_traffic"])
+        departures = int(row["departures"])
+        arrivals = int(row["arrivals"])
+        net_flow = int(row["net_flow"])
+        imbalance_ratio = float(row.get("imbalance_ratio", 0.0))
+        region = str(row.get("region", "Unknown"))
+        lat = float(row["lat"]) if pd.notna(row.get("lat")) else 37.7749
+        lon = float(row["lon"]) if pd.notna(row.get("lon")) else -122.4194
+    else:
+        return empty_result
 
-    # 2. Top Destinations (trips starting at station_name)
+    # 2. Ranking and Network Share in current filtered station_metrics
+    sorted_metrics = station_metrics.sort_values("total_traffic", ascending=False).reset_index(drop=True)
+    stn_list = sorted_metrics["station_name"].tolist()
+    try:
+        rank = stn_list.index(station_name) + 1
+    except ValueError:
+        rank = 1
+
+    total_network = int(station_metrics["total_traffic"].sum())
+    network_share_pct = round((total_traffic / total_network * 100), 1) if total_network > 0 else 0.0
+
+    # 3. Flow Split Percentages
+    inbound_pct = round((arrivals / total_traffic * 100), 1) if total_traffic > 0 else 50.0
+    outbound_pct = round(100.0 - inbound_pct, 1)
+
+    # 4. Status label
+    if net_flow >= 0:
+        status_label = "Surplus (+ Inbound)"
+    else:
+        status_label = "Deficit (Outbound)"
+
+    # 5. Region short code
+    reg_l = region.lower()
+    if "san francisco" in reg_l or "sf" in reg_l:
+        region_code = "SF"
+    elif "east bay" in reg_l or "oakland" in reg_l or "berkeley" in reg_l:
+        region_code = "EAST BAY"
+    elif "san jose" in reg_l:
+        region_code = "SAN JOSE"
+    else:
+        region_code = region.upper()[:8]
+
+    # 6. Top Destinations (trips starting at station_name)
     trips_from = df[df["start_station_name"] == station_name]
+    top_destinations = []
+    round_trip_count = 0
+    round_trip_pct = 0.0
+
     if not trips_from.empty:
-        top_dests = (
-            trips_from[trips_from["end_station_name"] != station_name]
-            ["end_station_name"]
-            .value_counts()
-            .head(5)
-            .to_dict()
-        )
-        empty_result["top_destinations"] = [
-            {"station": k, "count": v} for k, v in top_dests.items()
+        valid_dests = trips_from[trips_from["end_station_name"] != station_name]["end_station_name"]
+        top_dests = valid_dests.value_counts().head(5).to_dict()
+        top_destinations = [
+            {"station": k, "count": int(v)} for k, v in top_dests.items()
         ]
 
-        # Round trip stats
-        rts = len(trips_from[trips_from["end_station_name"] == station_name])
-        empty_result["round_trip_count"] = rts
+        rts = int((trips_from["end_station_name"] == station_name).sum())
+        round_trip_count = rts
         if len(trips_from) > 0:
-            empty_result["round_trip_pct"] = round((rts / len(trips_from)) * 100, 1)
+            round_trip_pct = round((rts / len(trips_from)) * 100, 1)
 
-    # 3. Top Origins (trips ending at station_name)
+    # 7. Operational Suggestion
+    if net_flow < -500:
+        recommendation = "High depletion risk during morning commuter peak. Priority dock replenishment route (van delivery recommended)."
+    elif net_flow > 500:
+        recommendation = "High overflow risk during afternoon arrivals. Dispatch clearing van to free dock capacity."
+    elif round_trip_pct > 20:
+        recommendation = "High tourist/recreation turnover. Station naturally cycles bikes back; monitor regular brake and tire wear."
+    else:
+        recommendation = "Equilibrium corridor hub. Self-balancing bidirectional commute patterns with low rebalancing overhead."
+
+    # 8. Top Origins (trips ending at station_name)
     trips_to = df[df["end_station_name"] == station_name]
+    top_origins = []
     if not trips_to.empty:
-        top_origs = (
-            trips_to[trips_to["start_station_name"] != station_name]
-            ["start_station_name"]
-            .value_counts()
-            .head(5)
-            .to_dict()
-        )
-        empty_result["top_origins"] = [
-            {"station": k, "count": v} for k, v in top_origs.items()
+        valid_origs = trips_to[trips_to["start_station_name"] != station_name]["start_station_name"]
+        top_origs = valid_origs.value_counts().head(5).to_dict()
+        top_origins = [
+            {"station": k, "count": int(v)} for k, v in top_origs.items()
         ]
 
-    return empty_result
+    return {
+        "station_name": station_name,
+        "total_traffic": total_traffic,
+        "departures": departures,
+        "arrivals": arrivals,
+        "net_flow": net_flow,
+        "imbalance_ratio": imbalance_ratio,
+        "region": region,
+        "region_code": region_code,
+        "rank": rank,
+        "total_stations": len(station_metrics),
+        "network_share_pct": network_share_pct,
+        "inbound_pct": inbound_pct,
+        "outbound_pct": outbound_pct,
+        "status_label": status_label,
+        "round_trip_count": round_trip_count,
+        "round_trip_pct": round_trip_pct,
+        "recommendation": recommendation,
+        "top_destinations": top_destinations,
+        "top_origins": top_origins,
+        "lat": lat,
+        "lon": lon,
+    }
 
 
 # ---------------------------------------------------------------------------

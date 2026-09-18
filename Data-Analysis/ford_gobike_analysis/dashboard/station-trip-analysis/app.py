@@ -40,6 +40,7 @@ app = Dash(
     __name__,
     title="Ford GoBike | Station & Trip Analysis (Member 5)",
     assets_folder=str(_MODULE_DIR / "assets"),
+    suppress_callback_exceptions=True,
 )
 
 # Attach layout and callbacks
