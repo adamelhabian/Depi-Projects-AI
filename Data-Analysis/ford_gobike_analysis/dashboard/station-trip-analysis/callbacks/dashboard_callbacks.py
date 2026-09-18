@@ -144,14 +144,39 @@ def register_callbacks(app: dash.Dash) -> None:
         round_trips = compute_round_trip_hotspots(df_view, top_n=min(n, 10))
         dispatch_pairs = compute_smart_dispatch_pairs(station_metrics_view, max_pairs=3)
 
+        # 5b. Compute top destination map (station → its #1 destination)
+        top_dest_map = {}
+        if not filtered_df.empty and "start_station_name" in filtered_df.columns:
+            valid_trips = filtered_df[
+                (filtered_df["start_station_name"].notna())
+                & (filtered_df["end_station_name"].notna())
+                & (filtered_df["start_station_name"] != filtered_df["end_station_name"])
+            ]
+            if not valid_trips.empty:
+                dest_counts = (
+                    valid_trips
+                    .groupby(["start_station_name", "end_station_name"], observed=True)
+                    .size()
+                    .reset_index(name="cnt")
+                )
+                idx_max = dest_counts.groupby("start_station_name", observed=True)["cnt"].idxmax()
+                top_pairs = dest_counts.loc[idx_max]
+                top_dest_map = dict(
+                    zip(top_pairs["start_station_name"], top_pairs["end_station_name"])
+                )
+
+        # 5c. Total network traffic for percentage calculations
+        total_network_traffic = int(station_metrics_view["total_traffic"].sum()) if not station_metrics_view.empty else 0
+
         # 6. Generate Figures
         fig_map = create_station_map(
             station_metrics,
             region=region_filter,
             top_routes=top_routes,
             show_flow_lines=show_flow_lines,
+            top_dest_map=top_dest_map,
         )
-        fig_stations = create_top_stations_chart(top_stations)
+        fig_stations = create_top_stations_chart(top_stations, total_network_traffic=total_network_traffic)
         fig_routes = create_top_routes_chart(top_routes)
         fig_imbalance = create_flow_imbalance_chart(flow_imbalance)
         fig_round_trip = create_round_trip_hotspots_chart(round_trips)

@@ -2,12 +2,7 @@
 charts/trip_analysis.py – Origin–Destination Corridor Visualizations
 =====================================================================
 Plotly chart generator for:
-  - Top Origin–Destination Corridors (Horizontal bar chart)
-
-Key UI & Readability Fixes:
-  - Clean single-line corridor labels with rank prefix ("1. ", "2. ") so labels NEVER overlap.
-  - Passes unique route strings to `y` to avoid Plotly category-merging bugs.
-  - Dynamic height ensures 15 and 20 bars get comfortable vertical spacing.
+  - Top Origin–Destination Corridors (rank-gradient colors, network % labels)
 """
 
 from __future__ import annotations
@@ -17,6 +12,35 @@ import pandas as pd
 
 from config import COLORS, CHART_HEIGHT_BAR
 from utils.theme import apply_chart_theme, empty_figure
+
+
+def _rank_gradient(n_bars: int, dark: str = "#0D9488", light: str = "#CCFBF1") -> list[str]:
+    """
+    Generate a list of n_bars hex colors from light (lowest rank) to dark (highest rank).
+    Data is sorted ascending, so index 0 = lowest rank, index n-1 = highest rank (top bar).
+    """
+    if n_bars <= 1:
+        return [dark]
+
+    def hex_to_rgb(h: str) -> tuple[int, int, int]:
+        h = h.lstrip("#")
+        return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+    def rgb_to_hex(r: int, g: int, b: int) -> str:
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    r1, g1, b1 = hex_to_rgb(light)
+    r2, g2, b2 = hex_to_rgb(dark)
+
+    colors = []
+    for i in range(n_bars):
+        t = i / (n_bars - 1)
+        r = int(r1 + (r2 - r1) * t)
+        g = int(g1 + (g2 - g1) * t)
+        b = int(b1 + (b2 - b1) * t)
+        colors.append(rgb_to_hex(r, g, b))
+
+    return colors
 
 
 def _clean_short_route(route: str, rank: int, max_len: int = 34) -> str:
@@ -68,7 +92,16 @@ def create_top_routes_chart(top_routes: pd.DataFrame) -> go.Figure:
         for i, r in enumerate(routes)
     ]
 
+    # Rank-gradient colors: light (bottom) → dark teal (top)
+    bar_colors = _rank_gradient(n_bars, dark="#0D9488", light="#CCFBF1")
+
     custom_data = top_routes[["route", "trip_count", "pct_of_total"]].values
+
+    # Bar text with network share percentage
+    bar_texts = [
+        f"{tc:,} — {pct:.2f}%"
+        for tc, pct in zip(top_routes["trip_count"], top_routes["pct_of_total"])
+    ]
 
     fig = go.Figure(
         go.Bar(
@@ -76,12 +109,7 @@ def create_top_routes_chart(top_routes: pd.DataFrame) -> go.Figure:
             y=routes,  # Unique route key ensures no bars get merged
             orientation="h",
             marker=dict(
-                color=top_routes["trip_count"],
-                colorscale=[
-                    [0.0, "#34D399"],   # Mint Green
-                    [1.0, "#0D9488"],   # Teal
-                ],
-                showscale=False,
+                color=bar_colors,
                 line=dict(width=0),
             ),
             customdata=custom_data,
@@ -91,7 +119,7 @@ def create_top_routes_chart(top_routes: pd.DataFrame) -> go.Figure:
                 "Share of Network: <b>%{customdata[2]:.2f}%</b>"
                 "<extra></extra>"
             ),
-            text=top_routes["trip_count"].apply(lambda v: f"{v:,}"),
+            text=bar_texts,
             textposition="auto",
             textfont=dict(color=COLORS["text_primary"], size=10),
         )
