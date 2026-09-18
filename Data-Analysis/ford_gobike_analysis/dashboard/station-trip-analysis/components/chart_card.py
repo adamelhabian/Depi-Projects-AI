@@ -38,12 +38,12 @@ def chart_card(
     html.Div
     """
     header_elements = [
-        html.H3(title, className="card-title"),
+        html.H3(title, className="text-base sm:text-lg font-bold text-slate-900"),
     ]
     if subtitle:
-        header_elements.append(html.P(subtitle, className="card-subtitle"))
+        header_elements.append(html.P(subtitle, className="text-xs text-slate-500 mb-3"))
 
-    card_classes = f"dashboard-card {className}".strip()
+    card_classes = f"bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 flex flex-col justify-between {className}".strip()
 
     return html.Div(
         className=card_classes,

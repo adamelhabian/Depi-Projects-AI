@@ -24,20 +24,19 @@ def render_dispatch_panel(pairs: list[dict] | None = None) -> html.Div:
     html.Div
     """
     header = html.Div(
-        className="card-header",
+        className="mb-4",
         children=[
             html.Div(
-                style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "4px"},
+                style={"display": "flex", "alignItems": "center", "gap": "8px", "marginBottom": "6px"},
                 children=[
-                    html.Span("PRESCRIPTIVE DISPATCH", className="badge-tag dispatch-tag"),
-                    html.Span("Automated Spatial Match", className="badge-region"),
+                    html.Span("PRESCRIPTIVE DISPATCH", className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-teal-100 text-teal-800 uppercase tracking-wider"),
+                    html.Span("Automated Spatial Match", className="text-xs text-slate-400 font-medium"),
                 ],
             ),
-            html.H3("Smart Fleet Rebalancing Recommendations", className="card-title"),
+            html.H3("Smart Fleet Rebalancing Recommendations", className="text-base sm:text-lg font-bold text-slate-900"),
             html.P(
-                "Algorithmic rebalancing pairs high-deficit stations with their nearest high-surplus neighbor "
-                "within the same metropolitan cluster using Haversine distance.",
-                className="card-subtitle",
+                "Algorithmic rebalancing pairs high-deficit stations with their nearest high-surplus neighbor within the same metropolitan cluster using Haversine distance.",
+                className="text-xs text-slate-500 mt-0.5",
             ),
         ],
     )
@@ -119,7 +118,7 @@ def render_dispatch_panel(pairs: list[dict] | None = None) -> html.Div:
         content = html.Div(className="dispatch-pair-list", children=card_items)
 
     return html.Div(
-        className="dashboard-card dispatch-card",
+        className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 flex flex-col justify-between mb-8",
         children=[
             header,
             content,

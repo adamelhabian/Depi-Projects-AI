@@ -49,36 +49,37 @@ def create_layout() -> html.Div:
             # State store for clicked station across map and charts
             dcc.Store(id=ID_SELECTED_STATION_STORE, data=None),
             # ── 1. Section Header ─────────────────────────────────────────
-            html.Div(
-                className="section-header",
+            html.Header(
+                className="mb-6",
                 children=[
                     html.Div(
-                        style={"display": "flex", "justifyContent": "space-between", "alignItems": "flex-start", "flexWrap": "wrap", "gap": "12px"},
+                        className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200",
                         children=[
                             html.Div([
-                                html.H2("Station & Trip Analysis", className="section-title"),
-                                html.P(
-                                    "Youssef Mohamed Member 5 · Network traffic hubs, corridor flows, spatial rebalancing, and station deep dives.",
-                                    className="section-subtitle",
+                                html.Div(
+                                    className="flex items-center gap-2 mb-1",
+                                    children=[
+                                        html.Span("Bay Wheels System", className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200"),
+                                        html.Span("SFMTA • MTC Network · Member 5", className="text-xs text-slate-400 font-medium"),
+                                    ],
                                 ),
+                                html.H1("Station & Trip Analysis", className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight"),
+                                html.P("Network traffic hubs, corridor flows, spatial rebalancing, and station deep dives.", className="text-sm sm:text-base text-slate-500 mt-1"),
                             ]),
                             html.Div(
-                                style={
-                                    "display": "inline-flex",
-                                    "alignItems": "center",
-                                    "gap": "7px",
-                                    "backgroundColor": "#ECFDF5",
-                                    "border": "1px solid #A7F3D0",
-                                    "borderRadius": "20px",
-                                    "padding": "6px 14px",
-                                    "fontSize": "11px",
-                                    "fontWeight": "650",
-                                    "color": "#047857",
-                                    "boxShadow": "0 1px 3px rgba(0, 0, 0, 0.04)",
-                                },
+                                className="flex items-center gap-2 text-xs font-medium",
                                 children=[
-                                    html.Span("🟢", style={"fontSize": "8px"}),
-                                    html.Span("LIVE: Supabase Cloud (gold.trip_analytics)"),
+                                    html.Span(
+                                        [
+                                            html.Span(className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block mr-1.5"),
+                                            "🟢 LIVE: Supabase Cloud",
+                                        ],
+                                        className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-700 flex items-center font-semibold",
+                                    ),
+                                    html.Span(
+                                        "Q1-Q4 Synthesized Trip Ledger",
+                                        className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-500 hidden sm:inline-block",
+                                    ),
                                 ],
                             ),
                         ],
@@ -91,45 +92,41 @@ def create_layout() -> html.Div:
 
             # ── 3. Station Traffic & Flow Corridor Map (Full Width) ──────
             html.Div(
-                className="grid-full",
+                className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-6 relative overflow-hidden",
                 children=[
                     html.Div(
-                        className="dashboard-card map-card-container",
-                        style={"position": "relative", "overflow": "hidden"},
+                        className="flex flex-wrap items-center justify-between gap-2 mb-3",
                         children=[
-                            html.Div(
-                                [
-                                    html.H3("Station Traffic & Flow Corridor Map", className="card-title"),
-                                    html.P(
-                                        "Bubble radius indicates total traffic volume; color indicates net flow rebalancing (deficit vs surplus). Top transit corridors connect key origin–destination hubs.",
-                                        className="card-subtitle",
-                                    ),
-                                ],
-                                className="card-header",
+                            html.Div([
+                                html.H2("Station Traffic & Flow Corridor Map", className="text-lg font-bold text-slate-900"),
+                                html.P(
+                                    "Bubble radius represents total station trip volume; color indicates network rebalancing deficit or surplus.",
+                                    className="text-xs text-slate-500",
+                                ),
+                            ]),
+                        ],
+                    ),
+                    html.Div(
+                        style={"position": "relative", "width": "100%", "height": f"{CHART_HEIGHT_MAP}px", "borderRadius": "10px", "overflow": "hidden", "border": "1px solid #e2e8f0"},
+                        children=[
+                            dcc.Graph(
+                                id=ID_MAP,
+                                style={"height": f"{CHART_HEIGHT_MAP}px", "width": "100%"},
+                                config={
+                                    "displayModeBar": "hover",
+                                    "displaylogo": False,
+                                    "modeBarButtonsToRemove": [
+                                        "select2d",
+                                        "lasso2d",
+                                        "autoScale2d",
+                                    ],
+                                },
                             ),
+                            # Slide-in Side Drawer container positioned over map
                             html.Div(
-                                style={"position": "relative", "width": "100%", "height": f"{CHART_HEIGHT_MAP}px", "borderRadius": "12px", "overflow": "hidden"},
-                                children=[
-                                    dcc.Graph(
-                                        id=ID_MAP,
-                                        style={"height": f"{CHART_HEIGHT_MAP}px", "width": "100%"},
-                                        config={
-                                            "displayModeBar": "hover",
-                                            "displaylogo": False,
-                                            "modeBarButtonsToRemove": [
-                                                "select2d",
-                                                "lasso2d",
-                                                "autoScale2d",
-                                            ],
-                                        },
-                                    ),
-                                    # Slide-in Side Drawer container positioned over map
-                                    html.Div(
-                                        id=ID_INSPECTOR_CONTAINER,
-                                        className="station-drawer drawer-closed",
-                                        children=render_station_inspector(None),
-                                    ),
-                                ],
+                                id=ID_INSPECTOR_CONTAINER,
+                                className="station-drawer drawer-closed",
+                                children=render_station_inspector(None),
                             ),
                         ],
                     ),
@@ -138,12 +135,12 @@ def create_layout() -> html.Div:
 
             # ── 4. Two-Column Analytical Charts: Volume & Corridors ──────
             html.Div(
-                className="grid-two-col",
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6",
                 children=[
                     chart_card(
                         graph_id=ID_TOP_STATIONS,
                         title="Top Stations by Total Traffic",
-                        subtitle="Stations with the highest combined departure and arrival volume across the network.",
+                        subtitle="Ranking stations by cumulative arrivals and departures. Percentages reflect share of active network traffic.",
                         height=CHART_HEIGHT_BAR,
                     ),
                     chart_card(
@@ -157,18 +154,18 @@ def create_layout() -> html.Div:
 
             # ── 5. Two-Column Analytical Charts: Imbalance & Leisure ─────
             html.Div(
-                className="grid-two-col",
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6",
                 children=[
                     chart_card(
                         graph_id=ID_FLOW_IMBALANCE,
                         title="Station Network Flow Imbalance",
-                        subtitle="Outbound pressure (net deficit) vs Inbound pressure (net surplus).",
+                        subtitle="Critical stations demanding truck/van rebalancing. Identifies dock depletion vs overflow docks.",
                         height=CHART_HEIGHT_IMBALANCE,
                     ),
                     chart_card(
                         graph_id=ID_ROUND_TRIP_CHART,
                         title="Leisure & Tourism Hotspots",
-                        subtitle="Stations with high round-trip ratios (start == end), characteristic of recreational and tourist riding.",
+                        subtitle="Stations exhibiting high percentages of loop journeys (origin = destination), signaling recreational riding.",
                         height=CHART_HEIGHT_LEISURE,
                     ),
                 ],
@@ -176,7 +173,7 @@ def create_layout() -> html.Div:
 
             # ── 6. Prescriptive Fleet Dispatch & Rebalancing ────────────
             html.Div(
-                className="grid-full",
+                className="mb-8",
                 children=[
                     # Prescriptive Dispatch Rebalancing Panel
                     html.Div(

@@ -40,8 +40,41 @@ app = Dash(
     __name__,
     title="Ford GoBike | Station & Trip Analysis (Member 5)",
     assets_folder=str(_MODULE_DIR / "assets"),
+    external_scripts=[
+        "https://cdn.tailwindcss.com",
+    ],
     suppress_callback_exceptions=True,
 )
+
+# Custom HTML index matching station_trip_analysis.html
+app.index_string = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    {%metas%}
+    <title>{%title%}</title>
+    {%favicon%}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {%css%}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto min-h-screen flex flex-col">
+    {%app_entry%}
+    <footer>
+        {%config%}
+        {%scripts%}
+        {%renderer%}
+    </footer>
+</body>
+</html>"""
 
 # Attach layout and callbacks
 app.layout = create_layout()

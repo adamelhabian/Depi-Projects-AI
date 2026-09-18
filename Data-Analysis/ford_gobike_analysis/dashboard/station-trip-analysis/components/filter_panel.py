@@ -44,7 +44,7 @@ def filter_panel() -> html.Div:
     }
 
     return html.Div(
-        className="filter-panel",
+        className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-6",
         children=[
             # Row 1: Primary Controls & Export
             html.Div(
@@ -54,7 +54,7 @@ def filter_panel() -> html.Div:
                     html.Div(
                         className="filter-tag-container",
                         children=[
-                            html.Span("CONTROLS", className="filter-badge"),
+                            html.Span("CONTROLS", className="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200 uppercase tracking-wider"),
                         ],
                     ),
 
@@ -62,19 +62,19 @@ def filter_panel() -> html.Div:
                     html.Div(
                         className="filter-group",
                         children=[
-                            html.Label("User Membership", className="filter-label"),
+                            html.Label("User Membership", className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5"),
                             dcc.Dropdown(
                                 id=ID_USER_FILTER,
                                 className="m5-dropdown",
                                 options=[
-                                    {"label": "All Users", "value": "All"},
-                                    {"label": "Subscribers", "value": "Subscriber"},
-                                    {"label": "Customers", "value": "Customer"},
+                                    {"label": "All Users (Total Volume)", "value": "All"},
+                                    {"label": "Subscribers (Pass Holders)", "value": "Subscriber"},
+                                    {"label": "Customers (Casual Rides)", "value": "Customer"},
                                 ],
                                 value="All",
                                 clearable=False,
                                 searchable=False,
-                                style={"width": "165px"},
+                                style={"width": "195px"},
                             ),
                         ],
                     ),
@@ -83,7 +83,7 @@ def filter_panel() -> html.Div:
                     html.Div(
                         className="filter-group",
                         children=[
-                            html.Label("Metro Region", className="filter-label"),
+                            html.Label("Metro Region", className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5"),
                             dcc.Dropdown(
                                 id=ID_REGION_FILTER,
                                 className="m5-dropdown",
@@ -105,7 +105,7 @@ def filter_panel() -> html.Div:
                     html.Div(
                         className="filter-group toggle-group",
                         children=[
-                            html.Label("Map Overlays", className="filter-label"),
+                            html.Label("Map Overlays", className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5"),
                             dcc.Checklist(
                                 id=ID_MAP_FLOW_LINES_TOGGLE,
                                 options=[
@@ -122,14 +122,14 @@ def filter_panel() -> html.Div:
                         className="filter-group export-group",
                         style={"marginLeft": "auto"},
                         children=[
-                            html.Label("Data Export", className="filter-label"),
+                            html.Label("Data Export", className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5"),
                             html.Button(
                                 [
                                     html.Span("📥", style={"marginRight": "6px"}),
                                     "Export CSV",
                                 ],
                                 id=ID_DOWNLOAD_BTN,
-                                className="btn-export",
+                                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow transition active:scale-95 cursor-pointer",
                                 n_clicks=0,
                             ),
                             dcc.Download(id=ID_DOWNLOAD_DATA),
@@ -143,12 +143,12 @@ def filter_panel() -> html.Div:
                 className="filter-slider-row",
                 children=[
                     html.Div(
-                        style={"display": "flex", "justifyContent": "space-between", "alignItems": "baseline", "marginBottom": "4px"},
+                        style={"display": "flex", "justifyContent": "space-between", "alignItems": "baseline", "marginBottom": "6px"},
                         children=[
-                            html.Label("Top N Stations & Corridors", className="filter-label"),
+                            html.Label("Top N Ranking Scope", className="block text-xs font-semibold uppercase tracking-wider text-slate-500"),
                             html.Span(
                                 "Applies to ranking charts · Map displays all active stations in selected region",
-                                className="filter-hint",
+                                className="text-xs text-slate-400 font-normal",
                             ),
                         ],
                     ),
