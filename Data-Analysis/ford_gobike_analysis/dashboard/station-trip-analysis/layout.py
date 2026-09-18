@@ -7,7 +7,11 @@ Tailwind CSS-driven layout perfectly matching station_trip_analysis.html:
   3. Interactive Map with integrated Floating Map Legend and Slide-in Side Drawer.
   4. Top Stations by Total Traffic & Top Origin–Destination Corridors (side-by-side).
   5. Station Network Flow Imbalance & Leisure & Tourism Hotspots (side-by-side).
-  6. Prescriptive Fleet Dispatch & Rebalancing Panel.
+  6. Time Analysis: Hourly demand, duration profiles, day×hour heatmap,
+     and weekday/weekend comparison.
+  7. User Analysis: User-type composition, hourly patterns, duration profiles,
+     age/gender distributions, and cross-tab user-type × age.
+  8. Prescriptive Fleet Dispatch & Rebalancing Panel.
 """
 
 from __future__ import annotations
@@ -20,6 +24,16 @@ from config import (
     ID_TOP_ROUTES,
     ID_FLOW_IMBALANCE,
     ID_ROUND_TRIP_CHART,
+    ID_TRIPS_BY_HOUR,
+    ID_DAY_HOUR_HEATMAP,
+    ID_AVG_DURATION_BY_HOUR,
+    ID_WEEKDAY_WEEKEND_DURATION,
+    ID_USER_TYPE_DISTRIBUTION,
+    ID_USER_TYPE_HOUR,
+    ID_AVG_DURATION_BY_USER_TYPE,
+    ID_AGE_GROUP_DISTRIBUTION,
+    ID_GENDER_DISTRIBUTION,
+    ID_USER_TYPE_BY_AGE_GROUP,
     ID_INSPECTOR_CONTAINER,
     ID_DISPATCH_CONTAINER,
     ID_SELECTED_STATION_STORE,
@@ -27,6 +41,8 @@ from config import (
     CHART_HEIGHT_BAR,
     CHART_HEIGHT_IMBALANCE,
     CHART_HEIGHT_LEISURE,
+    CHART_HEIGHT_LINE,
+    CHART_HEIGHT_HEATMAP,
 )
 from components.chart_card import chart_card
 from components.filter_panel import filter_panel
@@ -255,7 +271,198 @@ def create_layout() -> html.Div:
                 ],
             ),
 
-            # ── 6. Prescriptive Fleet Dispatch & Rebalancing ────────────
+            # ── 6. Time Analysis (Temporal Usage & Duration) ─────────────
+            html.Div(
+                className="mb-6",
+                children=[
+                    # Section sub-header (matches Section 1 header style, smaller scale)
+                    html.Div(
+                        className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200",
+                        children=[
+                            html.Div([
+                                html.H2(
+                                    "Time Analysis",
+                                    className="text-lg font-bold text-slate-900 tracking-tight",
+                                ),
+                                html.P(
+                                    "Temporal demand patterns, hourly usage concentration, and trip duration profiles across the network.",
+                                    className="text-xs text-slate-500 mt-0.5",
+                                ),
+                            ]),
+                            html.Div(
+                                className="flex items-center gap-2 text-xs font-medium",
+                                children=[
+                                    html.Span(
+                                        "Hourly · Day-of-Week · Weekday vs Weekend",
+                                        className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-500",
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+
+                    # Row 1 — Trips by Hour + Avg Duration by Hour
+                    html.Div(
+                        className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start",
+                        children=[
+                            chart_card(
+                                graph_id=ID_TRIPS_BY_HOUR,
+                                title="Trips by Hour of Day",
+                                subtitle="Total trips recorded per hour. Peak hours are detected dynamically from the active filter scope.",
+                                badge_text="Demand Curve",
+                                badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-teal-100 text-teal-800",
+                                footnote="* Hour axis runs 00:00 → 23:00 in local time",
+                                height=CHART_HEIGHT_LINE,
+                            ),
+                            chart_card(
+                                graph_id=ID_AVG_DURATION_BY_HOUR,
+                                title="Average Trip Duration by Hour",
+                                subtitle="Mean trip duration (minutes) per start hour. Highlights off-peak periods with longer rides.",
+                                badge_text="Duration Profile",
+                                badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-purple-100 text-purple-800",
+                                footnote="* Hours with no recorded trips are omitted from the line",
+                                height=CHART_HEIGHT_LINE,
+                            ),
+                        ],
+                    ),
+
+                    # Row 2 — Day × Hour Heatmap (Full width)
+                    chart_card(
+                        graph_id=ID_DAY_HOUR_HEATMAP,
+                        title="Day-of-Week × Hour Heatmap",
+                        subtitle="Demand intensity matrix across the week. Darker cells indicate higher trip concentration.",
+                        badge_text="Demand Matrix",
+                        badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-800",
+                        footnote="* Rows follow Monday → Sunday; columns follow 00:00 → 23:00",
+                        height=CHART_HEIGHT_HEATMAP,
+                    ),
+
+                    # Row 3 — Weekday vs Weekend (Full width)
+                    html.Div(
+                        className="mt-6",
+                        children=[
+                            chart_card(
+                                graph_id=ID_WEEKDAY_WEEKEND_DURATION,
+                                title="Weekday vs Weekend Average Duration",
+                                subtitle="Mean trip duration comparison between working days and weekend riding patterns.",
+                                badge_text="Day Type Comparison",
+                                badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600",
+                                footnote="* Uses the dataset's weekend flag; both boolean and 0/1 encodings are supported",
+                                height=CHART_HEIGHT_LINE,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+
+            # ── 7. User Analysis (Behavior & Demographics) ───────────────
+            html.Div(
+                className="mb-6",
+                children=[
+                    # Section sub-header
+                    html.Div(
+                        className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200",
+                        children=[
+                            html.Div([
+                                html.H2(
+                                    "User Analysis",
+                                    className="text-lg font-bold text-slate-900 tracking-tight",
+                                ),
+                                html.P(
+                                    "User-type composition, hourly behavior, duration profiles, and demographic distributions across the network.",
+                                    className="text-xs text-slate-500 mt-0.5",
+                                ),
+                            ]),
+                            html.Div(
+                                className="flex items-center gap-2 text-xs font-medium",
+                                children=[
+                                    html.Span(
+                                        "User Type · Age · Gender",
+                                        className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-500",
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+
+                    # Row 1 — User Type Distribution + Hourly Pattern
+                    html.Div(
+                        className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start",
+                        children=[
+                            chart_card(
+                                graph_id=ID_USER_TYPE_DISTRIBUTION,
+                                title="User Type Distribution",
+                                subtitle="Share of trips between Subscriber and Customer user types across the active filter scope.",
+                                badge_text="Composition",
+                                badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-teal-100 text-teal-800",
+                                footnote="* Donut segments are proportional to total trips per user type",
+                                height=CHART_HEIGHT_BAR,
+                            ),
+                            chart_card(
+                                graph_id=ID_USER_TYPE_HOUR,
+                                title="Hourly Usage Pattern by User Type",
+                                subtitle="Normalized hourly distribution within each user type, enabling direct pattern comparison.",
+                                badge_text="Hourly Pattern",
+                                badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-purple-100 text-purple-800",
+                                footnote="* Each curve sums to 100% of that user type's total trips",
+                                height=CHART_HEIGHT_LINE,
+                            ),
+                        ],
+                    ),
+
+                    # Row 2 — Avg Duration by User Type + Age Group Distribution
+                    html.Div(
+                        className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start",
+                        children=[
+                            chart_card(
+                                graph_id=ID_AVG_DURATION_BY_USER_TYPE,
+                                title="Average Trip Duration by User Type",
+                                subtitle="Mean trip duration comparison between Subscriber and Customer users.",
+                                badge_text="Duration Comparison",
+                                badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-teal-100 text-teal-800",
+                                footnote="* Bars reflect mean duration in minutes after filtering",
+                                height=CHART_HEIGHT_BAR,
+                            ),
+                            chart_card(
+                                graph_id=ID_AGE_GROUP_DISTRIBUTION,
+                                title="Trip Distribution by Age Group",
+                                subtitle="Trip counts across age bands derived from rider birth-year records.",
+                                badge_text="Age Cohorts",
+                                badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800",
+                                footnote="* Age groups: 18-25 · 26-35 · 36-50 · 51-65 · 66-80",
+                                height=CHART_HEIGHT_BAR,
+                            ),
+                        ],
+                    ),
+
+                    # Row 3 — Gender Distribution + User Type × Age Group
+                    html.Div(
+                        className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start",
+                        children=[
+                            chart_card(
+                                graph_id=ID_GENDER_DISTRIBUTION,
+                                title="Gender Distribution",
+                                subtitle="Share of trips across member gender categories reported in the trip ledger.",
+                                badge_text="Demographics",
+                                badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-purple-100 text-purple-800",
+                                footnote="* Categories reflect the source dataset's member_gender field",
+                                height=CHART_HEIGHT_BAR,
+                            ),
+                            chart_card(
+                                graph_id=ID_USER_TYPE_BY_AGE_GROUP,
+                                title="User Type Distribution Across Age Groups",
+                                subtitle="100% stacked comparison of Subscriber vs Customer composition inside each age band.",
+                                badge_text="Cross-Tab",
+                                badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600",
+                                footnote="* Each bar sums to 100% of trips within that age group",
+                                height=CHART_HEIGHT_BAR,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+
+            # ── 8. Prescriptive Fleet Dispatch & Rebalancing ────────────
             html.Div(
                 className="mb-8",
                 children=[

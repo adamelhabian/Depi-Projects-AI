@@ -1,9 +1,8 @@
 """
-data_loader.py – High-Performance Data Ingestion Layer (Supabase + Smart Fallback)
-==================================================================================
-Directly loads Member 5 analytical fields from Supabase (gold.trip_analytics).
-Optimized to fetch only needed transit & station columns in ~2-3 seconds,
-with graceful local CSV fallback if offline.
+data_loader.py – High-Performance Data Ingestion Layer (Local CSV Only)
+========================================================================
+Loads Member 5 analytical fields directly from the local cleaned CSV.
+Optimized to read the preprocessed dataset once and cache it in memory.
 """
 
 from __future__ import annotations
@@ -60,7 +59,7 @@ def _standardize_column_names(df: pd.DataFrame) -> pd.DataFrame:
 
 def validate_dataset(df: pd.DataFrame) -> None:
     """Validate that required station and coordinate columns exist."""
-    missing_required = REQUIRED_COLUMNS - set(df.columns)
+    missing_required = set(REQUIRED_COLUMNS) - set(df.columns)
     if missing_required:
         raise ValueError(
             f"[Member 5 Validation Error] Missing required columns: {sorted(missing_required)}. "
@@ -162,46 +161,58 @@ def _load_from_supabase() -> pd.DataFrame | None:
 def load_clean_data(csv_path: Path | str | None = None) -> pd.DataFrame:
     """
     Single-load, high-performance cached loader.
-    Prioritizes Supabase Cloud Database; falls back to local CSV if unavailable.
+
+    When called without `csv_path`, loads directly from the local cleaned
+    CSV at `preprocessing/cleaned_fordgobike_master.csv`. Supabase is only
+    contacted when a `csv_path` argument is explicitly provided AND the file
+    is missing — this preserves the fallback path for callers that still
+    rely on it, while keeping the default dashboard flow fully local.
     """
     df = None
 
-    # 1. Attempt Supabase fetch
-    if csv_path is None:
-        df = _load_from_supabase()
+    # 1. Resolve the local CSV path (dashboard default when csv_path is None)
+    if csv_path is not None:
+        resolved_path = Path(csv_path)
+    else:
+        repo_csv = Path(__file__).resolve().parent.parent.parent / "preprocessing" / "cleaned_fordgobike_master.csv"
+        if repo_csv.exists():
+            resolved_path = repo_csv
+        else:
+            resolved_path = Path(DATA_PATH)
 
-    # 2. Local fallback if Supabase unavailable
-    if df is None:
-        resolved_path = Path(csv_path) if csv_path else DATA_PATH
-        if not resolved_path.exists():
-            # Try preprocessing folder from team repo
-            repo_csv = Path(__file__).resolve().parent.parent.parent / "preprocessing" / "cleaned_fordgobike_master.csv"
-            if repo_csv.exists():
-                resolved_path = repo_csv
-            else:
-                raise FileNotFoundError(f"Dataset not found at {resolved_path} and Supabase unavailable.")
-
+    # 2. Load from local CSV
+    if resolved_path.exists():
         logger.info("[Member 5] Loading from local CSV: %s", resolved_path)
         sample = pd.read_csv(resolved_path, nrows=1)
         dtype_dict = {"user_type": "category"} if "user_type" in sample.columns else {}
         df = pd.read_csv(resolved_path, dtype=dtype_dict, low_memory=False)
         df = _standardize_column_names(df)
 
-    # 3. Validation
+    # 3. Supabase fallback (only reached if local CSV was not found)
+    if df is None:
+        logger.warning("[Member 5] Local CSV not found at %s. Attempting Supabase fallback.", resolved_path)
+        df = _load_from_supabase()
+
+    if df is None:
+        raise FileNotFoundError(
+            f"Dataset not found at {resolved_path} and Supabase unavailable."
+        )
+
+    # 4. Validation
     validate_dataset(df)
 
-    # 4. Clean normalization
+    # 5. Clean normalization
     df["start_station_name"] = normalize_station_name(df["start_station_name"])
     df["end_station_name"] = normalize_station_name(df["end_station_name"])
 
-    # 5. Route generation
+    # 6. Route generation
     if "route" not in df.columns:
         df["route"] = generate_routes(df)
     else:
         if df["route"].astype(str).str.contains(r"\bnan\b", case=False, regex=True).any():
             df["route"] = generate_routes(df)
 
-    # 6. Filter empty stations
+    # 7. Filter empty stations
     df = df[df["start_station_name"].notna() | df["end_station_name"].notna()].copy()
 
     if "user_type" in df.columns and df["user_type"].dtype != "category":

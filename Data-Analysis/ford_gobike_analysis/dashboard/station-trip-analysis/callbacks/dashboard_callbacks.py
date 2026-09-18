@@ -24,6 +24,16 @@ from config import (
     ID_TOP_ROUTES,
     ID_FLOW_IMBALANCE,
     ID_ROUND_TRIP_CHART,
+    ID_TRIPS_BY_HOUR,
+    ID_DAY_HOUR_HEATMAP,
+    ID_AVG_DURATION_BY_HOUR,
+    ID_WEEKDAY_WEEKEND_DURATION,
+    ID_USER_TYPE_DISTRIBUTION,
+    ID_USER_TYPE_HOUR,
+    ID_AVG_DURATION_BY_USER_TYPE,
+    ID_AGE_GROUP_DISTRIBUTION,
+    ID_GENDER_DISTRIBUTION,
+    ID_USER_TYPE_BY_AGE_GROUP,
     ID_INSPECTOR_CONTAINER,
     ID_DISPATCH_CONTAINER,
     ID_SELECTED_STATION_STORE,
@@ -58,6 +68,20 @@ from charts.station_analysis import (
     create_round_trip_hotspots_chart,
 )
 from charts.trip_analysis import create_top_routes_chart
+from charts.time_analysis import (
+    create_trips_by_hour_chart,
+    create_day_hour_heatmap_chart,
+    create_avg_duration_by_hour_chart,
+    create_weekday_vs_weekend_duration_chart,
+)
+from charts.user_analysis import (
+    create_user_type_distribution_chart,
+    create_user_type_hour_chart,
+    create_avg_duration_by_user_type_chart,
+    create_age_group_distribution_chart,
+    create_gender_distribution_chart,
+    create_user_type_by_age_group_chart,
+)
 from components.station_inspector import render_station_inspector
 from components.dispatch_panel import render_dispatch_panel
 
@@ -100,6 +124,16 @@ def register_callbacks(app: dash.Dash) -> None:
             Output(ID_TOP_ROUTES, "figure"),
             Output(ID_FLOW_IMBALANCE, "figure"),
             Output(ID_ROUND_TRIP_CHART, "figure"),
+            Output(ID_TRIPS_BY_HOUR, "figure"),
+            Output(ID_DAY_HOUR_HEATMAP, "figure"),
+            Output(ID_AVG_DURATION_BY_HOUR, "figure"),
+            Output(ID_WEEKDAY_WEEKEND_DURATION, "figure"),
+            Output(ID_USER_TYPE_DISTRIBUTION, "figure"),
+            Output(ID_USER_TYPE_HOUR, "figure"),
+            Output(ID_AVG_DURATION_BY_USER_TYPE, "figure"),
+            Output(ID_AGE_GROUP_DISTRIBUTION, "figure"),
+            Output(ID_GENDER_DISTRIBUTION, "figure"),
+            Output(ID_USER_TYPE_BY_AGE_GROUP, "figure"),
             Output(ID_DISPATCH_CONTAINER, "children"),
         ],
         [
@@ -233,6 +267,20 @@ def register_callbacks(app: dash.Dash) -> None:
         fig_imbalance = create_flow_imbalance_chart(flow_imbalance)
         fig_round_trip = create_round_trip_hotspots_chart(round_trips)
 
+        # 6b. Time Analysis Figures (same filtered_df / df_view scope)
+        fig_trips_by_hour = create_trips_by_hour_chart(df_view)
+        fig_day_hour_heatmap = create_day_hour_heatmap_chart(df_view)
+        fig_avg_duration_by_hour = create_avg_duration_by_hour_chart(df_view)
+        fig_weekday_weekend = create_weekday_vs_weekend_duration_chart(df_view)
+
+        # 6c. User Analysis Figures (same filtered_df / df_view scope)
+        fig_user_type_distribution = create_user_type_distribution_chart(df_view)
+        fig_user_type_hour = create_user_type_hour_chart(df_view)
+        fig_avg_duration_by_user_type = create_avg_duration_by_user_type_chart(df_view)
+        fig_age_group_distribution = create_age_group_distribution_chart(df_view)
+        fig_gender_distribution = create_gender_distribution_chart(df_view)
+        fig_user_type_by_age_group = create_user_type_by_age_group_chart(df_view)
+
         # 7. Render Dispatch Component
         dispatch_children = render_dispatch_panel(dispatch_pairs)
 
@@ -242,6 +290,16 @@ def register_callbacks(app: dash.Dash) -> None:
             fig_routes,
             fig_imbalance,
             fig_round_trip,
+            fig_trips_by_hour,
+            fig_day_hour_heatmap,
+            fig_avg_duration_by_hour,
+            fig_weekday_weekend,
+            fig_user_type_distribution,
+            fig_user_type_hour,
+            fig_avg_duration_by_user_type,
+            fig_age_group_distribution,
+            fig_gender_distribution,
+            fig_user_type_by_age_group,
             dispatch_children,
         )
 
