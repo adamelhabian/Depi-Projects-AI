@@ -67,11 +67,11 @@ def chart_card(
     card_children = [
         header,
         html.Div(
-            style={"position": "relative", "width": "100%", "minHeight": f"{height}px"},
+            style={"position": "relative", "width": "100%"},
             children=[
                 dcc.Graph(
                     id=graph_id,
-                    style={"height": f"{height}px", "width": "100%"},
+                    style={"width": "100%"},
                     config={
                         "displayModeBar": "hover",
                         "displaylogo": False,

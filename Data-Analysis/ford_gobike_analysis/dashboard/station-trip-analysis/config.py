@@ -112,9 +112,9 @@ COORDINATE_COLUMNS = {
 # 6. Filter Defaults
 # ---------------------------------------------------------------------------
 DEFAULT_TOP_N = 10
-TOP_N_MIN = 5
-TOP_N_MAX = 20
-TOP_N_STEP = 5
+TOP_N_MIN = 1
+TOP_N_MAX = 30
+TOP_N_STEP = 1
 
 # ---------------------------------------------------------------------------
 # 7. Component IDs

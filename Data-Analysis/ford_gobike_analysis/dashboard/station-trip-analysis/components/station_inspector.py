@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dash import html
 from config import ID_DRAWER_CLOSE_BTN, ID_DRAWER_FOCUS_BTN
+from components.icons import icon_close, icon_crosshair
 
 
 def render_station_inspector(profile: dict | None = None) -> html.Div:
@@ -35,7 +36,7 @@ def render_station_inspector(profile: dict | None = None) -> html.Div:
         return html.Div(
             className="drawer-inner-empty",
             children=[
-                html.Button("✕", id=ID_DRAWER_CLOSE_BTN, style={"display": "none"}, n_clicks=0),
+                html.Button("", id=ID_DRAWER_CLOSE_BTN, style={"display": "none"}, n_clicks=0),
                 html.Button("Focus Map", id=ID_DRAWER_FOCUS_BTN, style={"display": "none"}, n_clicks=0),
             ],
         )
@@ -78,7 +79,7 @@ def render_station_inspector(profile: dict | None = None) -> html.Div:
                         ],
                     ),
                     html.Button(
-                        "✕",
+                        icon_close("w-4 h-4 inline-block"),
                         id=ID_DRAWER_CLOSE_BTN,
                         className="drawer-close-btn",
                         n_clicks=0,
@@ -154,12 +155,12 @@ def render_station_inspector(profile: dict | None = None) -> html.Div:
                                 className="drawer-split-labels",
                                 children=[
                                     html.Span([
-                                        html.Span("● ", style={"color": "#10B981"}),
+                                        html.Span(className="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1.5"),
                                         "Inbound: ",
                                         html.Strong(f"{arrs:,}"),
                                     ]),
                                     html.Span([
-                                        html.Span("● ", style={"color": "#F43F5E"}),
+                                        html.Span(className="w-2 h-2 rounded-full bg-pink-500 inline-block mr-1.5"),
                                         "Outbound: ",
                                         html.Strong(f"{deps:,}"),
                                     ]),
@@ -227,7 +228,7 @@ def render_station_inspector(profile: dict | None = None) -> html.Div:
                 children=[
                     html.Button(
                         [
-                            html.Span("🎯", style={"marginRight": "6px"}),
+                            icon_crosshair("w-4 h-4 mr-2 inline-block"),
                             "Focus Map on Station",
                         ],
                         id=ID_DRAWER_FOCUS_BTN,

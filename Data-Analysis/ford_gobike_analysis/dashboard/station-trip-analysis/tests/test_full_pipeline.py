@@ -54,13 +54,13 @@ def run_full_pipeline_test():
     # Top Stations
     top_stations = compute_top_stations(station_metrics, top_n=10)
     assert len(top_stations) == 10, f"Expected 10 top stations, got {len(top_stations)}"
-    assert top_stations["total_traffic"].is_monotonic_increasing, "Top stations should be sorted ascending for horizontal bar chart!"
+    assert top_stations["total_traffic"].is_monotonic_decreasing, "Top stations should be sorted descending (Rank 1 first)!"
     print(f"[PASS] Top stations computed (Max traffic = {top_stations['total_traffic'].max():,}).")
 
     # Top Routes
     top_routes = compute_top_routes(df, top_n=10)
     assert len(top_routes) == 10, f"Expected 10 top routes, got {len(top_routes)}"
-    assert top_routes["trip_count"].is_monotonic_increasing, "Top routes should be sorted ascending for horizontal bar chart!"
+    assert top_routes["trip_count"].is_monotonic_decreasing, "Top routes should be sorted descending (highest volume first)!"
     print(f"[PASS] Top routes computed (Top corridor trips = {top_routes['trip_count'].max():,}).")
 
     # Flow Imbalance
@@ -69,9 +69,9 @@ def run_full_pipeline_test():
     deficits = imbalance[imbalance["net_flow"] < 0]
     surpluses = imbalance[imbalance["net_flow"] > 0]
     assert len(deficits) > 0 and len(surpluses) > 0, "Both deficit and surplus stations should be present!"
-    assert (deficits["imbalance_type"] == "Outbound Pressure").all()
-    assert (surpluses["imbalance_type"] == "Inbound Pressure").all()
-    print(f"[PASS] Flow imbalance computed ({len(deficits)} Outbound Pressure, {len(surpluses)} Inbound Pressure).")
+    assert (deficits["imbalance_type"] == "Outbound Deficit").all()
+    assert (surpluses["imbalance_type"] == "Inbound Surplus").all()
+    print(f"[PASS] Flow imbalance computed ({len(deficits)} Outbound Deficit, {len(surpluses)} Inbound Surplus).")
 
     # Chart Generation
     print("Testing figure generation across all 4 visualizations...")

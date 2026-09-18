@@ -198,7 +198,7 @@ def compute_canonical_station_metrics(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def compute_top_stations(station_metrics: pd.DataFrame, top_n: int) -> pd.DataFrame:
-    """Select Top N stations ranked by total traffic (sorted ascending for horizontal bar)."""
+    """Select Top N stations ranked by total traffic (sorted strictly descending: Rank 1 first)."""
     if station_metrics.empty:
         return station_metrics
 
@@ -206,13 +206,12 @@ def compute_top_stations(station_metrics: pd.DataFrame, top_n: int) -> pd.DataFr
     return (
         station_metrics
         .nlargest(n, "total_traffic")
-        .sort_values("total_traffic", ascending=True)
         .reset_index(drop=True)
     )
 
 
 def compute_top_routes(df: pd.DataFrame, top_n: int) -> pd.DataFrame:
-    """Analyze top origin → destination corridors."""
+    """Analyze top origin → destination corridors (sorted strictly descending: highest volume first)."""
     cols = ["route", "trip_count", "pct_of_total"]
     if df.empty or "route" not in df.columns:
         return pd.DataFrame(columns=cols)
@@ -228,40 +227,41 @@ def compute_top_routes(df: pd.DataFrame, top_n: int) -> pd.DataFrame:
     route_counts.columns = ["route", "trip_count"]
     route_counts["pct_of_total"] = (route_counts["trip_count"] / total_network_trips * 100).round(2)
 
-    return route_counts.sort_values("trip_count", ascending=True).reset_index(drop=True)
+    return route_counts.sort_values("trip_count", ascending=False).reset_index(drop=True)
 
 
 def compute_flow_imbalance(station_metrics: pd.DataFrame, top_n: int) -> pd.DataFrame:
     """
-    Analyze station flow imbalance (strictly net_flow < 0 for deficit, > 0 for surplus).
+    Analyze station flow imbalance.
+    Returns stations sorted strictly descending from highest surplus to largest deficit.
     """
     cols = ["station_name", "departures", "arrivals", "total_traffic", "net_flow", "imbalance_ratio", "imbalance_type"]
     if station_metrics.empty or "net_flow" not in station_metrics.columns:
         return pd.DataFrame(columns=cols)
 
-    n_deficit = max(1, top_n // 2)
-    n_surplus = max(1, top_n - n_deficit)
+    n_surplus = (top_n + 1) // 2
+    n_deficit = top_n // 2
 
-    neg_stations = station_metrics[station_metrics["net_flow"] < 0]
-    deficit = neg_stations.nsmallest(min(n_deficit, len(neg_stations)), "net_flow").copy()
-    if not deficit.empty:
-        deficit["imbalance_type"] = "Outbound Pressure"
-
+    # Top surplus stations (highest positive first)
     pos_stations = station_metrics[station_metrics["net_flow"] > 0]
-    surplus = pos_stations.nlargest(min(n_surplus, len(pos_stations)), "net_flow").copy()
+    surplus = pos_stations.nlargest(n_surplus, "net_flow").copy() if n_surplus > 0 else pd.DataFrame()
     if not surplus.empty:
-        surplus["imbalance_type"] = "Inbound Pressure"
+        surplus["imbalance_type"] = "Inbound Surplus"
+        surplus = surplus.sort_values("net_flow", ascending=False)
 
-    combined = pd.concat([deficit, surplus], ignore_index=True)
+    # Top deficit stations (sorted from smallest deficit to largest deficit, so array descends continuously)
+    neg_stations = station_metrics[station_metrics["net_flow"] < 0]
+    deficit = neg_stations.nsmallest(n_deficit, "net_flow").copy() if n_deficit > 0 else pd.DataFrame()
+    if not deficit.empty:
+        deficit["imbalance_type"] = "Outbound Deficit"
+        # Sort descending so net_flow goes -100 -> -500 -> -1500
+        deficit = deficit.sort_values("net_flow", ascending=False)
+
+    combined = pd.concat([surplus, deficit], ignore_index=True)
     if combined.empty:
         return pd.DataFrame(columns=cols)
 
-    return (
-        combined
-        .drop_duplicates(subset=["station_name"])
-        .sort_values("net_flow", ascending=True)
-        .reset_index(drop=True)
-    )
+    return combined.drop_duplicates(subset=["station_name"]).reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------
@@ -270,8 +270,8 @@ def compute_flow_imbalance(station_metrics: pd.DataFrame, top_n: int) -> pd.Data
 
 def compute_round_trip_hotspots(df: pd.DataFrame, top_n: int = 5) -> pd.DataFrame:
     """
-    Identify stations with the highest concentration of round-trip journeys
-    (where start_station == end_station), indicative of recreational and tourist activity.
+    Identify stations with the highest round-trip ratio (where start_station == end_station).
+    Sorted strictly descending by round_trip_pct so largest percentage is first.
     """
     cols = ["station_name", "round_trips", "total_departures", "round_trip_pct"]
     if df.empty or "start_station_name" not in df.columns or "end_station_name" not in df.columns:
@@ -294,10 +294,15 @@ def compute_round_trip_hotspots(df: pd.DataFrame, top_n: int = 5) -> pd.DataFram
         (merged["round_trips"] / merged["total_departures"]) * 100
     ).round(1)
 
-    # Return top N stations sorted ascending for horizontal bar chart
+    # Filter stations with at least 15 departures to avoid 1-trip outliers
+    valid = merged[merged["total_departures"] >= 15]
+    if valid.empty:
+        valid = merged
+
+    # Return top N stations sorted descending by round_trip_pct
     return (
-        merged.nlargest(top_n, "round_trips")
-        .sort_values("round_trips", ascending=True)
+        valid.sort_values(["round_trip_pct", "round_trips"], ascending=[False, False])
+        .head(top_n)
         .reset_index(drop=True)
     )
 

@@ -23,15 +23,18 @@ from config import (
     TOP_N_MAX,
     TOP_N_STEP,
 )
+from components.icons import icon_download
+
 
 
 def filter_panel() -> html.Section:
     """
     Render the 12-column Tailwind-styled filter panel controls bar.
     """
+    benchmark_marks = [1, 5, 10, 15, 20, 25, 30]
     slider_marks = {
         i: {"label": str(i), "style": {"color": "#64748B", "fontSize": "11px", "fontWeight": "600"}}
-        for i in range(TOP_N_MIN, TOP_N_MAX + 1, TOP_N_STEP)
+        for i in benchmark_marks
     }
 
     return html.Section(
@@ -117,6 +120,7 @@ def filter_panel() -> html.Section:
                                         step=TOP_N_STEP,
                                         value=DEFAULT_TOP_N,
                                         marks=slider_marks,
+                                        tooltip={"placement": "bottom", "always_visible": False},
                                     ),
                                 ],
                             ),
@@ -140,7 +144,7 @@ def filter_panel() -> html.Section:
                             # Export CSV Button
                             html.Button(
                                 [
-                                    html.Span("📥", style={"marginRight": "4px"}),
+                                    icon_download("w-3.5 h-3.5 mr-1.5 inline-block"),
                                     "Export CSV",
                                 ],
                                 id=ID_DOWNLOAD_BTN,

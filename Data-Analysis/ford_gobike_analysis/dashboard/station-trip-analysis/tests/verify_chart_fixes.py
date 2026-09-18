@@ -22,8 +22,9 @@ bar_y = list(fig_stations.data[0].y)
 
 print(f"Top Stations bar count: {len(bar_x)}")
 assert len(bar_x) == 20, f"Expected 20 bars, but got {len(bar_x)}"
-assert bar_x == sorted(bar_x), f"Bars are not in sorted order! {bar_x}"
-assert bar_x[-1] == 8015, f"Expected highest bar at top to be 8,015, got {bar_x[-1]}"
+assert bar_x == sorted(bar_x, reverse=True), f"Bars are not in descending order! {bar_x}"
+assert bar_x[0] == 8015, f"Expected highest bar at top to be 8,015, got {bar_x[0]}"
+assert fig_stations.layout.yaxis.autorange == "reversed", "Expected yaxis autorange='reversed'"
 assert 9768 not in bar_x, "Bug detected: 9768 sum found instead of individual stations!"
 
 # Test Top 20 Routes
@@ -33,7 +34,8 @@ route_x = list(fig_routes.data[0].x)
 
 print(f"Top Routes bar count: {len(route_x)}")
 assert len(route_x) == 20, f"Expected 20 route bars, got {len(route_x)}"
-assert route_x == sorted(route_x), f"Routes are not in sorted order! {route_x}"
+assert route_x == sorted(route_x, reverse=True), f"Routes are not in descending order! {route_x}"
+assert fig_routes.layout.yaxis.autorange == "reversed", "Expected yaxis autorange='reversed'"
 assert 453 not in route_x, "Bug detected: 453 sum found instead of individual routes!"
 
 print("\n[ALL FIXES VERIFIED!]")

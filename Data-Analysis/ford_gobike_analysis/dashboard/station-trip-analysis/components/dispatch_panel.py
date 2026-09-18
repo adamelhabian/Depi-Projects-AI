@@ -8,6 +8,7 @@ matching between high-deficit and high-surplus stations in the same metro cluste
 from __future__ import annotations
 
 from dash import html
+from components.icons import icon_check_circle, icon_pin, icon_arrow_right
 
 
 def render_dispatch_panel(pairs: list[dict] | None = None) -> html.Div:
@@ -45,7 +46,7 @@ def render_dispatch_panel(pairs: list[dict] | None = None) -> html.Div:
         content = html.Div(
             className="dispatch-empty",
             children=[
-                html.Span("✅", style={"fontSize": "24px", "display": "block", "marginBottom": "8px"}),
+                icon_check_circle("w-8 h-8 mx-auto mb-2 block"),
                 html.P(
                     "Network is well balanced or no severe deficit-surplus pairs exceed threshold in the current filter selection.",
                     style={"color": "#94A3B8", "margin": 0, "fontSize": "13px"},
@@ -71,7 +72,13 @@ def render_dispatch_panel(pairs: list[dict] | None = None) -> html.Div:
                         className="dispatch-pair-header",
                         children=[
                             html.Span(f"Pair #{idx + 1} · {region}", className="dispatch-pair-title"),
-                            html.Span(f"📍 {dist_km:.2f} km apart", className="dispatch-distance-badge"),
+                            html.Span(
+                                [
+                                    icon_pin("w-3.5 h-3.5 mr-1 inline-block shrink-0"),
+                                    f"{dist_km:.2f} km apart",
+                                ],
+                                className="dispatch-distance-badge inline-flex items-center",
+                            ),
                         ],
                     ),
 
@@ -94,9 +101,12 @@ def render_dispatch_panel(pairs: list[dict] | None = None) -> html.Div:
                                 className="dispatch-transfer-arrow",
                                 children=[
                                     html.Span(f"Transfer ~{transfer_qty} bikes", className="dispatch-transfer-pill"),
-                                    html.Div(className="arrow-line-wrapper", children=[
-                                        html.Span("➔", className="dispatch-arrow-symbol"),
-                                    ]),
+                                    html.Div(
+                                        className="arrow-line-wrapper",
+                                        children=[
+                                            icon_arrow_right("w-4 h-4 mx-auto block"),
+                                        ],
+                                    ),
                                 ],
                             ),
 

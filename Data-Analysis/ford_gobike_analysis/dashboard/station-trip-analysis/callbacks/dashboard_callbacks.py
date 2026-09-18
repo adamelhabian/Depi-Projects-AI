@@ -145,7 +145,7 @@ def register_callbacks(app: dash.Dash) -> None:
         top_stations = compute_top_stations(station_metrics_view, top_n=n)
         top_routes = compute_top_routes(df_view, top_n=n)
         flow_imbalance = compute_flow_imbalance(station_metrics_view, top_n=n)
-        round_trips = compute_round_trip_hotspots(df_view, top_n=min(n, 10))
+        round_trips = compute_round_trip_hotspots(df_view, top_n=n)
         dispatch_pairs = compute_smart_dispatch_pairs(station_metrics_view, max_pairs=3)
 
         # 5b. Compute top destination map (station → its #1 destination)
@@ -343,3 +343,15 @@ def register_callbacks(app: dash.Dash) -> None:
         slug = reg.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("/", "_")
         filename = f"fordgobike_station_metrics_{slug}.csv"
         return dcc.send_data_frame(metrics.to_csv, filename, index=False)
+
+    # -----------------------------------------------------------------------
+    # 5. Live Top-N Scope Badge Update
+    # -----------------------------------------------------------------------
+    @app.callback(
+        Output("m5-slider-scope-badge", "children"),
+        Input(ID_TOP_N_SLIDER, "value"),
+    )
+    def update_scope_badge(val):
+        """Update top ranking badge smoothly to show exact selected value (e.g. Top 7, Top 13)."""
+        v = int(val) if val else DEFAULT_TOP_N
+        return f"Top {v}"

@@ -138,8 +138,8 @@ def create_layout() -> html.Div:
                                 children=[
                                     html.Span(
                                         [
-                                            html.Span(className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block mr-1.5"),
-                                            "🟢 LIVE: Supabase Cloud",
+                                            html.Span(className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse inline-block mr-2"),
+                                            "LIVE: Supabase Cloud",
                                         ],
                                         className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-700 flex items-center font-semibold",
                                     ),
@@ -204,7 +204,7 @@ def create_layout() -> html.Div:
 
             # ── 4. Two-Column Analytical Charts: Volume & Corridors ──────
             html.Div(
-                className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6",
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start",
                 children=[
                     chart_card(
                         graph_id=ID_TOP_STATIONS,
@@ -229,7 +229,7 @@ def create_layout() -> html.Div:
 
             # ── 5. Two-Column Analytical Charts: Imbalance & Leisure ─────
             html.Div(
-                className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6",
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start",
                 children=[
                     chart_card(
                         graph_id=ID_FLOW_IMBALANCE,

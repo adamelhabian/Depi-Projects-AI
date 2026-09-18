@@ -2,8 +2,8 @@
 charts/trip_analysis.py – Origin–Destination Corridor Visualizations
 =====================================================================
 Plotly chart generator for Top Corridors matching Chart.js aesthetic in station_trip_analysis.html:
-  - Teal gradient with rank-opacity scaling
-  - Clean borders (#0f766e) and light gridlines (#f1f5f9)
+  - Strictly sorted from highest volume (top) to lowest volume (bottom)
+  - Teal gradient with rank-opacity scaling (1.0 down to 0.45)
   - Dark hoverlabel card matching Leaflet custom tooltip
 """
 
@@ -32,7 +32,7 @@ def _clean_short_route(route: str, rank: int, max_len: int = 30) -> str:
         d = dest.split("(")[0].strip()
         o_short = o[:12].rstrip() + "…" if len(o) > 13 else o
         d_short = d[:12].rstrip() + "…" if len(d) > 13 else d
-        return f"{o_short} ➔ {d_short}"
+        return f"{o_short} → {d_short}"
 
     if len(s) > max_len:
         s = s[: max_len - 1].rstrip() + "…"
@@ -41,24 +41,24 @@ def _clean_short_route(route: str, rank: int, max_len: int = 30) -> str:
 
 def create_top_routes_chart(top_routes: pd.DataFrame) -> go.Figure:
     """
-    Horizontal bar chart showing the most common origin → destination trips matching station_trip_analysis.html.
+    Horizontal bar chart showing origin → destination trips strictly ordered from highest (top) to lowest.
     """
     if top_routes.empty:
         return empty_figure("No corridor route data available for the selected filters.", height=CHART_HEIGHT_BAR)
 
     n_bars = len(top_routes)
-    dynamic_height = max(CHART_HEIGHT_BAR, n_bars * 28 + 60)
+    dynamic_height = max(340, n_bars * 28 + 60)
 
     routes = top_routes["route"].tolist()
 
     display_ticks = [
-        _clean_short_route(r, rank=n_bars - i)
+        _clean_short_route(r, rank=i + 1)
         for i, r in enumerate(routes)
     ]
 
-    # Teal gradient from HTML reference
+    # Teal gradient from 1.0 (top rank) down to 0.45
     bar_colors = [
-        f"rgba(13, 148, 136, {0.45 + (i / max(1, n_bars - 1)) * 0.55:.2f})"
+        f"rgba(13, 148, 136, {1.0 - (i / max(1, n_bars - 1)) * 0.55:.2f})"
         for i in range(n_bars)
     ]
 
@@ -116,8 +116,9 @@ def create_top_routes_chart(top_routes: pd.DataFrame) -> go.Figure:
             tickvals=routes,
             ticktext=display_ticks,
             tickfont=dict(color="#334155", size=11, family="Inter"),
+            autorange="reversed",  # Highest volume corridor at top
         ),
-        bargap=0.25,
+        bargap=0.22,
         hoverlabel=dict(
             bgcolor="rgba(15, 23, 42, 0.95)",
             bordercolor="rgba(255, 255, 255, 0.15)",
