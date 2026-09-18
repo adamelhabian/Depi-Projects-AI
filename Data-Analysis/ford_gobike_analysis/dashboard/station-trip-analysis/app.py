@@ -93,5 +93,4 @@ if __name__ == "__main__":
         from data_loader import load_clean_data
         load_clean_data()
 
-    app.run(debug=is_debug, port=port)
-
+app.run(debug=is_debug, port=port, use_reloader=False)
