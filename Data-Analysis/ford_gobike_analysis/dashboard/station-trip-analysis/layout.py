@@ -1,14 +1,13 @@
 """
-layout.py – Member 5 Dashboard Layout Structure
-================================================
-Implements the analytical hierarchy for Station & Trip Analysis:
-
-  1. Section Header (Clear scope, Member 5 branding)
-  2. Filter Panel (User Type, Region, Top N, Map Overlays, CSV Export)
-  3. Station Traffic & Flow Corridor Map (Full Width)
-  4. Top Stations & Top Corridors (2-Column Grid)
-  5. Flow Imbalance & Leisure Hotspots (2-Column Grid)
-  6. Station Profile Inspector & Smart Fleet Dispatch (2-Column Grid)
+layout.py – Section Layout for Member 5: Station & Trip Analysis
+================================================================
+Tailwind CSS-driven layout perfectly matching station_trip_analysis.html:
+  1. Section Header with Bay Wheels system badge, title, and live Supabase pulse pill.
+  2. 12-Column Responsive Controls Bar (Membership, Region, Top N Slider, Export).
+  3. Interactive Map with integrated Floating Map Legend and Slide-in Side Drawer.
+  4. Top Stations by Total Traffic & Top Origin–Destination Corridors (side-by-side).
+  5. Station Network Flow Imbalance & Leisure & Tourism Hotspots (side-by-side).
+  6. Prescriptive Fleet Dispatch & Rebalancing Panel.
 """
 
 from __future__ import annotations
@@ -35,19 +34,87 @@ from components.station_inspector import render_station_inspector
 from components.dispatch_panel import render_dispatch_panel
 
 
+def _map_floating_legend() -> html.Div:
+    """Integrated Floating Map Legend matching station_trip_analysis.html."""
+    return html.Div(
+        className="absolute bottom-4 left-4 z-40 bg-white/95 backdrop-blur-sm border border-slate-200 shadow-lg rounded-xl p-3 text-xs max-w-[280px] pointer-events-auto",
+        children=[
+            html.Div(
+                className="font-bold text-slate-800 mb-2 border-b border-slate-100 pb-1 flex justify-between items-center",
+                children=[
+                    html.Span("Map Legend"),
+                    html.Span("Click station for profile", className="text-[10px] text-slate-400 font-normal"),
+                ],
+            ),
+            # Net Flow Imbalance Gradient
+            html.Div(
+                className="mb-2.5",
+                children=[
+                    html.Span("Net Flow Imbalance (Inbound - Outbound)", className="block text-[11px] font-semibold text-slate-600 mb-1"),
+                    html.Div(
+                        style={
+                            "height": "10px",
+                            "width": "100%",
+                            "borderRadius": "999px",
+                            "background": "linear-gradient(to right, #f43f5e, #94a3b8, #10b981)",
+                            "marginBottom": "4px",
+                        }
+                    ),
+                    html.Div(
+                        className="flex justify-between text-[10px] text-slate-500 font-medium",
+                        children=[
+                            html.Span("◄ Deficit (Outbound)", className="text-pink-600 font-bold"),
+                            html.Span("Balanced"),
+                            html.Span("Surplus (Inbound) ►", className="text-emerald-600 font-bold"),
+                        ],
+                    ),
+                ],
+            ),
+            # Circle Size Meaning
+            html.Div(
+                children=[
+                    html.Span("Total Trip Volume (Circle Radius)", className="block text-[11px] font-semibold text-slate-600 mb-1"),
+                    html.Div(
+                        className="flex items-center justify-between text-[10px] text-slate-600 pt-0.5",
+                        children=[
+                            html.Div([
+                                html.Span(className="w-2.5 h-2.5 rounded-full border border-slate-400 bg-slate-300 inline-block mr-1"),
+                                html.Span("< 5k trips"),
+                            ], className="flex items-center"),
+                            html.Div([
+                                html.Span(className="w-4 h-4 rounded-full border border-slate-400 bg-slate-300 inline-block mr-1"),
+                                html.Span("15k trips"),
+                            ], className="flex items-center"),
+                            html.Div([
+                                html.Span(className="w-6 h-6 rounded-full border border-slate-400 bg-slate-300 inline-block mr-1"),
+                                html.Span("35k+"),
+                            ], className="flex items-center"),
+                        ],
+                    ),
+                ],
+            ),
+            # Corridor line item
+            html.Div(
+                className="mt-2 pt-1.5 border-t border-slate-100 flex items-center gap-2",
+                children=[
+                    html.Span(className="w-5 h-1 bg-teal-600 rounded inline-block"),
+                    html.Span("Top Corridor Volume (Line Width)", className="text-[10px] text-slate-600"),
+                ],
+            ),
+        ],
+    )
+
+
 def create_layout() -> html.Div:
     """
-    Construct the full Station & Trip Analysis section layout.
-
-    Returns
-    -------
-    html.Div
+    Construct the full Station & Trip Analysis section layout matching station_trip_analysis.html.
     """
     return html.Div(
-        className="m5-container",
+        className="w-full",
         children=[
             # State store for clicked station across map and charts
             dcc.Store(id=ID_SELECTED_STATION_STORE, data=None),
+
             # ── 1. Section Header ─────────────────────────────────────────
             html.Header(
                 className="mb-6",
@@ -122,6 +189,8 @@ def create_layout() -> html.Div:
                                     ],
                                 },
                             ),
+                            # Integrated Floating Map Legend
+                            _map_floating_legend(),
                             # Slide-in Side Drawer container positioned over map
                             html.Div(
                                 id=ID_INSPECTOR_CONTAINER,
@@ -141,12 +210,18 @@ def create_layout() -> html.Div:
                         graph_id=ID_TOP_STATIONS,
                         title="Top Stations by Total Traffic",
                         subtitle="Ranking stations by cumulative arrivals and departures. Percentages reflect share of active network traffic.",
+                        badge_text="Total Rides",
+                        badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600",
+                        footnote="* Hover bars to see unshortened station names and exact network proportions",
                         height=CHART_HEIGHT_BAR,
                     ),
                     chart_card(
                         graph_id=ID_TOP_ROUTES,
                         title="Top Origin–Destination Corridors",
-                        subtitle="Most frequently traveled station-to-station corridors across the bicycle network.",
+                        subtitle="Highest volume point-to-point station pairs across the network.",
+                        badge_text="Directional Flow",
+                        badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-teal-100 text-teal-800",
+                        footnote="* Arrows indicate origin station to terminal destination station",
                         height=CHART_HEIGHT_BAR,
                     ),
                 ],
@@ -160,12 +235,21 @@ def create_layout() -> html.Div:
                         graph_id=ID_FLOW_IMBALANCE,
                         title="Station Network Flow Imbalance",
                         subtitle="Critical stations demanding truck/van rebalancing. Identifies dock depletion vs overflow docks.",
+                        badges=[
+                            html.Span("Outbound Deficit (-)", className="text-pink-600 bg-pink-50 px-2 py-0.5 rounded border border-pink-200 text-[10px] font-bold"),
+                            html.Span("Inbound Surplus (+)", className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[10px] font-bold"),
+                        ],
+                        footnote_left="Pink: Bike re-stocking needed",
+                        footnote="Green: Bike clearance needed",
                         height=CHART_HEIGHT_IMBALANCE,
                     ),
                     chart_card(
                         graph_id=ID_ROUND_TRIP_CHART,
                         title="Leisure & Tourism Hotspots",
                         subtitle="Stations exhibiting high percentages of loop journeys (origin = destination), signaling recreational riding.",
+                        badge_text="Round-Trip Ratio",
+                        badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-purple-100 text-purple-800",
+                        footnote="* Percentage represents the station's own round-trip ratio, not share of overall network",
                         height=CHART_HEIGHT_LEISURE,
                     ),
                 ],

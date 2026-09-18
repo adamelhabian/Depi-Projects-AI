@@ -1,12 +1,11 @@
 """
-components/filter_panel.py – Comprehensive Filter & Export Controls
-====================================================================
-Interactive control panel for:
-  - User Membership (All, Subscriber, Customer)
-  - Metro Region (All Bay Area, San Francisco, East Bay, San Jose)
-  - Top N Rankings Slider (Applies to ranking charts)
-  - Flow Corridor Lines Toggle (On-map transit corridors)
-  - CSV Dataset Export (Downloads current canonical station metrics)
+components/filter_panel.py – Tailwind CSS Controls Bar
+======================================================
+12-column grid controls bar matching station_trip_analysis.html:
+  - User Membership Dropdown (col-span-3)
+  - Metro Region Dropdown (col-span-3)
+  - Top Ranking Scope Slider (col-span-3)
+  - Flow Corridors Toggle & Dark CSV Export Button (col-span-3)
 """
 
 from __future__ import annotations
@@ -23,67 +22,56 @@ from config import (
     TOP_N_MIN,
     TOP_N_MAX,
     TOP_N_STEP,
-    COLORS,
 )
 
 
-def filter_panel() -> html.Div:
+def filter_panel() -> html.Section:
     """
-    Build the Station & Trip Analysis filter bar.
-
-    Returns
-    -------
-    html.Div
+    Render the 12-column Tailwind-styled filter panel controls bar.
     """
     slider_marks = {
-        n: {
-            "label": f"Top {n}",
-            "style": {"color": COLORS["text_muted"], "fontSize": "11px"},
-        }
-        for n in range(TOP_N_MIN, TOP_N_MAX + 1, TOP_N_STEP)
+        i: {"label": str(i), "style": {"color": "#64748B", "fontSize": "11px", "fontWeight": "600"}}
+        for i in range(TOP_N_MIN, TOP_N_MAX + 1, TOP_N_STEP)
     }
 
-    return html.Div(
-        className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-6",
+    return html.Section(
+        className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-6 transition-all",
         children=[
-            # Row 1: Primary Controls & Export
             html.Div(
-                className="filter-main-row",
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-center",
                 children=[
-                    # Section Tag
+                    # ── 1. User Membership Filter (Col 3) ─────────────────
                     html.Div(
-                        className="filter-tag-container",
+                        className="lg:col-span-3",
                         children=[
-                            html.Span("CONTROLS", className="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200 uppercase tracking-wider"),
-                        ],
-                    ),
-
-                    # User Membership Filter
-                    html.Div(
-                        className="filter-group",
-                        children=[
-                            html.Label("User Membership", className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5"),
+                            html.Label(
+                                "User Membership",
+                                className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5",
+                            ),
                             dcc.Dropdown(
                                 id=ID_USER_FILTER,
                                 className="m5-dropdown",
                                 options=[
                                     {"label": "All Users (Total Volume)", "value": "All"},
-                                    {"label": "Subscribers (Pass Holders)", "value": "Subscriber"},
-                                    {"label": "Customers (Casual Rides)", "value": "Customer"},
+                                    {"label": "Subscriber (Annual / Pass)", "value": "Subscriber"},
+                                    {"label": "Customer (Casual / 24h Pass)", "value": "Customer"},
                                 ],
                                 value="All",
                                 clearable=False,
                                 searchable=False,
-                                style={"width": "195px"},
+                                style={"width": "100%"},
                             ),
                         ],
                     ),
 
-                    # Metro Region Filter
+                    # ── 2. Metro Region Filter (Col 3) ────────────────────
                     html.Div(
-                        className="filter-group",
+                        className="lg:col-span-3",
                         children=[
-                            html.Label("Metro Region", className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5"),
+                            html.Label(
+                                "Metro Region",
+                                className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5",
+                            ),
                             dcc.Dropdown(
                                 id=ID_REGION_FILTER,
                                 className="m5-dropdown",
@@ -96,69 +84,71 @@ def filter_panel() -> html.Div:
                                 value="All",
                                 clearable=False,
                                 searchable=False,
-                                style={"width": "230px"},
+                                style={"width": "100%"},
                             ),
                         ],
                     ),
 
-                    # Map Corridor Lines Toggle
+                    # ── 3. Top Ranking Scope Slider (Col 3) ───────────────
                     html.Div(
-                        className="filter-group toggle-group",
+                        className="lg:col-span-3",
                         children=[
-                            html.Label("Map Overlays", className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5"),
+                            html.Div(
+                                className="flex justify-between items-center mb-1.5",
+                                children=[
+                                    html.Label(
+                                        "Top Ranking Scope",
+                                        className="text-xs font-semibold uppercase tracking-wider text-slate-500",
+                                    ),
+                                    html.Span(
+                                        f"Top {DEFAULT_TOP_N}",
+                                        id="m5-slider-scope-badge",
+                                        className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full",
+                                    ),
+                                ],
+                            ),
+                            html.Div(
+                                style={"padding": "0 6px"},
+                                children=[
+                                    dcc.Slider(
+                                        id=ID_TOP_N_SLIDER,
+                                        min=TOP_N_MIN,
+                                        max=TOP_N_MAX,
+                                        step=TOP_N_STEP,
+                                        value=DEFAULT_TOP_N,
+                                        marks=slider_marks,
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+
+                    # ── 4. Flow Corridors Switch & Export CSV (Col 3) ──────
+                    html.Div(
+                        className="lg:col-span-3 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-3 pt-2 lg:pt-0",
+                        children=[
+                            # Corridor Toggle
                             dcc.Checklist(
                                 id=ID_MAP_FLOW_LINES_TOGGLE,
                                 options=[
                                     {"label": " Flow Corridors", "value": "show"},
                                 ],
                                 value=["show"],
-                                className="m5-checklist",
+                                className="m5-checklist text-xs font-medium text-slate-700 cursor-pointer",
                             ),
-                        ],
-                    ),
 
-                    # Export Button & Download Target
-                    html.Div(
-                        className="filter-group export-group",
-                        style={"marginLeft": "auto"},
-                        children=[
-                            html.Label("Data Export", className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5"),
+                            # Export CSV Button
                             html.Button(
                                 [
-                                    html.Span("📥", style={"marginRight": "6px"}),
+                                    html.Span("📥", style={"marginRight": "4px"}),
                                     "Export CSV",
                                 ],
                                 id=ID_DOWNLOAD_BTN,
-                                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow transition active:scale-95 cursor-pointer",
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow transition active:scale-95 cursor-pointer",
                                 n_clicks=0,
                             ),
                             dcc.Download(id=ID_DOWNLOAD_DATA),
                         ],
-                    ),
-                ],
-            ),
-
-            # Row 2: Top N Ranking Filter with clarifying scope note
-            html.Div(
-                className="filter-slider-row",
-                children=[
-                    html.Div(
-                        style={"display": "flex", "justifyContent": "space-between", "alignItems": "baseline", "marginBottom": "6px"},
-                        children=[
-                            html.Label("Top N Ranking Scope", className="block text-xs font-semibold uppercase tracking-wider text-slate-500"),
-                            html.Span(
-                                "Applies to ranking charts · Map displays all active stations in selected region",
-                                className="text-xs text-slate-400 font-normal",
-                            ),
-                        ],
-                    ),
-                    dcc.Slider(
-                        id=ID_TOP_N_SLIDER,
-                        min=TOP_N_MIN,
-                        max=TOP_N_MAX,
-                        step=TOP_N_STEP,
-                        value=DEFAULT_TOP_N,
-                        marks=slider_marks,
                     ),
                 ],
             ),

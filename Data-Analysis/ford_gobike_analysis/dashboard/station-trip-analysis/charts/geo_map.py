@@ -171,22 +171,7 @@ def create_station_map(
                 [0.5, "#94A3B8"],             # Balanced
                 [1.0, COLORS["success"]],     # Inbound pressure (surplus)
             ],
-            colorbar=dict(
-                title=dict(
-                    text="Net Flow",
-                    font=dict(color=COLORS["text_primary"], size=11),
-                ),
-                thickness=10,
-                len=0.40,
-                x=0.93,
-                xanchor="right",
-                y=0.06,
-                yanchor="bottom",
-                tickfont=dict(color=COLORS["text_secondary"], size=9),
-                bgcolor="rgba(255, 255, 255, 0.92)",
-                bordercolor=COLORS["border"],
-                borderwidth=1,
-            ),
+            showscale=False,
             opacity=0.9,
             sizemode="diameter",
         ),
@@ -214,28 +199,11 @@ def create_station_map(
         height=CHART_HEIGHT_MAP,
         margin=dict(r=0, t=0, l=0, b=0),
         showlegend=False,
-    )
-
-    # -----------------------------------------------------------------------
-    # In-bounds annotation legend for marker size meaning
-    # -----------------------------------------------------------------------
-    fig.add_annotation(
-        text=(
-            "<b>Marker Size</b> = Total Traffic<br>"
-            "<b>Color</b> = Net Flow (Red→Green)"
+        hoverlabel=dict(
+            bgcolor="rgba(15, 23, 42, 0.95)",
+            bordercolor="rgba(255, 255, 255, 0.15)",
+            font=dict(color="#ffffff", size=12, family="Inter"),
         ),
-        x=0.01,
-        y=0.99,
-        xref="paper",
-        yref="paper",
-        xanchor="left",
-        yanchor="top",
-        showarrow=False,
-        font=dict(size=10, color=COLORS["text_secondary"]),
-        bgcolor="rgba(255, 255, 255, 0.88)",
-        bordercolor=COLORS["border"],
-        borderwidth=1,
-        borderpad=6,
     )
 
     return fig

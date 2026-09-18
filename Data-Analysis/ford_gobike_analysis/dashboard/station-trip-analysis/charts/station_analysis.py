@@ -1,10 +1,10 @@
 """
 charts/station_analysis.py – Popular Stations & Flow Imbalance Visualizations
 =============================================================================
-Plotly chart generators for:
-  1. Top Stations by Total Traffic (rank-gradient colors, network % labels)
-  2. Station Flow Imbalance (high-contrast deficit/surplus colors)
-  3. Leisure & Tourism Hotspots (clarified round-trip ratio labels)
+Plotly chart generators styled with Chart.js-like Tailwind aesthetic matching station_trip_analysis.html:
+  1. Top Stations by Total Traffic (emerald rank-opacity gradient, dark hoverlabel)
+  2. Station Flow Imbalance (pink deficit vs emerald surplus, dark slate zero line)
+  3. Leisure & Tourism Hotspots (purple/violet gradient, percentage axis)
 """
 
 from __future__ import annotations
@@ -16,9 +16,10 @@ from config import COLORS, CHART_HEIGHT_BAR, CHART_HEIGHT_IMBALANCE, CHART_HEIGH
 from utils.theme import apply_chart_theme, empty_figure
 
 
-def _clean_short_station(name: str, max_chars: int = 28) -> str:
+def _clean_short_station(name: str, max_chars: int = 24) -> str:
     """Clean and abbreviate station names for single-line display."""
     s = str(name).strip()
+    s = s.split("(")[0].strip()
     s = (
         s.replace("San Francisco ", "SF ")
         .replace("Station", "Stn")
@@ -30,38 +31,8 @@ def _clean_short_station(name: str, max_chars: int = 28) -> str:
     return s
 
 
-def _rank_gradient(n_bars: int, dark: str = "#047857", light: str = "#D9F99D") -> list[str]:
-    """
-    Generate a list of n_bars hex colors from light (lowest rank) to dark (highest rank).
-    Data is sorted ascending, so index 0 = lowest rank, index n-1 = highest rank (top bar).
-    """
-    if n_bars <= 1:
-        return [dark]
-
-    # Parse hex to RGB
-    def hex_to_rgb(h: str) -> tuple[int, int, int]:
-        h = h.lstrip("#")
-        return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-
-    def rgb_to_hex(r: int, g: int, b: int) -> str:
-        return f"#{r:02x}{g:02x}{b:02x}"
-
-    r1, g1, b1 = hex_to_rgb(light)  # Bottom bar (lowest rank)
-    r2, g2, b2 = hex_to_rgb(dark)   # Top bar (highest rank)
-
-    colors = []
-    for i in range(n_bars):
-        t = i / (n_bars - 1)  # 0 = bottom (light), 1 = top (dark)
-        r = int(r1 + (r2 - r1) * t)
-        g = int(g1 + (g2 - g1) * t)
-        b = int(b1 + (b2 - b1) * t)
-        colors.append(rgb_to_hex(r, g, b))
-
-    return colors
-
-
 # ---------------------------------------------------------------------------
-# 1. Top Stations by Total Traffic
+# 1. Top Stations by Total Traffic (Emerald Rank-Opacity Gradient)
 # ---------------------------------------------------------------------------
 
 def create_top_stations_chart(
@@ -69,86 +40,90 @@ def create_top_stations_chart(
     total_network_traffic: int = 0,
 ) -> go.Figure:
     """
-    Horizontal bar chart showing Top N stations ranked by total traffic.
-
-    Parameters
-    ----------
-    top_stations : pd.DataFrame
-        Output of compute_top_stations(); sorted ascending by total_traffic.
-    total_network_traffic : int
-        Total traffic across the entire network, used to compute per-station share.
-
-    Returns
-    -------
-    go.Figure
+    Horizontal bar chart styled like Chart.js in station_trip_analysis.html.
     """
     if top_stations.empty:
         return empty_figure("No station data available for the selected filters.", height=CHART_HEIGHT_BAR)
 
     n_bars = len(top_stations)
-
-    # Dynamic height: gives each bar at least 26px of vertical breathing room
-    dynamic_height = max(CHART_HEIGHT_BAR, n_bars * 26 + 80)
+    dynamic_height = max(CHART_HEIGHT_BAR, n_bars * 28 + 60)
 
     station_names = top_stations["station_name"].tolist()
 
-    # Generate single-line labels with rank prefix (1 = highest traffic at top)
+    # Generate labels matching reference
     display_ticks = [
-        f"{n_bars - i}. {_clean_short_station(name, 28)}"
-        for i, name in enumerate(station_names)
+        _clean_short_station(name, 22)
+        for name in station_names
     ]
 
-    # Rank-gradient colors: light (bottom/lowest rank) → dark (top/highest rank)
-    bar_colors = _rank_gradient(n_bars, dark="#047857", light="#D9F99D")
+    # Rank-opacity emerald gradient: bottom bar (lowest rank) is 0.45, top bar is 1.0
+    bar_colors = [
+        f"rgba(16, 185, 129, {0.40 + (i / max(1, n_bars - 1)) * 0.60:.2f})"
+        for i in range(n_bars)
+    ]
 
     custom_data = top_stations[
         ["station_name", "departures", "arrivals", "net_flow"]
     ].values
 
-    # Bar text with network percentage
     if total_network_traffic > 0:
-        bar_texts = [
-            f"{v:,} — {v / total_network_traffic * 100:.1f}%"
+        shares = [
+            f"{v / total_network_traffic * 100:.1f}%"
             for v in top_stations["total_traffic"]
         ]
+        bar_texts = [
+            f"{v:,} ({s})"
+            for v, s in zip(top_stations["total_traffic"], shares)
+        ]
     else:
+        shares = ["0.0%"] * n_bars
         bar_texts = top_stations["total_traffic"].apply(lambda v: f"{v:,}").tolist()
+
+    hover_texts = [
+        f"<b>{name}</b><br><br>"
+        f"Total Volume: <b>{v:,} trips</b> ({s} of filtered network)<br>"
+        f"Departures: <b>{d:,}</b> | Arrivals: <b>{a:,}</b><br>"
+        f"Net Flow: <b>{nf:+,}</b>"
+        for name, v, s, d, a, nf in zip(
+            station_names,
+            top_stations["total_traffic"],
+            shares,
+            top_stations["departures"],
+            top_stations["arrivals"],
+            top_stations["net_flow"],
+        )
+    ]
 
     fig = go.Figure(
         go.Bar(
             x=top_stations["total_traffic"],
-            y=station_names,  # Unique station key
+            y=station_names,
             orientation="h",
             marker=dict(
                 color=bar_colors,
-                line=dict(width=0),
+                line=dict(color="#059669", width=1),
             ),
             customdata=custom_data,
-            hovertemplate=(
-                "<b>%{customdata[0]}</b><br><br>"
-                "Total Traffic: <b>%{x:,}</b><br>"
-                "Departures: <b>%{customdata[1]:,}</b><br>"
-                "Arrivals: <b>%{customdata[2]:,}</b><br>"
-                "Net Flow: <b>%{customdata[3]:+,}</b>"
-                "<extra></extra>"
-            ),
             text=bar_texts,
             textposition="auto",
-            textfont=dict(color=COLORS["text_primary"], size=10),
+            textfont=dict(color="#0f172a", size=10, family="Inter"),
+            hovertext=hover_texts,
+            hoverinfo="text",
         )
     )
 
     fig = apply_chart_theme(
         fig,
         height=dynamic_height,
-        margin=dict(l=10, r=40, t=20, b=30),
+        margin=dict(l=10, r=30, t=10, b=30),
     )
 
     fig.update_layout(
         xaxis=dict(
-            title="Total Trips (Departures + Arrivals)",
+            title="",
             tickformat=",",
             showgrid=True,
+            gridcolor="#f1f5f9",
         ),
         yaxis=dict(
             title="",
@@ -158,52 +133,62 @@ def create_top_stations_chart(
             tickmode="array",
             tickvals=station_names,
             ticktext=display_ticks,
-            tickfont=dict(color=COLORS["text_secondary"], size=11),
+            tickfont=dict(color="#334155", size=11, family="Inter"),
         ),
         bargap=0.25,
+        hoverlabel=dict(
+            bgcolor="rgba(15, 23, 42, 0.95)",
+            bordercolor="rgba(255, 255, 255, 0.15)",
+            font=dict(color="#ffffff", size=11, family="Inter"),
+        ),
     )
 
     return fig
 
 
 # ---------------------------------------------------------------------------
-# 2. Station Flow Imbalance (Inbound vs Outbound Pressure)
+# 2. Station Flow Imbalance (Pink Deficit vs Emerald Surplus)
 # ---------------------------------------------------------------------------
-
-_IMBALANCE_DEFICIT = "#DC2626"   # High-contrast dark red
-_IMBALANCE_SURPLUS = "#047857"   # High-contrast dark green
-
 
 def create_flow_imbalance_chart(flow_imbalance: pd.DataFrame) -> go.Figure:
     """
-    Diverging horizontal bar chart displaying network flow imbalance.
-
-    Parameters
-    ----------
-    flow_imbalance : pd.DataFrame
-        Output of compute_flow_imbalance(); sorted by net_flow ascending.
-
-    Returns
-    -------
-    go.Figure
+    Diverging horizontal bar chart displaying network flow imbalance matching station_trip_analysis.html.
     """
     if flow_imbalance.empty:
         return empty_figure("No flow imbalance data available for the selected filters.", height=CHART_HEIGHT_IMBALANCE)
 
     n_bars = len(flow_imbalance)
-    dynamic_height = max(CHART_HEIGHT_IMBALANCE, n_bars * 26 + 90)
+    dynamic_height = max(CHART_HEIGHT_IMBALANCE, n_bars * 28 + 60)
 
     station_names = flow_imbalance["station_name"].tolist()
-    display_ticks = [_clean_short_station(name, 32) for name in station_names]
+    display_ticks = [_clean_short_station(name, 22) for name in station_names]
 
     bar_colors = [
-        _IMBALANCE_DEFICIT if val < 0 else _IMBALANCE_SURPLUS
+        "rgba(244, 63, 94, 0.85)" if val < 0 else "rgba(16, 185, 129, 0.85)"
+        for val in flow_imbalance["net_flow"]
+    ]
+    border_colors = [
+        "#e11d48" if val < 0 else "#059669"
         for val in flow_imbalance["net_flow"]
     ]
 
     custom_data = flow_imbalance[
         ["station_name", "departures", "arrivals", "imbalance_type"]
     ].values
+
+    hover_texts = [
+        f"<b>{name}</b><br><br>"
+        f"Status: <b>{cat}</b><br>"
+        f"Net Flow: <b>{nf:+,}</b> ({'Surplus: dock overflow risk' if nf >= 0 else 'Deficit: dock depletion risk'})<br>"
+        f"Departures: <b>{d:,}</b> | Arrivals: <b>{a:,}</b>"
+        for name, d, a, cat, nf in zip(
+            station_names,
+            flow_imbalance["departures"],
+            flow_imbalance["arrivals"],
+            flow_imbalance["imbalance_type"],
+            flow_imbalance["net_flow"],
+        )
+    ]
 
     fig = go.Figure(
         go.Bar(
@@ -212,43 +197,36 @@ def create_flow_imbalance_chart(flow_imbalance: pd.DataFrame) -> go.Figure:
             orientation="h",
             marker=dict(
                 color=bar_colors,
-                opacity=0.95,
-                line=dict(width=0),
+                line=dict(color=border_colors, width=1),
             ),
             customdata=custom_data,
-            hovertemplate=(
-                "<b>%{customdata[0]}</b><br><br>"
-                "Flow Category: <b>%{customdata[3]}</b><br>"
-                "Net Flow: <b>%{x:+,}</b><br>"
-                "Departures: <b>%{customdata[1]:,}</b><br>"
-                "Arrivals: <b>%{customdata[2]:,}</b>"
-                "<extra></extra>"
-            ),
             text=flow_imbalance["net_flow"].apply(lambda v: f"{v:+,}"),
             textposition="auto",
-            textfont=dict(color=COLORS["text_primary"], size=10),
+            textfont=dict(color="#0f172a", size=10, family="Inter"),
+            hovertext=hover_texts,
+            hoverinfo="text",
         )
     )
 
-    # Vertical zero baseline
+    # Vertical zero baseline matching HTML reference
     fig.add_vline(
         x=0,
         line_width=2,
-        line_color="#CBD5E1",
-        line_dash="dash",
+        line_color="#475569",
     )
 
     fig = apply_chart_theme(
         fig,
         height=dynamic_height,
-        margin=dict(l=10, r=40, t=40, b=36),
+        margin=dict(l=10, r=30, t=10, b=30),
     )
 
     fig.update_layout(
         xaxis=dict(
-            title="← Outbound Pressure (Deficit)   |   Inbound Pressure (Surplus) →",
+            title="",
             tickformat=",",
             showgrid=True,
+            gridcolor="#f1f5f9",
             zeroline=False,
         ),
         yaxis=dict(
@@ -259,113 +237,90 @@ def create_flow_imbalance_chart(flow_imbalance: pd.DataFrame) -> go.Figure:
             tickmode="array",
             tickvals=station_names,
             ticktext=display_ticks,
-            tickfont=dict(color=COLORS["text_secondary"], size=11),
+            tickfont=dict(color="#334155", size=11, family="Inter"),
         ),
         bargap=0.28,
-        annotations=[
-            dict(
-                x=0.0,
-                y=1.07,
-                xref="paper",
-                yref="paper",
-                text="← Deficit (Outbound)",
-                showarrow=False,
-                font=dict(size=11, color=_IMBALANCE_DEFICIT, weight="bold"),
-                xanchor="left",
-            ),
-            dict(
-                x=1.0,
-                y=1.07,
-                xref="paper",
-                yref="paper",
-                text="Surplus (Inbound) →",
-                showarrow=False,
-                font=dict(size=11, color=_IMBALANCE_SURPLUS, weight="bold"),
-                xanchor="right",
-            ),
-        ],
+        hoverlabel=dict(
+            bgcolor="rgba(15, 23, 42, 0.95)",
+            bordercolor="rgba(255, 255, 255, 0.15)",
+            font=dict(color="#ffffff", size=11, family="Inter"),
+        ),
     )
 
     return fig
 
 
 # ---------------------------------------------------------------------------
-# 3. Leisure & Tourism Hotspots (Round-Trip Journeys)
+# 3. Leisure & Tourism Hotspots (Purple/Violet Gradient)
 # ---------------------------------------------------------------------------
 
 def create_round_trip_hotspots_chart(round_trip_df: pd.DataFrame) -> go.Figure:
     """
-    Horizontal bar chart showing Leisure & Tourism Hotspots (Round-Trip Journeys).
-    The percentage shown is explicitly the round-trip ratio (same-station returns /
-    total departures), NOT the share of network traffic.
-
-    Parameters
-    ----------
-    round_trip_df : pd.DataFrame
-        Output of compute_round_trip_hotspots(); sorted by round_trips ascending.
-
-    Returns
-    -------
-    go.Figure
+    Horizontal bar chart showing Leisure & Tourism Hotspots in Purple/Violet matching station_trip_analysis.html.
     """
     if round_trip_df.empty:
         return empty_figure("No round-trip journey data available for the selected filters.", height=CHART_HEIGHT_LEISURE)
 
     n_bars = len(round_trip_df)
-    dynamic_height = max(CHART_HEIGHT_LEISURE, n_bars * 26 + 80)
+    dynamic_height = max(CHART_HEIGHT_LEISURE, n_bars * 28 + 60)
 
     station_names = round_trip_df["station_name"].tolist()
-    display_ticks = [
-        f"{n_bars - i}. {_clean_short_station(name, 28)}"
-        for i, name in enumerate(station_names)
-    ]
+    display_ticks = [_clean_short_station(name, 22) for name in station_names]
 
     custom_data = round_trip_df[
         ["station_name", "round_trips", "total_departures", "round_trip_pct"]
     ].values
 
-    # Rank-gradient colors for visual hierarchy
-    bar_colors = _rank_gradient(n_bars, dark="#0D9488", light="#CCFBF1")
+    # Purple/Violet gradient from HTML reference
+    bar_colors = [
+        f"rgba(168, 85, 247, {0.45 + (i / max(1, n_bars - 1)) * 0.55:.2f})"
+        for i in range(n_bars)
+    ]
+
+    hover_texts = [
+        f"<b>{name}</b><br><br>"
+        f"Round-Trip Ratio: <b>{pct:.1f}%</b><br>"
+        f"Round Trips: <b>{r:,}</b> (out of {deps:,} total departures)<br>"
+        f"<span style='color:#94A3B8;font-size:10px;'>* Trips starting and ending at this station</span>"
+        for name, r, deps, pct in zip(
+            station_names,
+            round_trip_df["round_trips"],
+            round_trip_df["total_departures"],
+            round_trip_df["round_trip_pct"],
+        )
+    ]
 
     fig = go.Figure(
         go.Bar(
-            x=round_trip_df["round_trips"],
+            x=round_trip_df["round_trip_pct"],
             y=station_names,
             orientation="h",
             marker=dict(
                 color=bar_colors,
-                line=dict(width=0),
+                line=dict(color="#9333ea", width=1),
             ),
             customdata=custom_data,
-            hovertemplate=(
-                "<b>%{customdata[0]}</b><br><br>"
-                "Round Trips: <b>%{x:,}</b><br>"
-                "Total Departures: <b>%{customdata[2]:,}</b><br>"
-                "Round-Trip Ratio: <b>%{customdata[3]:.1f}%</b><br>"
-                "<span style='color:#94A3B8;font-size:11px;'>"
-                "(% of trips returning to same station)</span>"
-                "<extra></extra>"
-            ),
-            text=[
-                f"{r:,} — {pct:.1f}% round-trip ratio"
-                for r, pct in zip(round_trip_df["round_trips"], round_trip_df["round_trip_pct"])
-            ],
+            text=[f"{pct:.1f}% ({r:,} loops)" for pct, r in zip(round_trip_df["round_trip_pct"], round_trip_df["round_trips"])],
             textposition="auto",
-            textfont=dict(color=COLORS["text_primary"], size=10),
+            textfont=dict(color="#0f172a", size=10, family="Inter"),
+            hovertext=hover_texts,
+            hoverinfo="text",
         )
     )
 
     fig = apply_chart_theme(
         fig,
         height=dynamic_height,
-        margin=dict(l=10, r=40, t=20, b=30),
+        margin=dict(l=10, r=30, t=10, b=30),
     )
 
     fig.update_layout(
         xaxis=dict(
-            title="Round Trips (Start == End Station) · % = Round-Trip Ratio",
-            tickformat=",",
+            title="",
+            ticksuffix="%",
+            range=[0, max(50, round_trip_df["round_trip_pct"].max() + 5)],
             showgrid=True,
+            gridcolor="#f1f5f9",
         ),
         yaxis=dict(
             title="",
@@ -375,9 +330,14 @@ def create_round_trip_hotspots_chart(round_trip_df: pd.DataFrame) -> go.Figure:
             tickmode="array",
             tickvals=station_names,
             ticktext=display_ticks,
-            tickfont=dict(color=COLORS["text_secondary"], size=11),
+            tickfont=dict(color="#334155", size=11, family="Inter"),
         ),
         bargap=0.25,
+        hoverlabel=dict(
+            bgcolor="rgba(15, 23, 42, 0.95)",
+            bordercolor="rgba(255, 255, 255, 0.15)",
+            font=dict(color="#ffffff", size=11, family="Inter"),
+        ),
     )
 
     return fig
