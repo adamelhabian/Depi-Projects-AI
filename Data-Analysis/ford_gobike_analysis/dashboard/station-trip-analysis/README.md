@@ -1,6 +1,6 @@
 # Ford GoBike Analytics — Station & Trip Analysis (Member 5)
 
-> **Collaborative Data Analytics Project | DEPI Final Project**  
+> **Collaborative Data Analytics Project | DEPI Project**  
 > Modern, interactive geospatial analytics, transit corridor flow mapping, spatial fleet rebalancing dispatch, and station deep-dive profiling built with **Dash**, **Plotly**, and **Tailwind CSS**.
 
 ---
