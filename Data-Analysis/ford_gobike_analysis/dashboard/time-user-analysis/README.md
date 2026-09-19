@@ -1,45 +1,42 @@
 # Ford GoBike Analytics — Time & User Analysis (Member 4)
 
 > **Collaborative Data Analytics Project | DEPI Project**  
-> Interactive temporal and demographic behavioral analytics, peak commuting pattern discovery, rider segmentation, and operational scheduling built with **Dash**, **Plotly**, and **Tailwind CSS**.
+> Modern, focused behavioral analytics dashboard exploring diurnal commuting rhythms, weekly usage intensity, and rider demographic segmentation built with **Dash**, **Plotly**, and **Tailwind CSS**.
 
 ---
 
-## 👥 Team Responsibilities
+## 👥 Member 4 Scope & Responsibilities
 
-| Role | Member | Scope |
-|---|---|---|
-| Member 1 | Database Engineering | PostgreSQL Database Architecture, Views & SQL Pipeline |
-| Member 2 | Data Engineering | Data Cleaning, Pipeline Processing & Master Datasets |
-| Member 3 | BI & KPI Design | High-Level KPI Tiles, Global Filters & Executive Metrics |
-| **Member 4** | **Time & User Analysis** | **Time-Series Trends, Peak Hours, User Demographics & Prescriptive Scheduling** |
-| Member 5 | Station & Trip Analysis | Network Traffic Hubs, Flow Corridors, Rebalancing & Station Deep Dives |
+| Role | Scope |
+|---|---|
+| **Member 4: Behavioral & Temporal Analytics** | **Time-Series Trends, Peak Commuting Rhythms, Rider Demographics, and User Segmentation** |
 
 ---
 
-## 🚀 Key Features & Capabilities
+## 🚀 Dashboard Architecture & Features
 
-### 1. Temporal Dynamics & Commute Patterns
-* **Hourly Trip Distribution**: Visualizes diurnal rhythms, distinguishing morning rush (8–9 AM) and evening rush (5–6 PM).
-* **Day-of-Week & Seasonal Trends**: Contrast weekday commuter spikes against weekend leisure profiles.
-* **Peak Utilization Heatmaps**: Interactive cross-tabulation of day-of-week vs. hour-of-day.
+This dashboard is designed as a clean, self-contained analytical view with zero clutter and no extraneous navigation wrappers:
 
-### 2. User Segmentation & Demographics
-* **Subscriber vs. Customer Behavior**: Comparative analysis of trip frequency, duration distributions, and usage schedules.
-* **Rider Demographics**: Age cohort breakdowns, gender distributions, and bike-share-for-all program adoption.
-* **Duration & Speed Profiling**: Segmentation of trips by ride length, speed estimates, and loop journeys.
+### 1. Headline KPI Cards
+* **Total Trips**: Live trip count matching active filter parameters.
+* **Subscriber Ratio**: Percentage of trips completed by annual pass commuter subscribers.
+* **Peak Commute Window**: Hour of highest network volume (e.g. 8:00 AM / 5:00 PM).
+* **Average Ride Duration**: Mean journey duration in minutes.
 
-### 3. Prescriptive Scheduling & Resource Allocation
-* **Peak Hour Resource Guidance**: Data-driven recommendations for bike availability during commuter rush hours.
-* **Weekend Leisure Readiness**: Operational guidelines for high-demand recreational docks during weekends.
+### 2. Five Core Visualizations (Strictly Focused Scope)
+* **Hourly Trip Demand Profile**: Diurnal volume distribution revealing the twin commuter rush peaks (8–9 AM & 5–6 PM).
+* **Weekly Utilization Heatmap**: High-density Day-of-Week × Hour-of-Day intensity matrix showing weekday vs. weekend patterns.
+* **Rider Membership Split**: Horizontal comparative breakdown of Subscribers vs. Casual Customers.
+* **Hourly Pattern by User Type**: Normalized comparative trends showing how Subscribers drive commuter peaks while Customers ride midday.
+* **Rider Age Cohort Distribution**: Demographic volume distributed across defined age brackets (18–25, 26–35, 36–50, 51–65, 66–80).
 
-### 4. Interactive Sidebar & Global Navigation
-* **Dedicated Navigation Sidebar**: Smooth collapsible sidebar with section links, filter controls, and active view highlights.
-* **Configurable Metric Slicers**: Dynamic date range, user type, and demographic filters.
+### 3. Reactive Filter Slicers
+* **Rider Membership Filter**: Slices data by `All Riders`, `Subscribers`, or `Customers`.
+* **Temporal Day Classification**: Slices data by `All Days`, `Weekdays Only`, or `Weekends Only`.
 
-### 5. High-Performance Cloud Data Layer (Supabase Exclusively)
+### 4. Direct Cloud Data Layer (Supabase Exclusively)
 * **Direct Cloud Ingestion**: Queries `gold.trip_analytics` directly from Supabase PostgreSQL cloud database.
-* **100% In-Memory Processing**: Zero reliance on local CSV files. All temporal aggregations, demographic distributions, and metrics are computed live from the cloud dataset.
+* **100% In-Memory Processing**: Zero reliance on local CSV files.
 
 ---
 
@@ -48,49 +45,53 @@
 ```text
 time-user-analysis/
 ├── app.py                      # Dash application entry point (Default Port: 8051)
-├── config.py                   # Theme colors, chart configurations, and component IDs
-├── data_loader.py              # Supabase cloud loader with caching (Supabase Exclusively)
-├── layout.py                   # Master layout (Sidebar + Header + Time Analysis + User Analysis)
+├── config.py                   # Central component IDs, palette, and chart constants
+├── data_loader.py              # Supabase cloud loader with memory caching
+├── layout.py                   # Master clean layout (Header + 4 KPIs + Filter Bar + 5 Charts + Footer)
 ├── requirements.txt            # Python dependencies
 ├── README.md                   # Documentation & integration guide
 │
 ├── callbacks/
 │   ├── __init__.py
-│   └── dashboard_callbacks.py  # Reactive callbacks for filters, charts, and interactions
+│   └── dashboard_callbacks.py  # Reactive controller for filters, KPIs, and 5 charts
 │
 ├── components/
 │   ├── __init__.py
-│   ├── chart_card.py           # Standard card wrapper
-│   ├── filter_panel.py         # Global filter bar
-│   ├── icons.py                # Standalone SVG icon library
-│   └── sidebar.py              # Collapsible navigation sidebar
+│   ├── chart_card.py           # Reusable Tailwind chart container
+│   └── filter_panel.py         # Slicer controls for membership and day classification
 │
 ├── charts/
 │   ├── __init__.py
-│   ├── time_analysis.py        # Hourly, daily, weekly, and heatmap charts
-│   └── user_analysis.py        # Subscriber vs Customer, demographic breakdowns
+│   ├── time_analysis.py        # Hourly demand and weekly heatmap visualizations
+│   └── user_analysis.py        # Membership, behavioral hourly, and age cohort charts
+│
+├── tests/
+│   └── test_time_user_dashboard.py # Automated verification suite
 │
 └── utils/
     ├── __init__.py
-    ├── data_processing.py      # Aggregations, filtering, and metric calculations
-    └── theme.py                # Color palettes, fonts, and styling constants
+    ├── data_processing.py      # KPI computations and reactive dataset filtering
+    └── theme.py                # Color palettes and Plotly styling
 ```
 
 ---
 
 ## 🛠️ Quickstart & Local Setup
 
-### 1. Environment & Dependencies
-Ensure Python 3.10+ is installed. Install required packages:
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Run the Dashboard
+### 2. Configure Environment
+Ensure `.env` contains your Supabase PostgreSQL credentials:
+```env
+DATABASE_URL=postgresql://postgres.mvolsievttmxgwbkuovy:ford-gobike1234@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
+```
+
+### 3. Run the Dashboard
 ```bash
 python app.py
 ```
 Open your browser and navigate to:
 **`http://127.0.0.1:8051`**
-
-*(Note: Default port is set to `8051` so both Member 4 and Member 5 dashboards can run concurrently without port conflict).*
