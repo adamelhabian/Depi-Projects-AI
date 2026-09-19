@@ -1,0 +1,100 @@
+/* ==========================================================================
+   master_style.css – Ford GoBike Master Dashboard Custom Styles
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --sidebar-bg: #0f172a;
+    --sidebar-border: #1e293b;
+    --sidebar-text: #94a3b8;
+    --sidebar-hover: #1e293b;
+    --sidebar-active-bg: #1e293b;
+    --sidebar-active-text: #ffffff;
+    --accent-emerald: #10b981;
+    --accent-teal: #0d9488;
+    --accent-indigo: #6366f1;
+}
+
+body {
+    font-family: var(--font-inter);
+    background-color: #f8fafc;
+    color: #0f172a;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Smooth Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Sidebar Navigation Items */
+.master-nav-link {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.35rem;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.master-nav-link:hover {
+    background-color: #1e293b;
+    color: #f8fafc;
+    transform: translateX(2px);
+}
+
+.master-nav-link.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(16, 185, 129, 0.18) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.master-nav-link.active .master-nav-icon {
+    color: #34d399;
+}
+
+/* Overview Metric Cards Hover */
+.overview-kpi-card {
+    transition: all 0.25s ease-in-out;
+}
+
+.overview-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+}
+
+/* Quick Launch Cards */
+.quick-launch-card {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.quick-launch-card:hover {
+    transform: translateY(-3px);
+    border-color: #cbd5e1;
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
+}
