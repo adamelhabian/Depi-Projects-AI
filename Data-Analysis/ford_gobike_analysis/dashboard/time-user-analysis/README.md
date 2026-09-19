@@ -37,9 +37,9 @@
 * **Dedicated Navigation Sidebar**: Smooth collapsible sidebar with section links, filter controls, and active view highlights.
 * **Configurable Metric Slicers**: Dynamic date range, user type, and demographic filters.
 
-### 5. High-Performance Data Layer
-* **Direct Cloud Ingestion**: Queries `gold.trip_analytics` directly from Supabase PostgreSQL database.
-* **Resilient Offline Fallback**: Automatically switches to local CSV if credentials or network connectivity are unavailable.
+### 5. High-Performance Cloud Data Layer (Supabase Exclusively)
+* **Direct Cloud Ingestion**: Queries `gold.trip_analytics` directly from Supabase PostgreSQL cloud database.
+* **100% In-Memory Processing**: Zero reliance on local CSV files. All temporal aggregations, demographic distributions, and metrics are computed live from the cloud dataset.
 
 ---
 
@@ -49,7 +49,7 @@
 time-user-analysis/
 ├── app.py                      # Dash application entry point (Default Port: 8051)
 ├── config.py                   # Theme colors, chart configurations, and component IDs
-├── data_loader.py              # Supabase cloud loader with caching & CSV fallback
+├── data_loader.py              # Supabase cloud loader with caching (Supabase Exclusively)
 ├── layout.py                   # Master layout (Sidebar + Header + Time Analysis + User Analysis)
 ├── requirements.txt            # Python dependencies
 ├── README.md                   # Documentation & integration guide
