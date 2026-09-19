@@ -25,6 +25,54 @@ from components.navbar import render_navbar
 logger = logging.getLogger(__name__)
 
 
+def _skeleton_page(label: str = "Loading module…") -> html.Div:
+    """
+    Shimmer placeholder shown immediately while the module data loads.
+    Uses the .skeleton CSS classes defined in master_style.css.
+    """
+    return html.Div(
+        className="skeleton-page",
+        children=[
+            # Label
+            html.Div(
+                className="flex items-center gap-3 mb-2",
+                children=[
+                    html.Div(className="skeleton skeleton-line skeleton-line-short"),
+                    html.Span(label, className="text-slate-400 text-sm animate-pulse"),
+                ],
+            ),
+            # 4 KPI card skeletons
+            html.Div(
+                className="skeleton-kpi-row",
+                children=[html.Div(className="skeleton skeleton-kpi") for _ in range(4)],
+            ),
+            # 2 chart row
+            html.Div(
+                className="skeleton-chart-row",
+                children=[html.Div(className="skeleton skeleton-chart") for _ in range(2)],
+            ),
+            # 1 wide chart
+            html.Div(className="skeleton skeleton-chart"),
+        ],
+    )
+
+
+def _error_page(message: str) -> html.Div:
+    """Friendly error card shown when a page fails to render."""
+    return html.Div(
+        className="max-w-lg mx-auto mt-24 p-8 bg-white rounded-2xl border border-rose-100 shadow-sm text-center",
+        children=[
+            html.Div("⚠️", className="text-4xl mb-3"),
+            html.H3("Something went wrong", className="text-lg font-bold text-slate-800 mb-2"),
+            html.P(message, className="text-slate-500 text-sm leading-relaxed"),
+            html.P(
+                "Try refreshing the page. If the problem persists, check the Supabase connection.",
+                className="text-slate-400 text-xs mt-2",
+            ),
+        ],
+    )
+
+
 def register_routing_callbacks(app) -> None:
     """Register URL routing and navigation state synchronization callbacks."""
 
@@ -35,28 +83,36 @@ def register_routing_callbacks(app) -> None:
     )
     def display_page(pathname: str | None):
         if not pathname:
-            return render_overview_page()
+            try:
+                return render_overview_page()
+            except Exception as exc:
+                logger.exception("Overview render failed: %s", exc)
+                return _error_page(str(exc))
 
         clean_path = pathname.rstrip("/")
         if not clean_path:
             clean_path = "/"
 
-        if clean_path == ROUTE_STATIONS:
-            return render_station_page()
-        elif clean_path == ROUTE_TIME_USER:
-            return render_time_user_page()
-        elif clean_path in (ROUTE_OVERVIEW, "/overview"):
-            return render_overview_page()
-        else:
-            # 404 / Fallback to Overview
-            return html.Div(
-                className="max-w-4xl mx-auto py-16 text-center",
-                children=[
-                    html.H2("Page Not Found", className="text-2xl font-bold text-slate-800 mb-2"),
-                    html.P(f"No module route matches '{pathname}'.", className="text-slate-500 mb-6"),
-                    render_overview_page(),
-                ],
-            )
+        try:
+            if clean_path == ROUTE_STATIONS:
+                return render_station_page()
+            elif clean_path == ROUTE_TIME_USER:
+                return render_time_user_page()
+            elif clean_path in (ROUTE_OVERVIEW, "/overview"):
+                return render_overview_page()
+            else:
+                # 404 / Fallback
+                return html.Div(
+                    className="max-w-4xl mx-auto py-16 text-center",
+                    children=[
+                        html.H2("Page Not Found", className="text-2xl font-bold text-slate-800 mb-2"),
+                        html.P(f"No module route matches '{pathname}'.", className="text-slate-500 mb-6"),
+                        render_overview_page(),
+                    ],
+                )
+        except Exception as exc:
+            logger.exception("Page render failed for '%s': %s", pathname, exc)
+            return _error_page(str(exc))
 
     # 2. Synchronize Navbar Breadcrumb
     @app.callback(

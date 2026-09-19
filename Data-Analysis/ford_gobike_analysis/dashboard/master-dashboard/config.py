@@ -39,8 +39,8 @@ NAV_ITEMS = [
         "route": ROUTE_OVERVIEW,
         "label": "Executive Overview",
         "icon": "fas fa-chart-pie",
-        "badge": "Unified",
-        "badge_color": "bg-indigo-100 text-indigo-700",
+        "badge": "Overview",
+        "badge_color": "bg-indigo-900/60 text-indigo-300",
         "description": "Cross-cutting fleet insights, summary metrics & status",
     },
     {
@@ -48,8 +48,8 @@ NAV_ITEMS = [
         "route": ROUTE_STATIONS,
         "label": "Station & Network Flow",
         "icon": "fas fa-map-marked-alt",
-        "badge": "Module 5",
-        "badge_color": "bg-emerald-100 text-emerald-700",
+        "badge": "M-5",
+        "badge_color": "bg-emerald-900/60 text-emerald-300",
         "description": "Geospatial traffic, top corridors & network imbalance",
     },
     {
@@ -57,8 +57,8 @@ NAV_ITEMS = [
         "route": ROUTE_TIME_USER,
         "label": "Time & Rider Demographics",
         "icon": "fas fa-user-clock",
-        "badge": "Module 4",
-        "badge_color": "bg-teal-100 text-teal-700",
+        "badge": "M-4",
+        "badge_color": "bg-teal-900/60 text-teal-300",
         "description": "Commuter rhythms, hourly demand & demographic splits",
     },
 ]

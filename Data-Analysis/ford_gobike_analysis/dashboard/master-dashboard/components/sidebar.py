@@ -44,7 +44,17 @@ def render_sidebar(active_route: str = "/") -> html.Aside:
 
     return html.Aside(
         id=ID_SIDEBAR,
-        className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col justify-between p-5 min-h-screen select-none",
+        # position:fixed keeps the sidebar pinned no matter how far the user scrolls.
+        # h-screen + overflow-y-auto let it scroll internally if content is taller.
+        className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col justify-between p-5 select-none",
+        style={
+            "position": "fixed",
+            "top": "0",
+            "left": "0",
+            "height": "100vh",
+            "overflowY": "auto",
+            "zIndex": "40",
+        },
         children=[
             # Top Section: Brand & Navigation
             html.Div(
