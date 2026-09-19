@@ -3,7 +3,7 @@ pages/station_page.py – Modernized Station & Network Flow Analysis View
 ========================================================================
 Enterprise station network diagnostics:
   1. Controls Bar: Top-N slider (5-30), Corridor toggle (OD flow lines)
-  2. Map & Station Profile Drawer (interactive Scattermapbox + slide-in detail panel)
+  2. Map & Station Profile Drawer (interactive Scattermap + slide-in detail panel)
   3. 4 Full-Name Horizontal Bar Charts:
      - Top Busiest Stations
      - Top Deficit Stations (Orange)
@@ -44,17 +44,21 @@ def build_station_map_figure(
     corridors: List[Dict[str, Any]],
     show_corridors: bool = True,
 ) -> go.Figure:
-    """Builds the primary interactive Mapbox network map."""
+    """Builds the primary interactive Mapbox network map with backward/forward compatibility."""
     fig = go.Figure()
 
     if stations_df.empty:
         return fig
 
+    # Compatibility between Plotly 7+ (Scattermap) and Plotly 5/6 (Scattermapbox)
+    ScatterMapCls = getattr(go, "Scattermap", getattr(go, "Scattermapbox", None))
+    is_new_map = hasattr(go, "Scattermap")
+
     # 1. Optional Transit Corridor Lines
     if show_corridors and corridors:
         for c in corridors[:20]:
             fig.add_trace(
-                go.Scattermapbox(
+                ScatterMapCls(
                     lat=[c["from_lat"], c["to_lat"]],
                     lon=[c["from_lng"], c["to_lng"]],
                     mode="lines",
@@ -66,7 +70,6 @@ def build_station_map_figure(
             )
 
     # 2. Station Markers (sized by total volume, colored by net flow)
-    # Clamp sizes for clean cartography
     max_flow = stations_df["total_flow"].max() or 1
     sizes = [max(8, min(24, int((f / max_flow) * 22) + 7)) for f in stations_df["total_flow"]]
 
@@ -83,7 +86,7 @@ def build_station_map_figure(
 
     # Diverging color scale: Orange (Deficit) -> Slate (Balanced) -> Blue (Surplus)
     fig.add_trace(
-        go.Scattermapbox(
+        ScatterMapCls(
             lat=stations_df["lat"],
             lon=stations_df["lng"],
             mode="markers",
@@ -125,12 +128,16 @@ def build_station_map_figure(
         )
     )
 
+    map_cfg = dict(
+        style="carto-positron",
+        center=dict(lat=37.7780, lon=-122.3500),
+        zoom=10.2,
+    )
+
+    layout_kwargs = {"map": map_cfg} if is_new_map else {"mapbox": map_cfg}
+
     fig.update_layout(
-        mapbox=dict(
-            style="carto-positron",
-            center=dict(lat=37.7780, lon=-122.3500),
-            zoom=10.2,
-        ),
+        **layout_kwargs,
         margin=dict(l=0, r=0, t=0, b=0),
         height=480,
         paper_bgcolor="rgba(0,0,0,0)",
@@ -451,7 +458,7 @@ def render_station_page() -> html.Div:
             html.Div(
                 className="grid grid-cols-1 lg:grid-cols-4 gap-6",
                 children=[
-                    # Mapbox Visualizer (3 columns)
+                    # Map Visualizer (3 columns)
                     html.Div(
                         className="lg:col-span-3 bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-sm flex flex-col",
                         children=[
