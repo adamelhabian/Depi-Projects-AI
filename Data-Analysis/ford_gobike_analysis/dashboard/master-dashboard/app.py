@@ -35,6 +35,7 @@ from utils.module_loader import get_station_module, get_time_user_module
 app = Dash(
     __name__,
     title=APP_TITLE,
+    routes_pathname_prefix="/dash/",
     assets_folder=str(_CURRENT_DIR / "assets"),
     external_scripts=[
         "https://cdn.tailwindcss.com",
@@ -93,6 +94,23 @@ app.index_string = """<!DOCTYPE html>
 
 # Expose WSGI server for production deployment (Gunicorn / uWSGI)
 server = app.server
+
+from flask import send_from_directory, jsonify
+from data_loader import get_full_api_payload
+
+@server.route("/")
+def serve_home():
+    """Default Landing View: Serves the high-performance interactive HTML5 platform."""
+    return send_from_directory(str(_CURRENT_DIR), "index.html")
+
+@server.route("/interactive")
+def serve_interactive():
+    return send_from_directory(str(_CURRENT_DIR), "index.html")
+
+@server.route("/api/data")
+def serve_api_data():
+    """Provides real-time Supabase Gold data to the interactive dashboard."""
+    return jsonify(get_full_api_payload())
 
 # ---------------------------------------------------------------------------
 # 2. Layout Definition

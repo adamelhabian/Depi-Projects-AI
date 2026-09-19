@@ -52,6 +52,17 @@ def render_navbar(active_route: str = "/") -> html.Header:
                         ],
                     ),
 
+                    # Interactive Studio Switcher
+                    html.A(
+                        [
+                            html.I(className="fas fa-bolt text-teal-500 mr-1.5"),
+                            html.Span("Interactive Studio"),
+                        ],
+                        href="/",
+                        title="Switch to Ultra-Fast Interactive HTML5 Studio",
+                        className="inline-flex items-center text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200/80 px-3 py-1.5 rounded-lg hover:bg-teal-100 transition-colors shadow-2xs",
+                    ),
+
                     # Quick Link to Standalone Modules
                     html.Div(
                         className="flex items-center gap-2",
