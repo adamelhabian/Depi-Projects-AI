@@ -74,11 +74,39 @@ ID_DB_STATUS = "master-db-status"
 ID_NAV_CONTAINER = "master-nav-container"
 
 # Overview Page IDs
-ID_OVERVIEW_TRIPS_METRIC = "master-overview-trips"
-ID_OVERVIEW_STATIONS_METRIC = "master-overview-stations"
-ID_OVERVIEW_SUBSCRIBER_METRIC = "master-overview-subscribers"
-ID_OVERVIEW_DURATION_METRIC = "master-overview-duration"
-ID_OVERVIEW_RECENT_CHART = "master-overview-recent-chart"
+ID_OVERVIEW_TRIPS_METRIC     = "master-overview-trips"
+ID_OVERVIEW_STATIONS_METRIC  = "master-overview-stations"
+ID_OVERVIEW_SUBSCRIBER_METRIC= "master-overview-subscribers"
+ID_OVERVIEW_DURATION_METRIC  = "master-overview-duration"
+ID_OVERVIEW_RECENT_CHART     = "master-overview-recent-chart"
+
+# ---------------------------------------------------------------------------
+# 5. Global Filter Bar IDs (shared across all pages via dcc.Store)
+# ---------------------------------------------------------------------------
+ID_GLOBAL_STORE        = "master-global-filter-store"   # dcc.Store holds the dict
+ID_GLOBAL_USER_FILTER  = "master-global-user-filter"    # Dropdown
+ID_GLOBAL_REGION_FILTER= "master-global-region-filter"  # Dropdown
+ID_GLOBAL_RESET_BTN    = "master-global-reset-btn"      # Reset button
+ID_GLOBAL_CHIPS        = "master-global-active-chips"   # Active filter chips row
+
+# Default values written to the Store on initial load
+GLOBAL_FILTER_DEFAULTS = {
+    "user_type": "All",
+    "region": "All",
+}
+
+# Human-readable labels for the chips
+USER_FILTER_LABELS = {
+    "All":        "All Riders",
+    "Subscriber": "Subscribers",
+    "Customer":   "Customers",
+}
+REGION_FILTER_LABELS = {
+    "All":                        "All Bay Area",
+    "San Francisco":              "San Francisco",
+    "East Bay (Oakland/Berkeley)":"East Bay",
+    "San Jose":                   "San Jose",
+}
 
 # ---------------------------------------------------------------------------
 # 5. Theme Palette (Modern Executive BI Theme)

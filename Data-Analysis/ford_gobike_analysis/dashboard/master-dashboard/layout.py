@@ -12,6 +12,7 @@ from config import ID_URL, ID_PAGE_CONTENT
 from components.sidebar import render_sidebar
 from components.navbar import render_navbar
 from components.footer import render_footer
+from components.global_filter_bar import render_global_filter_bar
 
 
 def create_master_layout() -> html.Div:
@@ -41,6 +42,9 @@ def create_master_layout() -> html.Div:
                         id="master-navbar-container",
                         children=render_navbar(active_route="/"),
                     ),
+
+                    # ── Global Filter Bar (persists across all pages) ──────
+                    render_global_filter_bar(),
 
                     # Dynamic Page Content with Loading Spinner
                     html.Div(

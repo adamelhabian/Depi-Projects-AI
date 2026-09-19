@@ -103,6 +103,10 @@ app.layout = create_master_layout()
 print(">> Initializing Master Dashboard Routing Callbacks...", flush=True)
 register_routing_callbacks(app)
 
+print(">> Registering Global Filter Bar Callbacks...", flush=True)
+from callbacks.global_filter_callbacks import register_global_filter_callbacks
+register_global_filter_callbacks(app)
+
 print(">> Registering Member 5 (Station Analysis) Callbacks...", flush=True)
 _, register_station_callbacks = get_station_module()
 register_station_callbacks(app)
@@ -110,6 +114,10 @@ register_station_callbacks(app)
 print(">> Registering Member 4 (Time & User Analysis) Callbacks...", flush=True)
 _, register_time_user_callbacks = get_time_user_module()
 register_time_user_callbacks(app)
+
+print(">> Registering Global→Local Filter Bridge Callbacks...", flush=True)
+from callbacks.global_filter_sync import register_global_filter_sync_callbacks
+register_global_filter_sync_callbacks(app)
 
 print(f">> Total Callbacks Registered: {len(app.callback_map)}", flush=True)
 
