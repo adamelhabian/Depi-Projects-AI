@@ -1,4 +1,4 @@
-"""
+﻿"""
 callbacks/routing.py – Master Router Controller
 ===============================================
 Coordinates URL routing, dynamic view rendering, active sidebar link styling,
@@ -23,38 +23,6 @@ from pages.time_user_page import render_time_user_page
 from components.navbar import render_navbar
 
 logger = logging.getLogger(__name__)
-
-
-def _skeleton_page(label: str = "Loading module…") -> html.Div:
-    """
-    Shimmer placeholder shown immediately while the module data loads.
-    Uses the .skeleton CSS classes defined in master_style.css.
-    """
-    return html.Div(
-        className="skeleton-page",
-        children=[
-            # Label
-            html.Div(
-                className="flex items-center gap-3 mb-2",
-                children=[
-                    html.Div(className="skeleton skeleton-line skeleton-line-short"),
-                    html.Span(label, className="text-slate-400 text-sm animate-pulse"),
-                ],
-            ),
-            # 4 KPI card skeletons
-            html.Div(
-                className="skeleton-kpi-row",
-                children=[html.Div(className="skeleton skeleton-kpi") for _ in range(4)],
-            ),
-            # 2 chart row
-            html.Div(
-                className="skeleton-chart-row",
-                children=[html.Div(className="skeleton skeleton-chart") for _ in range(2)],
-            ),
-            # 1 wide chart
-            html.Div(className="skeleton skeleton-chart"),
-        ],
-    )
 
 
 def _error_page(message: str) -> html.Div:
@@ -141,10 +109,10 @@ def register_routing_callbacks(app) -> None:
 
         def nav_class(target: str) -> str:
             is_active = (path == target) or (target == ROUTE_OVERVIEW and path in ("/", "/overview"))
-            base = "group flex items-center justify-between px-3.5 py-3 rounded-xl transition-all duration-200 text-sm "
+            base = "group flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all duration-150 text-sm "
             if is_active:
-                return base + "active bg-slate-800/90 text-white font-semibold shadow-sm border border-slate-700/80"
-            return base + "text-slate-400 hover:text-slate-100 hover:bg-slate-800/50"
+                return base + "bg-teal-500/15 text-teal-400 font-semibold border-r-2 border-teal-400 shadow-sm"
+            return base + "text-slate-400 hover:text-slate-100 hover:bg-white/[0.04]"
 
         return [
             nav_class(ROUTE_OVERVIEW),

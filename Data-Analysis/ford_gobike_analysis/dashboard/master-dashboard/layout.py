@@ -1,8 +1,12 @@
-"""
+﻿"""
 layout.py – Master Shell Layout
 ===============================
-Top-level application shell coordinating responsive sidebar navigation,
-sticky top navbar, and dynamic page container with loading state.
+Top-level application shell coordinating:
+  - Fixed left sidebar (w-64 = 256px, #0B1329)
+  - Sticky top navbar with active route breadcrumbs
+  - Sticky global filter bar with session dcc.Store
+  - Dynamic page container with loading indicator
+  - Executive application footer
 """
 
 from __future__ import annotations
@@ -19,7 +23,7 @@ def create_master_layout() -> html.Div:
     """
     Renders the master application shell layout.
     Sidebar is position:fixed (never scrolls away).
-    Main content has a left offset equal to the sidebar width (w-72 = 288px).
+    Main content has a left offset equal to the sidebar width (w-64 = 16rem = 256px).
     """
     return html.Div(
         className="min-h-screen bg-slate-50 antialiased text-slate-800",
@@ -30,11 +34,9 @@ def create_master_layout() -> html.Div:
             # 2. Fixed Sidebar – always visible regardless of scroll position
             render_sidebar(active_route="/"),
 
-            # 3. Main Content Area – offset from the fixed sidebar (288px = w-72)
+            # 3. Main Content Area – offset from the fixed sidebar (w-64 = 256px)
             html.Div(
-                # ml-72 gives 288px left margin matching the fixed sidebar width.
-                # On small screens (< md) the sidebar is hidden so we remove the margin.
-                style={"marginLeft": "288px"},
+                style={"marginLeft": "16rem"},
                 className="flex flex-col min-h-screen bg-slate-50",
                 children=[
                     # Sticky Top Navbar
@@ -43,7 +45,7 @@ def create_master_layout() -> html.Div:
                         children=render_navbar(active_route="/"),
                     ),
 
-                    # ── Global Filter Bar (persists across all pages) ──────
+                    # Global Filter Bar (persists across all pages via dcc.Store)
                     render_global_filter_bar(),
 
                     # Dynamic Page Content with Loading Spinner
@@ -52,8 +54,8 @@ def create_master_layout() -> html.Div:
                         children=[
                             dcc.Loading(
                                 id="master-page-loading",
-                                type="circle",
-                                color="#6366F1",
+                                type="dot",
+                                color="#14B8A6",
                                 children=html.Div(id=ID_PAGE_CONTENT),
                             ),
                         ],
