@@ -1,15 +1,15 @@
 """
-app.py – Member 5: Station & Trip Analysis Module Entry Point
-=============================================================
-Collaborative Ford GoBike Analytics Project · Member 5 Section
+app.py – Member 4: Time & User Analysis Module Entry Point
+==========================================================
+Collaborative Ford GoBike Analytics Project · Member 4 Section
 
 Run Standalone:
     python app.py
-    (Opens http://127.0.0.1:8050)
+    (Opens http://127.0.0.1:8051)
 
-Integration Contract for Team Dashboard (Members 3 & 4):
-    from member5.layout import create_layout
-    from member5.callbacks.dashboard_callbacks import register_callbacks
+Integration Contract for Team Dashboard:
+    from time_user_analysis.layout import create_layout
+    from time_user_analysis.callbacks.dashboard_callbacks import register_callbacks
 
     # In your parent team layout:
     parent_layout.children.append(create_layout())
@@ -38,7 +38,7 @@ from callbacks.dashboard_callbacks import register_callbacks
 # ---------------------------------------------------------------------------
 app = Dash(
     __name__,
-    title="Ford GoBike | Station & Trip Analysis (Member 5)",
+    title="Ford GoBike | Time & User Analysis (Member 4)",
     assets_folder=str(_MODULE_DIR / "assets"),
     external_scripts=[
         "https://cdn.tailwindcss.com",
@@ -85,7 +85,7 @@ server = app.server
 
 if __name__ == "__main__":
     is_debug = os.environ.get("DASH_DEBUG", "True").lower() in {"true", "1", "yes"}
-    port = int(os.environ.get("PORT", 8050))
+    port = int(os.environ.get("PORT", 8051))
 
     # Pre-warm cached dataset so data is verified and loaded from Supabase immediately on startup
     if not is_debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
@@ -93,5 +93,4 @@ if __name__ == "__main__":
         from data_loader import load_clean_data
         load_clean_data()
 
-    app.run(debug=is_debug, port=port)
-
+    app.run(debug=is_debug, port=port, use_reloader=False)

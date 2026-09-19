@@ -1,21 +1,7 @@
 """
-config.py – Central Configuration for the Dashboard
-====================================================
-Single source of truth for every shared constant:
-
-  - Path resolution (DATA_PATH / project root)
-  - Component IDs (used by layout.py and callbacks)
-  - Filter defaults (Top-N slider bounds, etc.)
-  - Color palette (Tailwind-inspired)
-  - Font family
-  - Map tile style, region presets, and map center/zoom
-  - Coordinate validation ranges
-  - Required and coordinate column names
-  - Chart heights (one per chart family)
-  - Sidebar navigation constants (unique Desktop + Mobile IDs)
-
-This module must remain dependency-free (only stdlib) so that any other
-module can import from it without circular-import risk.
+config.py – Member 5: Station & Trip Analysis Configuration
+=============================================================
+Centralized configuration, color palette, directory paths, and region presets.
 """
 
 from __future__ import annotations
@@ -23,228 +9,131 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+# ---------------------------------------------------------------------------
+# 1. Path Resolution
+# ---------------------------------------------------------------------------
+_CURRENT_DIR = Path(__file__).resolve().parent
+CSV_FILENAME = os.environ.get("GOBIKE_CSV", "cleaned_fordgobike_master.csv")
+
+# Candidate search locations for the dataset
+_SEARCH_PATHS = [
+    Path(os.environ.get("GOBIKE_DATA_DIR", "")) / CSV_FILENAME if os.environ.get("GOBIKE_DATA_DIR") else None,
+    _CURRENT_DIR / CSV_FILENAME,
+    _CURRENT_DIR.parent / CSV_FILENAME,
+    _CURRENT_DIR.parent.parent / CSV_FILENAME,
+    _CURRENT_DIR.parent.parent.parent / CSV_FILENAME,
+    Path("d:/Depi R5/DA Final Project/Phase 2") / CSV_FILENAME,
+]
+
+DATA_PATH = next((p for p in _SEARCH_PATHS if p and p.exists()), _CURRENT_DIR / CSV_FILENAME)
 
 # ---------------------------------------------------------------------------
-# Path Resolution & Data Location
-# ---------------------------------------------------------------------------
-PROJECT_ROOT = Path(__file__).resolve().parent
-
-DATA_PATH = os.environ.get(
-    "DASHBOARD_DATA_PATH",
-    str(PROJECT_ROOT / "data"),
-)
-
-
-# ---------------------------------------------------------------------------
-# Component IDs
-# ---------------------------------------------------------------------------
-# Map & charts
-ID_MAP                     = "m5-map"
-ID_TOP_STATIONS            = "m5-top-stations"
-ID_TOP_ROUTES              = "m5-top-routes"
-ID_FLOW_IMBALANCE          = "m5-flow-imbalance"
-ID_ROUND_TRIP_CHART        = "m5-round-trip-chart"
-
-# Time Analysis charts (Phase 1)
-ID_TRIPS_BY_HOUR           = "m5-trips-by-hour"
-ID_DAY_HOUR_HEATMAP        = "m5-day-hour-heatmap"
-ID_AVG_DURATION_BY_HOUR    = "m5-avg-duration-by-hour"
-ID_WEEKDAY_WEEKEND_DURATION = "m5-weekday-weekend-duration"
-
-# User Analysis charts (Phase 2)
-ID_USER_TYPE_DISTRIBUTION   = "m5-user-type-distribution"
-ID_USER_TYPE_HOUR           = "m5-user-type-hour"
-ID_AVG_DURATION_BY_USER_TYPE = "m5-avg-duration-by-user-type"
-ID_AGE_GROUP_DISTRIBUTION   = "m5-age-group-distribution"
-ID_GENDER_DISTRIBUTION      = "m5-gender-distribution"
-ID_USER_TYPE_BY_AGE_GROUP   = "m5-user-type-by-age-group"
-
-# Containers & stores
-ID_INSPECTOR_CONTAINER     = "m5-inspector-container"
-ID_DISPATCH_CONTAINER      = "m5-dispatch-container"
-ID_SELECTED_STATION_STORE  = "m5-selected-station-store"
-
-# Filters & controls
-ID_USER_FILTER             = "m5-user-filter"
-ID_TOP_N_SLIDER            = "m5-top-n-slider"
-ID_REGION_FILTER           = "m5-region-filter"
-ID_MAP_FLOW_LINES_TOGGLE   = "m5-map-flow-lines-toggle"
-
-# Downloads & drawer actions
-ID_DOWNLOAD_BTN            = "m5-download-btn"
-ID_DOWNLOAD_DATA           = "m5-download-data"
-ID_DRAWER_CLOSE_BTN        = "m5-drawer-close-btn"
-ID_DRAWER_FOCUS_BTN        = "m5-drawer-focus-btn"
-
-# ---------------------------------------------------------------------------
-# Sidebar Navigation (Phase 1 – Sidebar Foundation)
-# ---------------------------------------------------------------------------
-# Global navigation state
-ID_ACTIVE_SECTION_STORE    = "m5-active-section-store"
-ID_ACTIVE_ANCHOR_STORE     = "m5-active-anchor-store"
-ID_MOBILE_MENU_STORE       = "m5-mobile-menu-store"
-
-# Sidebar shells
-ID_SIDEBAR_CONTAINER       = "m5-sidebar-desktop"
-ID_MOBILE_SIDEBAR          = "m5-sidebar-mobile"
-ID_MOBILE_MENU_TOGGLE      = "m5-mobile-menu-toggle"
-ID_MOBILE_BACKDROP         = "m5-mobile-backdrop"
-
-# Section wrapper IDs
-ID_SECTION_STATION         = "m5-section-station"
-ID_SECTION_TIME            = "m5-section-time"
-ID_SECTION_USER            = "m5-section-user"
-ID_SECTION_DISPATCH        = "m5-section-dispatch"
-
-# Filter panel wrapper (hidden outside Station Analysis)
-ID_FILTER_PANEL_WRAPPER    = "m5-filter-panel-wrapper"
-
-# --- Desktop navigation controls -------------------------------------------
-ID_NAV_STATION_DESKTOP     = "m5-nav-station-desktop"
-ID_NAV_TIME_DESKTOP        = "m5-nav-time-desktop"
-ID_NAV_USER_DESKTOP        = "m5-nav-user-desktop"
-ID_NAV_DISPATCH_DESKTOP    = "m5-nav-dispatch-desktop"
-
-ID_ANCHOR_STATION_NETWORK_DESKTOP = "m5-anchor-station-network-desktop"
-ID_ANCHOR_STATION_TRAFFIC_DESKTOP = "m5-anchor-station-traffic-desktop"
-ID_ANCHOR_STATION_FLOW_DESKTOP    = "m5-anchor-station-flow-desktop"
-
-ID_ANCHOR_TIME_HOURLY_DESKTOP   = "m5-anchor-time-hourly-desktop"
-ID_ANCHOR_TIME_DAYHOUR_DESKTOP  = "m5-anchor-time-dayhour-desktop"
-ID_ANCHOR_TIME_DURATION_DESKTOP = "m5-anchor-time-duration-desktop"
-
-ID_ANCHOR_USER_TYPE_DESKTOP     = "m5-anchor-user-type-desktop"
-ID_ANCHOR_USER_DEMO_DESKTOP     = "m5-anchor-user-demographics-desktop"
-ID_ANCHOR_USER_CROSSTAB_DESKTOP = "m5-anchor-user-crosstab-desktop"
-
-ID_ANCHOR_DISPATCH_PLAN_DESKTOP = "m5-anchor-dispatch-plan-desktop"
-
-# --- Mobile navigation controls --------------------------------------------
-ID_NAV_STATION_MOBILE      = "m5-nav-station-mobile"
-ID_NAV_TIME_MOBILE         = "m5-nav-time-mobile"
-ID_NAV_USER_MOBILE         = "m5-nav-user-mobile"
-ID_NAV_DISPATCH_MOBILE     = "m5-nav-dispatch-mobile"
-
-ID_ANCHOR_STATION_NETWORK_MOBILE = "m5-anchor-station-network-mobile"
-ID_ANCHOR_STATION_TRAFFIC_MOBILE = "m5-anchor-station-traffic-mobile"
-ID_ANCHOR_STATION_FLOW_MOBILE    = "m5-anchor-station-flow-mobile"
-
-ID_ANCHOR_TIME_HOURLY_MOBILE   = "m5-anchor-time-hourly-mobile"
-ID_ANCHOR_TIME_DAYHOUR_MOBILE  = "m5-anchor-time-dayhour-mobile"
-ID_ANCHOR_TIME_DURATION_MOBILE = "m5-anchor-time-duration-mobile"
-
-ID_ANCHOR_USER_TYPE_MOBILE     = "m5-anchor-user-type-mobile"
-ID_ANCHOR_USER_DEMO_MOBILE     = "m5-anchor-user-demographics-mobile"
-ID_ANCHOR_USER_CROSSTAB_MOBILE = "m5-anchor-user-crosstab-mobile"
-
-ID_ANCHOR_DISPATCH_PLAN_MOBILE = "m5-anchor-dispatch-plan-mobile"
-
-# Section keys
-SECTION_KEY_STATION        = "station"
-SECTION_KEY_TIME           = "time"
-SECTION_KEY_USER           = "user"
-SECTION_KEY_DISPATCH       = "dispatch"
-DEFAULT_ACTIVE_SECTION     = SECTION_KEY_STATION
-
-
-# ---------------------------------------------------------------------------
-# Filter Defaults (Top-N Slider & related)
-# ---------------------------------------------------------------------------
-DEFAULT_TOP_N  = 10
-TOP_N_MIN      = 1
-TOP_N_MAX      = 30
-TOP_N_STEP     = 1
-
-
-# ---------------------------------------------------------------------------
-# Color Palette (Tailwind-inspired)
+# 2. Central Color Palette (Clean Mint / Emerald / Lime Theme)
 # ---------------------------------------------------------------------------
 COLORS = {
-    "bg_card":       "#ffffff",
-    "bg_surface":    "#f8fafc",
-    "text_main":     "#0f172a",
-    "text_muted":    "#64748b",
-    "accent_teal":   "#0d9488",
-    "accent_purple": "#a855f7",
-    "accent_dim":    "#94a3b8",
-    "success":       "#10b981",
-    "danger":        "#f43f5e",
-    "warning":       "#f59e0b",
-    "border":        "#e2e8f0",
+    "bg_primary": "#F8FAFC",
+    "bg_secondary": "#FFFFFF",
+    "bg_card": "#FFFFFF",
+    "bg_card_hover": "#FFFFFF",
+    "border": "#E2E8F0",
+    "border_focus": "#10B981",
+    "accent": "#10B981",
+    "accent_dim": "#059669",
+    "accent_lime": "#84CC16",
+    "accent_teal": "#0D9488",
+    "text_primary": "#0F172A",
+    "text_secondary": "#475569",
+    "text_muted": "#94A3B8",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "danger": "#F43F5E",
 }
 
+FONT_FAMILY = "'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 # ---------------------------------------------------------------------------
-# Typography
+# 3. Chart Layout & Dimension Defaults
 # ---------------------------------------------------------------------------
-FONT_FAMILY = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-
+CHART_HEIGHT_MAP = 500
+CHART_HEIGHT_BAR = 380
+CHART_HEIGHT_IMBALANCE = 380
+CHART_HEIGHT_LEISURE = 380
 
 # ---------------------------------------------------------------------------
-# Map Configuration
+# 4. Regional Map Settings & Boundaries
 # ---------------------------------------------------------------------------
 MAP_TILE_STYLE = "carto-positron"
 
-MAP_CENTER = {"lat": 37.7749, "lon": -122.4194}
-MAP_ZOOM   = 11
-
 REGIONS = {
     "All": {
-        "center": {"lat": 37.7749, "lon": -122.4194},
-        "zoom":   11,
+        "name": "All Bay Area",
+        "center": {"lat": 37.776, "lon": -122.416},
+        "zoom": 10.8,
     },
     "San Francisco": {
-        "center": {"lat": 37.7749, "lon": -122.4194},
-        "zoom":   12.5,
+        "name": "San Francisco",
+        "center": {"lat": 37.774, "lon": -122.419},
+        "zoom": 12.3,
     },
-    "East Bay": {
-        "center": {"lat": 37.8044, "lon": -122.2712},
-        "zoom":   12,
+    "East Bay (Oakland/Berkeley)": {
+        "name": "East Bay (Oakland/Berkeley)",
+        "center": {"lat": 37.820, "lon": -122.260},
+        "zoom": 12.0,
     },
     "San Jose": {
-        "center": {"lat": 37.3382, "lon": -121.8863},
-        "zoom":   12,
+        "name": "San Jose",
+        "center": {"lat": 37.335, "lon": -121.890},
+        "zoom": 13.0,
     },
 }
 
+MAP_CENTER = REGIONS["All"]["center"]
+MAP_ZOOM = REGIONS["All"]["zoom"]
 
-# ---------------------------------------------------------------------------
-# Coordinate Validation Ranges (Bay Area bounding box)
-# ---------------------------------------------------------------------------
-VALID_LAT_RANGE = (37.0, 38.5)
+VALID_LAT_RANGE = (36.5, 38.5)
 VALID_LON_RANGE = (-123.0, -121.5)
 
-
 # ---------------------------------------------------------------------------
-# Column Name Contracts
+# 5. Schema Requirements
 # ---------------------------------------------------------------------------
-REQUIRED_COLUMNS = [
+REQUIRED_COLUMNS = {
     "start_station_name",
     "end_station_name",
+}
+
+COORDINATE_COLUMNS = {
     "start_station_latitude",
     "start_station_longitude",
     "end_station_latitude",
     "end_station_longitude",
-    "duration_min",
-    "user_type",
-]
-
-COORDINATE_COLUMNS = [
-    "start_station_latitude",
-    "start_station_longitude",
-    "end_station_latitude",
-    "end_station_longitude",
-]
-
+}
 
 # ---------------------------------------------------------------------------
-# Chart Heights
+# 6. Filter Defaults
 # ---------------------------------------------------------------------------
-CHART_HEIGHT_MAP        = 520
-CHART_HEIGHT_BAR        = 380
-CHART_HEIGHT_IMBALANCE  = 380
-CHART_HEIGHT_LEISURE    = 380
+DEFAULT_TOP_N = 10
+TOP_N_MIN = 1
+TOP_N_MAX = 30
+TOP_N_STEP = 1
 
-# Time Analysis (added in Phase 1)
-CHART_HEIGHT_LINE       = 320
-CHART_HEIGHT_HEATMAP    = 380
+# ---------------------------------------------------------------------------
+# 7. Component IDs
+# ---------------------------------------------------------------------------
+ID_USER_FILTER = "m5-user-filter"
+ID_TOP_N_SLIDER = "m5-top-n-slider"
+ID_REGION_FILTER = "m5-region-filter"
+ID_MAP_FLOW_LINES_TOGGLE = "m5-map-flow-lines"
+ID_DOWNLOAD_BTN = "m5-download-btn"
+ID_DOWNLOAD_DATA = "m5-download-data"
+
+ID_MAP = "m5-station-map"
+ID_TOP_STATIONS = "m5-top-stations-chart"
+ID_TOP_ROUTES = "m5-top-routes-chart"
+ID_FLOW_IMBALANCE = "m5-flow-imbalance-chart"
+ID_ROUND_TRIP_CHART = "m5-round-trip-chart"
+
+ID_INSPECTOR_CONTAINER = "m5-inspector-container"
+ID_DISPATCH_CONTAINER = "m5-dispatch-container"
+ID_SELECTED_STATION_STORE = "m5-selected-station-store"
+ID_DRAWER_CLOSE_BTN = "m5-drawer-close-btn"
+ID_DRAWER_FOCUS_BTN = "m5-drawer-focus-btn"
