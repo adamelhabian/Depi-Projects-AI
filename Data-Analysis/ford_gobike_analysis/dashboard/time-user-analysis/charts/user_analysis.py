@@ -183,9 +183,10 @@ def create_user_type_distribution_chart(df: pd.DataFrame) -> go.Figure:
                 colors=colors,
                 line=dict(color="#FFFFFF", width=2.5),
             ),
-            textinfo="percent",
+            textinfo="percent+label",
+            texttemplate="<b>%{percent}</b><br>%{label}",
             textposition="inside",
-            textfont=dict(color="#FFFFFF", size=12, family="Inter"),
+            textfont=dict(color="#FFFFFF", size=11, family="Inter"),
             hovertext=hover_texts,
             hoverinfo="text",
             direction="clockwise",
@@ -193,12 +194,12 @@ def create_user_type_distribution_chart(df: pd.DataFrame) -> go.Figure:
         )
     )
 
-    # Center callout inside donut hole
+    # Center callout inside donut hole shows fleet total so no percentage is repeated
     fig.add_annotation(
-        text=f"<b>{sub_pct:.1f}%</b><br><span style='font-size:11px;color:#64748B;'>Subscribers</span>",
+        text=f"<b>{total:,}</b><br><span style='font-size:10px;font-weight:600;color:#64748B;'>TOTAL RIDES</span>",
         x=0.5,
         y=0.5,
-        font=dict(size=18, family="Inter", color="#0F172A"),
+        font=dict(size=16, family="Inter", color="#0F172A"),
         showarrow=False,
     )
 
