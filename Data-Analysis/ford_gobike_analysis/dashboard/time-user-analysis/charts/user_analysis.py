@@ -134,13 +134,14 @@ def create_user_type_distribution_chart(df: pd.DataFrame) -> go.Figure:
     User type distribution as horizontal bars, sorted by trips (descending).
 
     Visual language:
-      - Horizontal bars make labels readable regardless of category count.
-      - The dominant user type receives a strong accent; the rest is muted.
-      - Direct data labels show both trip count and share of total.
-      - A callout annotation describes the dominant type.
+      - Modern Donut Chart (hole=0.62) provides rich visual diversity.
+      - Subscribers styled in primary brand Teal (#0d9488).
+      - Customers styled in complementary Purple (#a855f7).
+      - Center callout prominently displaying dominant percentage and role.
+      - Sleek horizontal legend at the bottom with counts and shares.
     """
     if df.empty or "user_type" not in df.columns:
-        return _empty("No user-type data available for the selected filters.")
+        return _empty("No user-type data available for the selected filters.", height=CHART_HEIGHT_BAR)
 
     counts = (
         df["user_type"]
@@ -150,101 +151,74 @@ def create_user_type_distribution_chart(df: pd.DataFrame) -> go.Figure:
     )
 
     if counts.empty:
-        return _empty("No user-type records in the selected filter scope.")
+        return _empty("No user-type records in the selected filter scope.", height=CHART_HEIGHT_BAR)
 
-    counts = counts.sort_values(ascending=True)  # bottom→top for horizontal bars
-    labels = counts.index.tolist()
-    values = counts.values.astype(int)
-    total  = int(values.sum())
-    dominant_label = counts.idxmax()
-    dominant_val   = int(counts.max())
-    dominant_share = (dominant_val / total * 100.0) if total else 0.0
+    ordered_keys = [k for k in ["Subscriber", "Customer"] if k in counts.index]
+    for k in counts.index:
+        if k not in ordered_keys:
+            ordered_keys.append(k)
 
-    # Colors: emphasize the dominant type with the primary accent
-    colors, borders = [], []
-    for lbl in labels:
-        base = _USER_TYPE_COLORS.get(lbl, _SLATE_SOFT)
-        border = _USER_TYPE_BORDERS.get(lbl, _SLATE)
-        if lbl == dominant_label:
-            colors.append(base)
-            borders.append(border)
-        else:
-            colors.append(_hex_to_rgba(base, 0.55))
-            borders.append(_hex_to_rgba(border, 0.55))
+    labels = ordered_keys
+    values = [int(counts[k]) for k in labels]
+    total = sum(values)
 
-    bar_text = [
-        f"<b>{v:,}</b>  ({v / total * 100:.1f}%)"
-        for v in values
-    ]
+    color_map = {
+        "Subscriber": _TEAL,
+        "Customer": _PURPLE,
+    }
+    colors = [color_map.get(k, _SLATE) for k in labels]
+    sub_pct = (counts.get("Subscriber", 0) / total * 100) if total else 0.0
 
     hover_texts = [
-        f"<b>{lbl}</b><br>"
-        f"Trips: <b>{v:,}</b><br>"
-        f"Share of total: <b>{v / total * 100:.1f}%</b>"
-        for lbl, v in zip(labels, values)
+        f"<b>{k}</b><br>Trips: <b>{v:,}</b><br>Share of total: <b>{v/total*100:.1f}%</b>"
+        for k, v in zip(labels, values)
     ]
 
     fig = go.Figure(
-        go.Bar(
-            x=values,
-            y=labels,
-            orientation="h",
-            marker=dict(color=colors, line=dict(color=borders, width=1.4)),
-            text=bar_text,
-            textposition="outside",
-            textfont=dict(color="#0F172A", size=12, family="Inter"),
+        go.Pie(
+            labels=labels,
+            values=values,
+            hole=0.62,
+            marker=dict(
+                colors=colors,
+                line=dict(color="#FFFFFF", width=2.5),
+            ),
+            textinfo="percent",
+            textposition="inside",
+            textfont=dict(color="#FFFFFF", size=12, family="Inter"),
             hovertext=hover_texts,
             hoverinfo="text",
-            cliponaxis=False,
-            showlegend=False,
+            direction="clockwise",
+            sort=False,
         )
     )
 
-    # Dominant callout in the top-left corner
+    # Center callout inside donut hole
     fig.add_annotation(
-        xref="paper",
-        yref="paper",
-        x=0.0,
-        y=1.14,
-        xanchor="left",
-        yanchor="bottom",
-        text=(
-            f"<span style='color:#0F172A;font-weight:700;font-size:12px;'>"
-            f"{dominant_label}</b></span> "
-            f"<span style='color:{_SLATE};font-size:11px;'>account for</span> "
-            f"<span style='color:{_TEAL_DARK};font-weight:700;font-size:12px;'>"
-            f"{dominant_share:.1f}%</span> "
-            f"<span style='color:{_SLATE};font-size:11px;'>of trips</span>"
-        ),
+        text=f"<b>{sub_pct:.1f}%</b><br><span style='font-size:11px;color:#64748B;'>Subscribers</span>",
+        x=0.5,
+        y=0.5,
+        font=dict(size=18, family="Inter", color="#0F172A"),
         showarrow=False,
-        align="left",
     )
 
     fig = apply_chart_theme(
         fig,
         height=CHART_HEIGHT_BAR,
-        margin=dict(l=10, r=90, t=42, b=30),
+        margin=dict(l=14, r=14, t=14, b=30),
     )
 
     fig.update_layout(
-        xaxis=dict(
-            title=dict(text="Number of Trips", font=dict(color=_AXIS_TITLE, size=11, family="Inter")),
-            tickformat=",",
-            showgrid=True,
-            gridcolor=_GRID_COLOR,
-            zeroline=False,
-            rangemode="tozero",
-            tickfont=dict(color=_AXIS_TEXT, size=11, family="Inter"),
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.04,
+            xanchor="center",
+            x=0.5,
+            font=dict(family="Inter", size=11, color=_AXIS_TEXT),
         ),
-        yaxis=dict(
-            title="",
-            showgrid=False,
-            zeroline=False,
-            tickfont=dict(color=_AXIS_TEXT, size=12, family="Inter"),
-        ),
-        bargap=0.45,
         hoverlabel=_HOVER_LABEL,
-        showlegend=False,
     )
 
     return fig
@@ -557,7 +531,8 @@ def create_age_group_distribution_chart(df: pd.DataFrame) -> go.Figure:
     values = [int(v) for v in counts.values]
     total = int(sum(values))
     dominant_label = counts.idxmax()
-    dominant_share = (counts.max() / total * 100.0) if total else 0.0
+    dominant_val = int(counts.max())
+    dominant_share = (dominant_val / total * 100.0) if total else 0.0
 
     colors, borders = [], []
     for lbl in labels:
@@ -569,7 +544,7 @@ def create_age_group_distribution_chart(df: pd.DataFrame) -> go.Figure:
             borders.append(_hex_to_rgba(_TEAL_DARK, 0.55))
 
     bar_text = [
-        f"<b>{v:,}</b>  <span style='color:{_SLATE};font-size:10px;'>({v / total * 100:.1f}%)</span>"
+        f"<b>{v / 1000:.1f}K</b> ({v / total * 100:.1f}%)" if v >= 1000 else f"<b>{v}</b>"
         for v in values
     ]
 
@@ -595,32 +570,32 @@ def create_age_group_distribution_chart(df: pd.DataFrame) -> go.Figure:
         )
     )
 
-    # Dominant callout
+    # Dynamic peak annotation pointing to the largest cohort bar
     fig.add_annotation(
-        xref="paper",
-        yref="paper",
-        x=0.0,
-        y=1.14,
-        xanchor="left",
-        yanchor="bottom",
-        text=(
-            f"<span style='color:#0F172A;font-weight:700;font-size:12px;'>"
-            f"{dominant_label} years</span> "
-            f"<span style='color:{_SLATE};font-size:11px;'>is the largest cohort —</span> "
-            f"<span style='color:{_TEAL_DARK};font-weight:700;font-size:12px;'>"
-            f"{dominant_share:.1f}%</span> "
-            f"<span style='color:{_SLATE};font-size:11px;'>of trips</span>"
-        ),
-        showarrow=False,
-        align="left",
+        x=dominant_label,
+        y=dominant_val,
+        text=f"▲ Peak: {dominant_label} ({dominant_share:.1f}%)",
+        showarrow=True,
+        arrowhead=2,
+        arrowsize=0.8,
+        arrowwidth=1.5,
+        arrowcolor=_TEAL_DARK,
+        ax=0,
+        ay=-32,
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor=_TEAL,
+        borderwidth=1,
+        borderpad=4,
+        font=dict(color="#0F172A", size=10, family="Inter"),
     )
 
     fig = apply_chart_theme(
         fig,
         height=CHART_HEIGHT_BAR,
-        margin=dict(l=10, r=30, t=44, b=42),
+        margin=dict(l=14, r=14, t=44, b=34),
     )
 
+    max_val = max(values) if values else 100
     fig.update_layout(
         xaxis=dict(
             title=dict(text="Age Group (years)", font=dict(color=_AXIS_TITLE, size=11, family="Inter")),
@@ -629,12 +604,12 @@ def create_age_group_distribution_chart(df: pd.DataFrame) -> go.Figure:
             tickfont=dict(color=_AXIS_TEXT, size=11, family="Inter"),
         ),
         yaxis=dict(
-            title=dict(text="Number of Trips", font=dict(color=_AXIS_TITLE, size=11, family="Inter")),
+            title=dict(text="Trip Volume", font=dict(color=_AXIS_TITLE, size=11, family="Inter")),
             tickformat=",",
             showgrid=True,
             gridcolor=_GRID_COLOR,
             zeroline=False,
-            rangemode="tozero",
+            range=[0, max_val * 1.20],
             tickfont=dict(color=_AXIS_TEXT, size=11, family="Inter"),
         ),
         bargap=0.35,

@@ -22,7 +22,7 @@ def filter_panel() -> html.Section:
                 children=[
                     # 1. User Membership Filter
                     html.Div(
-                        className="lg:col-span-5",
+                        className="lg:col-span-6",
                         children=[
                             html.Label(
                                 "Rider Membership Type",
@@ -45,7 +45,7 @@ def filter_panel() -> html.Section:
 
                     # 2. Day Classification Filter
                     html.Div(
-                        className="lg:col-span-5",
+                        className="lg:col-span-6",
                         children=[
                             html.Label(
                                 "Temporal Day Classification",
@@ -62,24 +62,6 @@ def filter_panel() -> html.Section:
                                 value="All",
                                 clearable=False,
                                 searchable=False,
-                            ),
-                        ],
-                    ),
-
-                    # 3. Status Badge / Quick Summary
-                    html.Div(
-                        className="lg:col-span-2 flex flex-col items-end justify-center pt-2 sm:pt-0",
-                        children=[
-                            html.Div(
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-semibold",
-                                children=[
-                                    html.Span(className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"),
-                                    html.Span("Live Cloud Sync"),
-                                ],
-                            ),
-                            html.Span(
-                                "gold.trip_analytics",
-                                className="text-[10px] text-slate-400 font-mono mt-1",
                             ),
                         ],
                     ),

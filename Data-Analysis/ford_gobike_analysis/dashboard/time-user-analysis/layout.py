@@ -99,13 +99,13 @@ def create_layout() -> html.Div:
                             html.Div(
                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700",
                                 children=[
-                                    html.Span(className="w-2 h-2 rounded-full bg-teal-500"),
-                                    html.Span("Supabase Cloud Pipeline"),
+                                    html.Span(className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"),
+                                    html.Span("Live Cloud Pipeline"),
                                 ],
                             ),
                             html.Span(
-                                "Table: gold.trip_analytics",
-                                className="text-xs text-slate-400 font-mono hidden sm:inline",
+                                "San Francisco Bay Area",
+                                className="text-xs text-slate-400 hidden sm:inline",
                             ),
                         ],
                     ),
