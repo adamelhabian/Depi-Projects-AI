@@ -28,7 +28,7 @@ from __future__ import annotations
 import plotly.graph_objects as go
 import pandas as pd
 
-from config import COLORS, CHART_HEIGHT_LINE, CHART_HEIGHT_HEATMAP
+from config import COLORS, CHART_HEIGHT_LINE, CHART_HEIGHT_HEATMAP, CHART_HEIGHT_BAR
 from utils.theme import apply_chart_theme, empty_figure
 
 
@@ -271,7 +271,143 @@ def create_trips_by_hour_chart(df: pd.DataFrame) -> go.Figure:
 
 
 # ---------------------------------------------------------------------------
-# 2. Day-of-Week × Hour Demand Matrix
+# 2. Day-of-Week Trip Volume Distribution (Crystal-Clear Bar Analysis)
+# ---------------------------------------------------------------------------
+
+def create_trips_by_day_chart(df: pd.DataFrame) -> go.Figure:
+    """
+    Day-of-Week trip volume distribution.
+
+    Visual language:
+      - Clean, elegant vertical bars for Monday through Sunday.
+      - Weekdays (Mon-Fri) styled in Teal (#0d9488).
+      - Weekends (Sat-Sun) styled in Purple (#a855f7) for clear visual contrast.
+      - Value labels on top of each bar (e.g. '33.7K').
+      - Dynamic callout badge highlighting the peak day.
+      - Horizontal dashed reference line showing the daily average.
+    """
+    if df.empty or "day_of_week" not in df.columns:
+        return _empty("No day-of-week data available for the selected filters.", CHART_HEIGHT_BAR)
+
+    df_local = df.copy()
+    df_local["_day_norm"] = _normalize_day_names(df_local["day_of_week"])
+
+    day_counts = (
+        df_local.groupby("_day_norm")
+                .size()
+                .reindex(_DAY_ORDER, fill_value=0)
+    )
+
+    total_trips = int(day_counts.sum())
+    if total_trips == 0:
+        return _empty("No trips recorded in the selected filter scope.", CHART_HEIGHT_BAR)
+
+    peak_day = str(day_counts.idxmax())
+    peak_val = int(day_counts.max())
+    avg_val = float(day_counts.mean())
+
+    days = list(day_counts.index)
+    values = [int(v) for v in day_counts.values]
+
+    bar_colors = [
+        _hex_to_rgba(_PURPLE, 0.90) if d in _WEEKEND_DAYS else _hex_to_rgba(_TEAL, 0.90)
+        for d in days
+    ]
+    border_colors = [
+        _PURPLE_DARK if d in _WEEKEND_DAYS else _TEAL_DARK
+        for d in days
+    ]
+
+    hover_texts = [
+        f"<b>{d}</b> ({'Weekend' if d in _WEEKEND_DAYS else 'Weekday'})<br>"
+        f"Trips: <b>{v:,}</b><br>"
+        f"Share of week: <b>{(v / total_trips * 100):.1f}%</b>"
+        + ("<br><span style='color:#0F766E;font-weight:bold;'>▲ Peak day</span>" if d == peak_day else "")
+        for d, v in zip(days, values)
+    ]
+
+    text_labels = [
+        f"<b>{v / 1000:.1f}K</b>" if v >= 1000 else f"<b>{v}</b>"
+        for v in values
+    ]
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Bar(
+            x=days,
+            y=values,
+            marker=dict(
+                color=bar_colors,
+                line=dict(color=border_colors, width=1.5),
+            ),
+            text=text_labels,
+            textposition="outside",
+            textfont=dict(family="Inter", size=11, color="#334155"),
+            hovertext=hover_texts,
+            hoverinfo="text",
+            showlegend=False,
+        )
+    )
+
+    fig.add_hline(
+        y=avg_val,
+        line=dict(color="#94A3B8", width=1.4, dash="dot"),
+        annotation_text=f"Avg: {avg_val/1000:.1f}K/day",
+        annotation_position="top right",
+        annotation_font=dict(color="#64748B", size=10, family="Inter"),
+    )
+
+    fig.add_annotation(
+        x=peak_day,
+        y=peak_val,
+        text=f"▲ Peak: {peak_day} ({peak_val:,})",
+        showarrow=True,
+        arrowhead=2,
+        arrowsize=0.8,
+        arrowwidth=1.5,
+        arrowcolor=_TEAL_DARK,
+        ax=0,
+        ay=-32,
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor=_TEAL,
+        borderwidth=1,
+        borderpad=4,
+        font=dict(color="#0F172A", size=10, family="Inter"),
+    )
+
+    fig = apply_chart_theme(
+        fig,
+        height=CHART_HEIGHT_BAR,
+        margin=dict(l=14, r=14, t=44, b=34),
+    )
+
+    max_val = max(values) if values else 100
+    fig.update_layout(
+        xaxis=dict(
+            title=dict(text="Day of Week", font=dict(color=_AXIS_TITLE, size=11, family="Inter")),
+            showgrid=False,
+            zeroline=False,
+            tickfont=dict(color=_AXIS_TEXT, size=11, family="Inter"),
+        ),
+        yaxis=dict(
+            title=dict(text="Trip Volume", font=dict(color=_AXIS_TITLE, size=11, family="Inter")),
+            tickformat=",",
+            showgrid=True,
+            gridcolor=_GRID_COLOR,
+            zeroline=False,
+            range=[0, max_val * 1.18],
+            tickfont=dict(color=_AXIS_TEXT, size=11, family="Inter"),
+        ),
+        hoverlabel=_HOVER_LABEL,
+        showlegend=False,
+    )
+
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# 2b. Day-of-Week × Hour Demand Matrix (Legacy Heatmap)
 # ---------------------------------------------------------------------------
 
 def create_day_hour_heatmap_chart(df: pd.DataFrame) -> go.Figure:

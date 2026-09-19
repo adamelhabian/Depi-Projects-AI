@@ -30,7 +30,7 @@ ID_DAY_FILTER             = "tu-day-filter"
 
 # Core Visualizations (5 Core Charts)
 ID_TRIPS_BY_HOUR          = "tu-trips-by-hour"
-ID_DAY_HOUR_HEATMAP       = "tu-day-hour-heatmap"
+ID_TRIPS_BY_DAY           = "tu-trips-by-day"
 ID_USER_TYPE_DISTRIBUTION = "tu-user-type-distribution"
 ID_USER_TYPE_HOUR         = "tu-user-type-hour"
 ID_AGE_GROUP_DISTRIBUTION = "tu-age-group-distribution"

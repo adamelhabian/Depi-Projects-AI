@@ -15,7 +15,7 @@ if str(_MODULE_DIR) not in sys.path:
 import pandas as pd
 from data_loader import load_clean_data
 from utils.data_processing import filter_dataset, compute_kpi_summary
-from charts.time_analysis import create_trips_by_hour_chart, create_day_hour_heatmap_chart
+from charts.time_analysis import create_trips_by_hour_chart, create_trips_by_day_chart
 from charts.user_analysis import (
     create_user_type_distribution_chart,
     create_user_type_hour_chart,
@@ -54,9 +54,9 @@ def test_time_user_pipeline():
     assert f1 is not None and len(f1.data) > 0
     print("[PASS] 4a. Hourly Demand chart generated.")
 
-    f2 = create_day_hour_heatmap_chart(df)
+    f2 = create_trips_by_day_chart(df)
     assert f2 is not None and len(f2.data) > 0
-    print("[PASS] 4b. Weekly Heatmap chart generated.")
+    print("[PASS] 4b. Day-of-Week Volume chart generated.")
 
     f3 = create_user_type_distribution_chart(df)
     assert f3 is not None and len(f3.data) > 0

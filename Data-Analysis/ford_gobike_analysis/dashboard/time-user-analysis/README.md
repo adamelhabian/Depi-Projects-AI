@@ -25,7 +25,7 @@ This dashboard is designed as a clean, self-contained analytical view with zero 
 
 ### 2. Five Core Visualizations (Strictly Focused Scope)
 * **Hourly Trip Demand Profile**: Diurnal volume distribution revealing the twin commuter rush peaks (8–9 AM & 5–6 PM).
-* **Weekly Utilization Heatmap**: High-density Day-of-Week × Hour-of-Day intensity matrix showing weekday vs. weekend patterns.
+* **Day-of-Week Riding Volume**: Crystal-clear volume comparison across Monday through Sunday contrasting high weekday commuter demand (~25K–34K/day) with the ~50% drop on weekends.
 * **Rider Membership Split**: Horizontal comparative breakdown of Subscribers vs. Casual Customers.
 * **Hourly Pattern by User Type**: Normalized comparative trends showing how Subscribers drive commuter peaks while Customers ride midday.
 * **Rider Age Cohort Distribution**: Demographic volume distributed across defined age brackets (18–25, 26–35, 36–50, 51–65, 66–80).

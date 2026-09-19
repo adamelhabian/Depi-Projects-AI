@@ -21,7 +21,7 @@ from config import (
     ID_DAY_FILTER,
     # Charts
     ID_TRIPS_BY_HOUR,
-    ID_DAY_HOUR_HEATMAP,
+    ID_TRIPS_BY_DAY,
     ID_USER_TYPE_DISTRIBUTION,
     ID_USER_TYPE_HOUR,
     ID_AGE_GROUP_DISTRIBUTION,
@@ -30,7 +30,7 @@ from data_loader import load_clean_data
 from utils.data_processing import filter_dataset, compute_kpi_summary
 from charts.time_analysis import (
     create_trips_by_hour_chart,
-    create_day_hour_heatmap_chart,
+    create_trips_by_day_chart,
 )
 from charts.user_analysis import (
     create_user_type_distribution_chart,
@@ -53,7 +53,7 @@ def register_callbacks(app) -> None:
             Output(ID_KPI_AVG_DURATION, "children"),
             # 5 Chart Outputs
             Output(ID_TRIPS_BY_HOUR, "figure"),
-            Output(ID_DAY_HOUR_HEATMAP, "figure"),
+            Output(ID_TRIPS_BY_DAY, "figure"),
             Output(ID_USER_TYPE_DISTRIBUTION, "figure"),
             Output(ID_USER_TYPE_HOUR, "figure"),
             Output(ID_AGE_GROUP_DISTRIBUTION, "figure"),
@@ -78,7 +78,7 @@ def register_callbacks(app) -> None:
 
         # 2. Five Core Time & User Visualizations
         fig_trips_by_hour = create_trips_by_hour_chart(filtered_df)
-        fig_day_hour_heatmap = create_day_hour_heatmap_chart(filtered_df)
+        fig_trips_by_day = create_trips_by_day_chart(filtered_df)
         fig_user_type_dist = create_user_type_distribution_chart(filtered_df)
         fig_user_type_hour = create_user_type_hour_chart(filtered_df)
         fig_age_dist = create_age_group_distribution_chart(filtered_df)
@@ -89,7 +89,7 @@ def register_callbacks(app) -> None:
             kpis["peak_hour"],
             kpis["avg_duration"],
             fig_trips_by_hour,
-            fig_day_hour_heatmap,
+            fig_trips_by_day,
             fig_user_type_dist,
             fig_user_type_hour,
             fig_age_dist,

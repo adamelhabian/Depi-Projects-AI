@@ -20,13 +20,12 @@ from config import (
     ID_KPI_AVG_DURATION,
     # Charts
     ID_TRIPS_BY_HOUR,
-    ID_DAY_HOUR_HEATMAP,
+    ID_TRIPS_BY_DAY,
     ID_USER_TYPE_DISTRIBUTION,
     ID_USER_TYPE_HOUR,
     ID_AGE_GROUP_DISTRIBUTION,
     # Chart heights
     CHART_HEIGHT_LINE,
-    CHART_HEIGHT_HEATMAP,
     CHART_HEIGHT_BAR,
 )
 from components.chart_card import chart_card
@@ -170,17 +169,17 @@ def create_layout() -> html.Div:
                             ),
                         ],
                     ),
-                    # Chart 2: Weekly Heatmap (6 cols)
+                    # Chart 2: Day-of-Week Riding Volume (6 cols)
                     html.Div(
                         className="lg:col-span-6",
                         children=[
                             chart_card(
-                                graph_id=ID_DAY_HOUR_HEATMAP,
-                                title="Weekly Utilization Heatmap",
-                                subtitle="Day-of-Week vs. Hour matrix demonstrating concentrated weekday commute windows",
-                                badge_text="Intensity Matrix",
+                                graph_id=ID_TRIPS_BY_DAY,
+                                title="Day-of-Week Riding Volume",
+                                subtitle="Volume comparison across the week highlighting weekday commuter demand vs weekend drop",
+                                badge_text="Weekly Volume",
                                 badge_class="text-xs font-semibold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-100",
-                                height=CHART_HEIGHT_HEATMAP,
+                                height=CHART_HEIGHT_BAR,
                             ),
                         ],
                     ),
