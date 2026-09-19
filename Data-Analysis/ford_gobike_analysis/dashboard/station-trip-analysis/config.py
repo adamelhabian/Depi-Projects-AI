@@ -12,6 +12,7 @@ Single source of truth for every shared constant:
   - Coordinate validation ranges
   - Required and coordinate column names
   - Chart heights (one per chart family)
+  - Sidebar navigation constants (unique Desktop + Mobile IDs)
 
 This module must remain dependency-free (only stdlib) so that any other
 module can import from it without circular-import risk.
@@ -74,6 +75,76 @@ ID_DOWNLOAD_BTN            = "m5-download-btn"
 ID_DOWNLOAD_DATA           = "m5-download-data"
 ID_DRAWER_CLOSE_BTN        = "m5-drawer-close-btn"
 ID_DRAWER_FOCUS_BTN        = "m5-drawer-focus-btn"
+
+# ---------------------------------------------------------------------------
+# Sidebar Navigation (Phase 1 – Sidebar Foundation)
+# ---------------------------------------------------------------------------
+# Global navigation state
+ID_ACTIVE_SECTION_STORE    = "m5-active-section-store"
+ID_ACTIVE_ANCHOR_STORE     = "m5-active-anchor-store"
+ID_MOBILE_MENU_STORE       = "m5-mobile-menu-store"
+
+# Sidebar shells
+ID_SIDEBAR_CONTAINER       = "m5-sidebar-desktop"
+ID_MOBILE_SIDEBAR          = "m5-sidebar-mobile"
+ID_MOBILE_MENU_TOGGLE      = "m5-mobile-menu-toggle"
+ID_MOBILE_BACKDROP         = "m5-mobile-backdrop"
+
+# Section wrapper IDs
+ID_SECTION_STATION         = "m5-section-station"
+ID_SECTION_TIME            = "m5-section-time"
+ID_SECTION_USER            = "m5-section-user"
+ID_SECTION_DISPATCH        = "m5-section-dispatch"
+
+# Filter panel wrapper (hidden outside Station Analysis)
+ID_FILTER_PANEL_WRAPPER    = "m5-filter-panel-wrapper"
+
+# --- Desktop navigation controls -------------------------------------------
+ID_NAV_STATION_DESKTOP     = "m5-nav-station-desktop"
+ID_NAV_TIME_DESKTOP        = "m5-nav-time-desktop"
+ID_NAV_USER_DESKTOP        = "m5-nav-user-desktop"
+ID_NAV_DISPATCH_DESKTOP    = "m5-nav-dispatch-desktop"
+
+ID_ANCHOR_STATION_NETWORK_DESKTOP = "m5-anchor-station-network-desktop"
+ID_ANCHOR_STATION_TRAFFIC_DESKTOP = "m5-anchor-station-traffic-desktop"
+ID_ANCHOR_STATION_FLOW_DESKTOP    = "m5-anchor-station-flow-desktop"
+
+ID_ANCHOR_TIME_HOURLY_DESKTOP   = "m5-anchor-time-hourly-desktop"
+ID_ANCHOR_TIME_DAYHOUR_DESKTOP  = "m5-anchor-time-dayhour-desktop"
+ID_ANCHOR_TIME_DURATION_DESKTOP = "m5-anchor-time-duration-desktop"
+
+ID_ANCHOR_USER_TYPE_DESKTOP     = "m5-anchor-user-type-desktop"
+ID_ANCHOR_USER_DEMO_DESKTOP     = "m5-anchor-user-demographics-desktop"
+ID_ANCHOR_USER_CROSSTAB_DESKTOP = "m5-anchor-user-crosstab-desktop"
+
+ID_ANCHOR_DISPATCH_PLAN_DESKTOP = "m5-anchor-dispatch-plan-desktop"
+
+# --- Mobile navigation controls --------------------------------------------
+ID_NAV_STATION_MOBILE      = "m5-nav-station-mobile"
+ID_NAV_TIME_MOBILE         = "m5-nav-time-mobile"
+ID_NAV_USER_MOBILE         = "m5-nav-user-mobile"
+ID_NAV_DISPATCH_MOBILE     = "m5-nav-dispatch-mobile"
+
+ID_ANCHOR_STATION_NETWORK_MOBILE = "m5-anchor-station-network-mobile"
+ID_ANCHOR_STATION_TRAFFIC_MOBILE = "m5-anchor-station-traffic-mobile"
+ID_ANCHOR_STATION_FLOW_MOBILE    = "m5-anchor-station-flow-mobile"
+
+ID_ANCHOR_TIME_HOURLY_MOBILE   = "m5-anchor-time-hourly-mobile"
+ID_ANCHOR_TIME_DAYHOUR_MOBILE  = "m5-anchor-time-dayhour-mobile"
+ID_ANCHOR_TIME_DURATION_MOBILE = "m5-anchor-time-duration-mobile"
+
+ID_ANCHOR_USER_TYPE_MOBILE     = "m5-anchor-user-type-mobile"
+ID_ANCHOR_USER_DEMO_MOBILE     = "m5-anchor-user-demographics-mobile"
+ID_ANCHOR_USER_CROSSTAB_MOBILE = "m5-anchor-user-crosstab-mobile"
+
+ID_ANCHOR_DISPATCH_PLAN_MOBILE = "m5-anchor-dispatch-plan-mobile"
+
+# Section keys
+SECTION_KEY_STATION        = "station"
+SECTION_KEY_TIME           = "time"
+SECTION_KEY_USER           = "user"
+SECTION_KEY_DISPATCH       = "dispatch"
+DEFAULT_ACTIVE_SECTION     = SECTION_KEY_STATION
 
 
 # ---------------------------------------------------------------------------
