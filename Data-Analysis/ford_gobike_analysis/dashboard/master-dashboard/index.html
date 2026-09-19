@@ -1037,41 +1037,60 @@
       if (STATE.filters.membership === 'Subscriber') membershipFactor = 0.905;
       if (STATE.filters.membership === 'Customer') membershipFactor = 0.095;
 
-      let regionFactor = 1.0;
-      if (STATE.filters.region === 'San Francisco') regionFactor = 0.73;
-      if (STATE.filters.region === 'East Bay') regionFactor = 0.20;
-      if (STATE.filters.region === 'San Jose') regionFactor = 0.07;
+      // 2. Determine scaling factors for membership and region
+      let membershipFactor = 1.0;
+      if (STATE.filters.membership === 'Subscriber') membershipFactor = 0.905;
+      if (STATE.filters.membership === 'Customer') membershipFactor = 0.095;
 
-      const scale = (daysSlice.length / 90) * membershipFactor * regionFactor;
+      const maxDays = DAILY_HISTORY.length || 28;
+      const timeFactor = daysSlice.length / maxDays;
+      const scale = timeFactor * membershipFactor;
 
+      // 3. Compute aggregate trips directly from Supabase daily records
       let totalTrips = 0;
       let totalSubs = 0;
       let totalCusts = 0;
 
       daysSlice.forEach(day => {
         let dayTrips = day.totalTrips;
-        if (STATE.filters.region === 'San Francisco') dayTrips = day.sf;
-        else if (STATE.filters.region === 'East Bay') dayTrips = day.eb;
-        else if (STATE.filters.region === 'San Jose') dayTrips = day.sj;
+        let daySubs = day.subscribers;
+        let dayCusts = day.customers;
+
+        if (STATE.filters.region === 'San Francisco') {
+          dayTrips = day.sf;
+          daySubs = Math.round(dayTrips * 0.905);
+          dayCusts = dayTrips - daySubs;
+        } else if (STATE.filters.region === 'East Bay') {
+          dayTrips = day.eb;
+          daySubs = Math.round(dayTrips * 0.905);
+          dayCusts = dayTrips - daySubs;
+        } else if (STATE.filters.region === 'San Jose') {
+          dayTrips = day.sj;
+          daySubs = Math.round(dayTrips * 0.905);
+          dayCusts = dayTrips - daySubs;
+        }
 
         if (STATE.filters.membership === 'Subscriber') {
-          dayTrips = Math.round(dayTrips * (day.isWeekend ? 0.79 : 0.925));
+          dayTrips = daySubs;
+          dayCusts = 0;
         } else if (STATE.filters.membership === 'Customer') {
-          dayTrips = Math.round(dayTrips * (day.isWeekend ? 0.21 : 0.075));
+          dayTrips = dayCusts;
+          daySubs = 0;
         }
 
         totalTrips += dayTrips;
-        totalSubs += Math.round(dayTrips * 0.905);
-        totalCusts += Math.round(dayTrips * 0.095);
+        totalSubs += daySubs;
+        totalCusts += dayCusts;
       });
 
+      // 4. Filter and scale stations
       let stations = RAW_STATIONS.filter(s => {
         if (STATE.filters.region !== 'all' && s.region !== STATE.filters.region) return false;
         return true;
       }).map(s => {
         const trips = Math.round(s.baseTrips * scale);
         const netBias = Math.round(s.netBias * scale);
-        const loopTrips = Math.round(trips * s.loopRatio);
+        const loopTrips = Math.round(trips * (s.loopRatio || 0.04));
         return {
           ...s,
           trips,
@@ -1079,7 +1098,7 @@
           arrivals: Math.round((trips + netBias) / 2),
           netFlow: netBias,
           loopTrips,
-          loopRatio: s.loopRatio
+          loopRatio: s.loopRatio || 0.04
         };
       });
 
