@@ -95,7 +95,7 @@ def create_layout() -> html.Div:
 
             # ── 1. Headline 4 Demographic KPI Summary Cards ────────────────────────
             html.Section(
-                className="grid grid-cols-2 lg:grid-cols-4 gap-4",
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4",
                 children=[
                     # KPI 1: Filtered Volume
                     html.Div(
