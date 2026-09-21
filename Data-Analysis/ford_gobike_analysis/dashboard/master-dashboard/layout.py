@@ -33,10 +33,10 @@ def create_master_layout() -> html.Div:
             # 2. Fixed Sidebar – always visible regardless of scroll position
             render_sidebar(active_route="/"),
 
-            # 3. Main Content Area – offset from the fixed sidebar (w-64 = 256px)
+            # 3. Main Content Area – offset controlled cleanly via CSS media queries
             html.Div(
                 id="master-main-wrapper",
-                style={"marginLeft": "16rem", "width": "calc(100% - 16rem)", "minHeight": "100vh", "overflowX": "hidden"},
+                style={"minHeight": "100vh", "overflowX": "hidden"},
                 className="flex flex-col min-h-screen bg-slate-50",
                 children=[
                     # Sticky Top Navbar
