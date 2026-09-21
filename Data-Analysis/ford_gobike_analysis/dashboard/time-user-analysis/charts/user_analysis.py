@@ -54,10 +54,12 @@ _SLATE_SOFT  = "#94A3B8"
 _USER_TYPE_COLORS = {
     "Subscriber": _TEAL,
     "Customer":   _PURPLE,
+    "Casual":     _PURPLE,
 }
 _USER_TYPE_BORDERS = {
     "Subscriber": _TEAL_DARK,
     "Customer":   _PURPLE_DARK,
+    "Casual":     _PURPLE_DARK,
 }
 
 # Gender palette (neutral, not stereotypical — uses dashboard accents)
@@ -158,13 +160,14 @@ def create_user_type_distribution_chart(df: pd.DataFrame) -> go.Figure:
         if k not in ordered_keys:
             ordered_keys.append(k)
 
-    labels = ordered_keys
-    values = [int(counts[k]) for k in labels]
+    labels = [("Casual" if k == "Customer" else k) for k in ordered_keys]
+    values = [int(counts[k]) for k in ordered_keys]
     total = sum(values)
 
     color_map = {
         "Subscriber": _TEAL,
-        "Customer": _PURPLE,
+        "Customer":   _PURPLE,
+        "Casual":     _PURPLE,
     }
     colors = [color_map.get(k, _SLATE) for k in labels]
     sub_pct = (counts.get("Subscriber", 0) / total * 100) if total else 0.0
@@ -280,10 +283,11 @@ def create_user_type_hour_chart(df: pd.DataFrame) -> go.Figure:
         peak_hour = hours[peak_idx]
         peak_val  = float(y_vals[peak_idx])
 
+        display_name = "Casual" if user_type == "Customer" else user_type
         hover_texts = [
-            f"<b>{user_type}</b><br>"
+            f"<b>{display_name}</b><br>"
             f"{h:02d}:00 – {h:02d}:59<br>"
-            f"Share of {user_type} trips: <b>{v:.2f}%</b>"
+            f"Share of {display_name} trips: <b>{v:.2f}%</b>"
             for h, v in zip(hours, y_vals)
         ]
 
@@ -307,7 +311,7 @@ def create_user_type_hour_chart(df: pd.DataFrame) -> go.Figure:
                 x=hours,
                 y=y_vals,
                 mode="lines+markers",
-                name=user_type,
+                name=display_name,
                 line=dict(color=color, width=2.6, shape="spline", smoothing=0.6),
                 marker=dict(
                     size=5,
@@ -338,7 +342,7 @@ def create_user_type_hour_chart(df: pd.DataFrame) -> go.Figure:
             x=peak_hour,
             y=peak_val,
             text=(
-                f"<b>{user_type} peak</b><br>"
+                f"<b>{display_name} peak</b><br>"
                 f"{peak_hour:02d}:00 · "
                 f"<span style='color:{border};font-weight:700;'>{peak_val:.2f}%</span>"
             ),
@@ -512,110 +516,105 @@ def create_avg_duration_by_user_type_chart(df: pd.DataFrame) -> go.Figure:
 
 def create_age_group_distribution_chart(df: pd.DataFrame) -> go.Figure:
     """
-    Trip distribution across age groups in chronological order.
-
-    The dominant age group receives the primary accent; the rest are muted
-    so the distribution's center of gravity is immediately visible.
+    Rider Age Demographics broken down by Gender cohorts (Male, Female, Other).
+    Provides rich demographic insights and multi-colored variety.
     """
     if df.empty or "member_age" not in df.columns:
         return _empty("No age data available for the selected filters.")
 
-    age_groups = _derive_age_group(df["member_age"]).dropna()
-    if age_groups.empty:
+    df_valid = df.copy()
+    df_valid["age_grp"] = _derive_age_group(df_valid["member_age"])
+    df_valid = df_valid.dropna(subset=["age_grp"])
+
+    if df_valid.empty:
         return _empty("No valid age records in the selected filter scope.")
 
-    counts = age_groups.value_counts().reindex(_AGE_GROUP_ORDER, fill_value=0)
-    if counts.sum() == 0:
-        return _empty("No valid age records in the selected filter scope.")
+    # Check if gender column is present
+    has_gender = "member_gender" in df_valid.columns
+    if not has_gender:
+        df_valid["member_gender"] = "All"
 
-    labels = counts.index.tolist()
-    values = [int(v) for v in counts.values]
-    total = int(sum(values))
-    dominant_label = counts.idxmax()
-    dominant_val = int(counts.max())
-    dominant_share = (dominant_val / total * 100.0) if total else 0.0
+    # Color mapping for genders
+    gender_colors = {
+        "Male": "#14B8A6",     # Teal
+        "Female": "#A855F7",   # Purple
+        "Other": "#F59E0B",    # Amber
+        "All": "#14B8A6",
+    }
 
-    colors, borders = [], []
-    for lbl in labels:
-        if lbl == dominant_label:
-            colors.append(_TEAL)
-            borders.append(_TEAL_DARK)
-        else:
-            colors.append(_hex_to_rgba(_TEAL, 0.55))
-            borders.append(_hex_to_rgba(_TEAL_DARK, 0.55))
+    genders = ["Male", "Female", "Other"] if has_gender else ["All"]
+    available_genders = [g for g in genders if g in df_valid["member_gender"].values]
+    if not available_genders:
+        available_genders = df_valid["member_gender"].unique().tolist()
 
-    bar_text = [
-        f"<b>{v / 1000:.1f}K</b> ({v / total * 100:.1f}%)" if v >= 1000 else f"<b>{v}</b>"
-        for v in values
-    ]
+    fig = go.Figure()
+    total_network_trips = len(df_valid)
 
-    hover_texts = [
-        f"<b>{lbl} years</b><br>"
-        f"Trips: <b>{v:,}</b><br>"
-        f"Share of total: <b>{v / total * 100:.1f}%</b>"
-        for lbl, v in zip(labels, values)
-    ]
+    for g in available_genders:
+        g_df = df_valid[df_valid["member_gender"] == g]
+        counts = g_df["age_grp"].value_counts().reindex(_AGE_GROUP_ORDER, fill_value=0)
 
-    fig = go.Figure(
-        go.Bar(
-            x=labels,
-            y=values,
-            marker=dict(color=colors, line=dict(color=borders, width=1.4)),
-            text=bar_text,
-            textposition="outside",
-            textfont=dict(color="#0F172A", size=11, family="Inter"),
-            hovertext=hover_texts,
-            hoverinfo="text",
-            cliponaxis=False,
-            showlegend=False,
+        c = gender_colors.get(g, "#64748B")
+        bar_text = [
+            f"{v/1000:.1f}k" if v >= 1000 else (f"{v}" if v > 0 else "")
+            for v in counts.values
+        ]
+        hover_texts = [
+            f"<b>{age_lbl} years</b><br>"
+            f"Gender: <b>{g}</b><br>"
+            f"Trips: <b>{v:,}</b><br>"
+            f"Share: <b>{v / max(1, total_network_trips) * 100:.1f}%</b>"
+            for age_lbl, v in zip(_AGE_GROUP_ORDER, counts.values)
+        ]
+
+        fig.add_trace(
+            go.Bar(
+                name=g,
+                x=_AGE_GROUP_ORDER,
+                y=counts.values,
+                marker=dict(
+                    color=c,
+                    line=dict(color="rgba(255, 255, 255, 0.2)", width=1),
+                ),
+                text=bar_text,
+                textposition="auto",
+                textfont=dict(color="#FFFFFF" if g != "Other" else "#0F172A", size=10, family="Inter"),
+                hovertext=hover_texts,
+                hoverinfo="text",
+            )
         )
-    )
-
-    # Dynamic peak annotation pointing to the largest cohort bar
-    fig.add_annotation(
-        x=dominant_label,
-        y=dominant_val,
-        text=f"▲ Peak: {dominant_label} ({dominant_share:.1f}%)",
-        showarrow=True,
-        arrowhead=2,
-        arrowsize=0.8,
-        arrowwidth=1.5,
-        arrowcolor=_TEAL_DARK,
-        ax=0,
-        ay=-32,
-        bgcolor="rgba(255,255,255,0.95)",
-        bordercolor=_TEAL,
-        borderwidth=1,
-        borderpad=4,
-        font=dict(color="#0F172A", size=10, family="Inter"),
-    )
 
     fig = apply_chart_theme(
         fig,
         height=CHART_HEIGHT_BAR,
-        margin=dict(l=14, r=14, t=44, b=34),
+        margin=dict(l=14, r=14, t=25, b=30),
     )
 
-    max_val = max(values) if values else 100
     fig.update_layout(
+        barmode="group",
+        bargap=0.25,
+        bargroupgap=0.1,
         xaxis=dict(
-            title=dict(text="Age Group (years)", font=dict(color=_AXIS_TITLE, size=11, family="Inter")),
+            title="",
             showgrid=False,
-            zeroline=False,
             tickfont=dict(color=_AXIS_TEXT, size=11, family="Inter"),
         ),
         yaxis=dict(
-            title=dict(text="Trip Volume", font=dict(color=_AXIS_TITLE, size=11, family="Inter")),
+            title="",
             tickformat=",",
             showgrid=True,
             gridcolor=_GRID_COLOR,
-            zeroline=False,
-            range=[0, max_val * 1.20],
-            tickfont=dict(color=_AXIS_TEXT, size=11, family="Inter"),
+            tickfont=dict(color=_AXIS_TEXT, size=10, family="Inter"),
         ),
-        bargap=0.35,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            font=dict(size=10, color=_AXIS_TEXT, family="Inter"),
+        ),
         hoverlabel=_HOVER_LABEL,
-        showlegend=False,
     )
 
     return fig
@@ -803,9 +802,10 @@ def create_user_type_by_age_group_chart(df: pd.DataFrame) -> go.Figure:
         color = _USER_TYPE_COLORS[user_type]
         border = _USER_TYPE_BORDERS[user_type]
 
+        display_name = "Casual" if user_type == "Customer" else user_type
         hover_texts = [
             f"<b>{ag} years</b><br>"
-            f"{user_type}: <b>{pct:.1f}%</b><br>"
+            f"{display_name}: <b>{pct:.1f}%</b><br>"
             f"({int(cnt):,} of {int(tot):,} trips)"
             for ag, pct, cnt, tot in zip(age_groups, pct_vals, raw_counts, row_totals_vals)
         ]
@@ -820,7 +820,7 @@ def create_user_type_by_age_group_chart(df: pd.DataFrame) -> go.Figure:
             go.Bar(
                 x=age_groups,
                 y=pct_vals,
-                name=user_type,
+                name=display_name,
                 marker=dict(color=color, line=dict(color=border, width=1.0)),
                 hovertext=hover_texts,
                 hoverinfo="text",
@@ -862,6 +862,128 @@ def create_user_type_by_age_group_chart(df: pd.DataFrame) -> go.Figure:
             gridcolor=_GRID_COLOR,
             zeroline=False,
             tickfont=dict(color=_AXIS_TEXT, size=11, family="Inter"),
+        ),
+        hoverlabel=_HOVER_LABEL,
+    )
+
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# 7. Trip Duration Distribution — grouped by user type (Subscriber vs Customer)
+# ---------------------------------------------------------------------------
+
+def create_trip_duration_distribution_chart(df: pd.DataFrame) -> go.Figure:
+    """
+    Duration frequency split between subscriber and casual passes matching Screenshot 3.
+    Standard duration bins: ['0-5m', '5-10m', '10-15m', '15-20m', '20-30m', '30m+'].
+    Grouped bar chart comparing Subscriber (Teal) vs Customer (Purple).
+    """
+    if df.empty or "duration_min" not in df.columns or "user_type" not in df.columns:
+        return _empty("No duration data available for the selected filters.")
+
+    working = df[["user_type", "duration_min"]].dropna().copy()
+    if working.empty:
+        return _empty("No duration records in the selected filter scope.")
+
+    bins = [0, 5, 10, 15, 20, 30, float("inf")]
+    bin_labels = ["0-5m", "5-10m", "10-15m", "15-20m", "20-30m", "30m+"]
+
+    working["duration_bin"] = pd.cut(
+        working["duration_min"],
+        bins=bins,
+        labels=bin_labels,
+        right=False,
+    )
+
+    sub_df = working[working["user_type"] == "Subscriber"]
+    cust_df = working[working["user_type"] == "Customer"]
+
+    sub_counts = sub_df["duration_bin"].value_counts().reindex(bin_labels, fill_value=0)
+    cust_counts = cust_df["duration_bin"].value_counts().reindex(bin_labels, fill_value=0)
+
+    sub_total = len(sub_df) or 1
+    cust_total = len(cust_df) or 1
+
+    sub_shares = [round((v / sub_total) * 100, 1) for v in sub_counts]
+    cust_shares = [round((v / cust_total) * 100, 1) for v in cust_counts]
+
+    fig = go.Figure()
+
+    # Subscriber trace (Teal)
+    fig.add_trace(
+        go.Bar(
+            name="Subscriber",
+            x=bin_labels,
+            y=sub_shares,
+            marker=dict(
+                color="#14B8A6",
+                line=dict(color="#0F766E", width=1.2),
+            ),
+            text=[f"<b>{v:.0f}%</b>" if v >= 2 else "" for v in sub_shares],
+            textposition="outside",
+            textfont=dict(size=10, family="Inter", color="#0F172A"),
+            hovertext=[
+                f"<b>Subscriber</b>: {b}<br>Share: <b>{s:.1f}%</b> ({c:,} rides)"
+                for b, s, c in zip(bin_labels, sub_shares, sub_counts)
+            ],
+            hoverinfo="text",
+            cliponaxis=False,
+        )
+    )
+
+    # Casual trace (Purple)
+    fig.add_trace(
+        go.Bar(
+            name="Casual",
+            x=bin_labels,
+            y=cust_shares,
+            marker=dict(
+                color="#A855F7",
+                line=dict(color="#7E22CE", width=1.2),
+            ),
+            text=[f"<b>{v:.0f}%</b>" if v >= 2 else "" for v in cust_shares],
+            textposition="outside",
+            textfont=dict(size=10, family="Inter", color="#0F172A"),
+            hovertext=[
+                f"<b>Casual</b>: {b}<br>Share: <b>{s:.1f}%</b> ({c:,} rides)"
+                for b, s, c in zip(bin_labels, cust_shares, cust_counts)
+            ],
+            hoverinfo="text",
+            cliponaxis=False,
+        )
+    )
+
+    fig = apply_chart_theme(
+        fig,
+        height=CHART_HEIGHT_BAR,
+        margin=dict(l=10, r=10, t=30, b=30),
+    )
+
+    fig.update_layout(
+        barmode="group",
+        bargap=0.25,
+        bargroupgap=0.1,
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            font=dict(size=11, family="Inter", color=_AXIS_TEXT),
+        ),
+        xaxis=dict(
+            showgrid=False,
+            zeroline=False,
+            tickfont=dict(size=11, family="Inter", color=_AXIS_TEXT),
+        ),
+        yaxis=dict(
+            ticksuffix="%",
+            showgrid=True,
+            gridcolor=_GRID_COLOR,
+            zeroline=False,
+            tickfont=dict(size=11, family="Inter", color=_AXIS_TEXT),
         ),
         hoverlabel=_HOVER_LABEL,
     )

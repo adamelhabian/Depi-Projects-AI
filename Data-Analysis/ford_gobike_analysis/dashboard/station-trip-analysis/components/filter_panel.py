@@ -57,7 +57,7 @@ def filter_panel() -> html.Section:
                                 options=[
                                     {"label": "All Users (Total Volume)", "value": "All"},
                                     {"label": "Subscriber (Annual / Pass)", "value": "Subscriber"},
-                                    {"label": "Customer (Casual / 24h Pass)", "value": "Customer"},
+                                    {"label": "Casual (Single / Day Pass)", "value": "Customer"},
                                 ],
                                 value="All",
                                 clearable=False,

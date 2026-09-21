@@ -22,18 +22,126 @@ except AttributeError:
 
 # Regional Color Palette for Mini-Map
 REGION_COLORS = {
-    "San Francisco": "#10B981",  # Emerald
-    "East Bay": "#0D9488",       # Teal
-    "San Jose": "#6366F1",       # Indigo
+    "San Francisco": "#10B981",              # Emerald
+    "East Bay": "#0D9488",                   # Teal
+    "East Bay (Oakland/Berkeley)": "#0D9488",# Teal
+    "San Jose": "#6366F1",                   # Indigo
 }
+
+
+def create_overview_daily_trend_chart(df: pd.DataFrame) -> go.Figure:
+    """
+    Build the Daily Ridership & Prior Period Benchmark area curve matching reference UI:
+      - Current Period: solid line #14B8A6, translucent teal area fill rgba(20, 184, 166, 0.08)
+      - Prior Period Benchmark: dashed line #94A3B8, no fill
+      - Smooth cubic spline interpolation (shape='spline')
+    """
+    if df.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            title="No daily ridership records available",
+            paper_bgcolor="#ffffff",
+            plot_bgcolor="#ffffff",
+            height=288,
+        )
+        return fig
+
+    # Use real ISO datetime strings (YYYY-MM-DD) for Plotly date axis
+    if "date_str" in df.columns:
+        x_dates = df["date_str"].tolist()
+    elif "full_date" in df.columns:
+        x_dates = [pd.to_datetime(d).strftime("%Y-%m-%d") for d in df["full_date"]]
+    else:
+        x_dates = [f"2019-02-{i+1:02d}" for i in range(len(df))]
+
+    current_values = df["trip_count"].tolist()
+
+    # Genuine Week-over-Week baseline (Day d compared to Day d-7)
+    # First 7 days (Feb 1-7) have no prior week in this 28-day dataset -> None (hidden, no fake data)
+    if "prior_count" in df.columns:
+        prior_values = [int(v) if pd.notna(v) else None for v in df["prior_count"]]
+    else:
+        s = pd.Series(current_values).shift(7)
+        prior_values = [int(v) if pd.notna(v) else None for v in s]
+
+    fig = go.Figure()
+
+    # 1. Current Period (Solid Teal with Area Fill, Linear - no artificial spline)
+    fig.add_trace(
+        go.Scatter(
+            x=x_dates,
+            y=current_values,
+            name="Current Period",
+            mode="lines",
+            line=dict(color="#14B8A6", width=2.5, shape="linear"),
+            fill="tozeroy",
+            fillcolor="rgba(20, 184, 166, 0.08)",
+            hovertemplate="Current Period: <b>%{y:,} trips</b><extra></extra>",
+        )
+    )
+
+    # 2. Prior Period Benchmark: Genuine Week-over-Week (Dashed Gray Line)
+    # connectgaps=False ensures no line is drawn for the first 7 days where prior_values is None
+    fig.add_trace(
+        go.Scatter(
+            x=x_dates,
+            y=prior_values,
+            name="Prior Week (Same Day)",
+            mode="lines",
+            line=dict(color="#94A3B8", width=1.8, dash="dash", shape="linear"),
+            connectgaps=False,
+            hovertemplate="Prior Week: <b>%{y:,} trips</b><extra></extra>",
+        )
+    )
+
+    fig.update_layout(
+        font=dict(family="Inter, -apple-system, sans-serif", size=11, color="#64748B"),
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#ffffff",
+        height=288,
+        margin=dict(l=35, r=15, t=10, b=25),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5,
+            font=dict(size=11, color="#475569"),
+        ),
+        hovermode="x unified",
+        hoverlabel=dict(
+            bgcolor="#0F172A",
+            font=dict(color="#FFFFFF", size=12),
+        ),
+    )
+
+    fig.update_xaxes(
+        type="date",
+        tickformat="%b %d",
+        dtick=86400000.0 * 2,
+        showgrid=False,
+        linecolor="#E2E8F0",
+        tickfont=dict(color="#64748B", size=10),
+        hoverformat="%B %d, %Y",
+    )
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="#F1F5F9",
+        linecolor="#E2E8F0",
+        tickfont=dict(color="#64748B", size=10),
+    )
+
+    return fig
 
 
 def create_overview_trend_chart(df: pd.DataFrame) -> go.Figure:
     """
-    Build a dual-axis executive trend chart showing:
-      - Bar/Area: 24-hour trip volume with commute rush peaks (8 AM & 5 PM)
-      - Line: Average trip duration (minutes) across hours
+    Build a trend chart: routes to daily trend if full_date or formatted_date is present,
+    or 24-hour dual-axis if hour is present.
     """
+    if "full_date" in df.columns or "formatted_date" in df.columns:
+        return create_overview_daily_trend_chart(df)
+
     if df.empty:
         fig = go.Figure()
         fig.update_layout(
@@ -129,27 +237,29 @@ def create_overview_trend_chart(df: pd.DataFrame) -> go.Figure:
         linecolor="#E2E8F0",
         secondary_y=False,
     )
+    max_duration = df["avg_duration"].max() if not df["avg_duration"].empty else 25
     fig.update_yaxes(
         title_text="Duration (min)",
         title_font=dict(size=11, color="#10B981"),
         showgrid=False,
         linecolor="#E2E8F0",
-        range=[0, max(df["avg_duration"].max() * 1.35, 25)],
+        range=[0, max(float(max_duration) * 1.35, 25)],
         secondary_y=True,
     )
 
     return fig
 
 
-def create_overview_minimap(df: pd.DataFrame) -> go.Figure:
+def create_overview_minimap(df: pd.DataFrame, region: str = "All") -> go.Figure:
     """
-    Build an interactive geospatial scatter mini-map showing the 329 stations
+    Build an interactive geospatial scatter mini-map showing stations
     clustered across the Bay Area (San Francisco, East Bay, San Jose).
+    Dynamically adjusts viewport center and zoom to active region filter.
     """
     if df.empty:
         fig = go.Figure()
         fig.update_layout(
-            title="No geospatial data available",
+            title="No geospatial data available for active filter",
             paper_bgcolor="#ffffff",
             plot_bgcolor="#ffffff",
         )
@@ -185,11 +295,24 @@ def create_overview_minimap(df: pd.DataFrame) -> go.Figure:
         )
     )
 
-    # Dynamic mapbox layout centered on Greater Bay Area
+    # Dynamic mapbox layout centered on Greater Bay Area or selected Region
+    if region == "San Francisco":
+        center_coords = {"lat": 37.774, "lon": -122.419}
+        zoom_level = 11.5
+    elif "East Bay" in region:
+        center_coords = {"lat": 37.820, "lon": -122.260}
+        zoom_level = 11.2
+    elif region == "San Jose":
+        center_coords = {"lat": 37.335, "lon": -121.890}
+        zoom_level = 12.0
+    else:
+        center_coords = {"lat": 37.65, "lon": -122.25}
+        zoom_level = 8.8
+
     map_config = {
         "style": "carto-positron",
-        "center": {"lat": 37.65, "lon": -122.25},
-        "zoom": 8.8,
+        "center": center_coords,
+        "zoom": zoom_level,
     }
 
     fig.update_layout(

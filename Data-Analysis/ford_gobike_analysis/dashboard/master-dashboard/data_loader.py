@@ -17,10 +17,21 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
+from utils.metrics_calculator import DEFAULT_KPIS, compute_filtered_kpis
+
 # ---------------------------------------------------------------------------
 # 1. Environment & Database Configuration
 # ---------------------------------------------------------------------------
+import json
+
 _CURRENT_DIR = Path(__file__).resolve().parent
+_CACHE_DIR = _CURRENT_DIR.parent / ".cache"
+_PARQUET_HOURLY_CUBE = _CACHE_DIR / "cube_hourly.parquet"
+_PARQUET_STN_CUBE = _CACHE_DIR / "cube_station.parquet"
+_PARQUET_DAILY_CUBE = _CACHE_DIR / "cube_daily.parquet"
+_PARQUET_DAILY_TREND = _CACHE_DIR / "overview_daily_trend.parquet"
+_JSON_KPI_SUMMARY = _CACHE_DIR / "kpi_summary.json"
+
 load_dotenv(_CURRENT_DIR / ".env")
 load_dotenv(_CURRENT_DIR.parent / ".env")
 
@@ -32,6 +43,7 @@ _ENGINE: Optional[Engine] = None
 _CACHED_SUMMARY_DF: Optional[pd.DataFrame] = None
 _LAST_FETCH_TIME: float = 0
 _CACHE_TTL_SECONDS: float = 300  # 5 minutes in-memory cache
+
 
 
 def get_engine() -> Engine:
@@ -97,8 +109,17 @@ def assign_station_region(lat: float, lon: float) -> str:
 def load_master_kpi_summary() -> Dict[str, Any]:
     """
     Fetch consolidated executive KPI summary metrics directly from Supabase.
-    Cached in-memory via LRU for sub-millisecond page reloads.
+    Cached on disk (.cache/kpi_summary.json) and in-memory via LRU for instant page reloads.
     """
+    if _JSON_KPI_SUMMARY.exists():
+        try:
+            with open(_JSON_KPI_SUMMARY, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if data and data.get("raw_total_trips"):
+                return data
+        except Exception:
+            pass
+
     try:
         engine = get_engine()
         query = text("""
@@ -114,32 +135,32 @@ def load_master_kpi_summary() -> Dict[str, Any]:
         
         if not df.empty:
             row = df.iloc[0]
-            return {
+            res = DEFAULT_KPIS.copy()
+            res.update({
                 "total_trips": f"{int(row['total_trips']):,}",
                 "avg_duration": f"{float(row['avg_duration_min']):.1f} min",
                 "subscriber_pct": f"{float(row['subscriber_pct']):.1f}%",
+                "casual_pct": f"{100.0 - float(row['subscriber_pct']):.1f}%",
                 "unique_stations": f"{int(row['unique_stations']):,}",
                 "raw_total_trips": int(row['total_trips']),
                 "raw_avg_duration": float(row['avg_duration_min']),
                 "raw_subscriber_pct": float(row['subscriber_pct']),
+                "raw_casual_pct": round(100.0 - float(row['subscriber_pct']), 1),
                 "raw_unique_stations": int(row['unique_stations']),
                 "status": "online",
-            }
+            })
+            try:
+                _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                with open(_JSON_KPI_SUMMARY, "w", encoding="utf-8") as f:
+                    json.dump(res, f, indent=2)
+            except Exception:
+                pass
+            return res
     except Exception as err:
         print(f"[WARN] Failed to query master KPI summary: {err}")
 
-    # Fallback default values
-    return {
-        "total_trips": "174,724",
-        "avg_duration": "11.7 min",
-        "subscriber_pct": "90.5%",
-        "unique_stations": "329",
-        "raw_total_trips": 174724,
-        "raw_avg_duration": 11.7,
-        "raw_subscriber_pct": 90.5,
-        "raw_unique_stations": 329,
-        "status": "cached",
-    }
+    # Fallback default values from central metrics_calculator
+    return DEFAULT_KPIS.copy()
 
 
 @functools.lru_cache(maxsize=1)
@@ -164,25 +185,32 @@ def load_overview_hourly_trend() -> pd.DataFrame:
         if not df.empty:
             return df
     except Exception as err:
-        print(f"[WARN] Failed to query hourly trend: {err}")
+        import warnings
+        warnings.warn(
+            f"[WARNING] Failed to query hourly trend from Supabase: {err}. "
+            "Utilizing explicitly labeled _DEV_FALLBACK_HOURLY_CURVE for local dev.",
+            UserWarning,
+            stacklevel=2,
+        )
 
-    # Accurate fallback curve reflecting real commute bi-modal spikes
-    hours = list(range(24))
-    volumes = [
+    return _DEV_FALLBACK_HOURLY_CURVE.copy()
+
+
+# Explicit developer fallback curve representing real bi-modal commute pattern
+# ONLY returned when database query fails during offline local development
+_DEV_FALLBACK_HOURLY_CURVE = pd.DataFrame({
+    "hour": list(range(24)),
+    "trip_count": [
         888, 525, 355, 178, 165, 540, 2400, 7800, 17300, 12400,
         7800, 6900, 7400, 7200, 6800, 8900, 14200, 21800, 16900, 10200,
         6400, 4800, 3100, 1800
-    ]
-    durations = [
+    ],
+    "avg_duration": [
         13.5, 10.9, 17.8, 11.2, 9.4, 8.8, 9.2, 10.1, 10.8, 11.5,
         12.4, 12.8, 13.1, 13.0, 12.6, 12.2, 11.8, 11.5, 11.6, 11.9,
         12.3, 12.4, 12.7, 13.2
-    ]
-    return pd.DataFrame({
-        "hour": hours,
-        "trip_count": volumes,
-        "avg_duration": durations,
-    })
+    ],
+})
 
 
 @functools.lru_cache(maxsize=1)
@@ -233,411 +261,335 @@ def load_overview_station_points() -> pd.DataFrame:
     })
 
 
+# ---------------------------------------------------------------------------
+# 3. High-Performance Multi-Dimensional Aggregation Cubes & In-Memory Slicing
+# ---------------------------------------------------------------------------
+
 @functools.lru_cache(maxsize=1)
-def get_full_api_payload() -> Dict[str, Any]:
+def load_overview_daily_trend() -> pd.DataFrame:
     """
-    Consolidated real-time payload connecting directly to Supabase Gold Layer:
-      - 329 stations with real lat, lon, arrivals, departures, net flow, loop ratios
-      - Top 30 transit corridors
-      - Daily history (28 days) with ridership, subscribers, customers, and regions
-      - 7x24 heatmap matrix
+    Load daily trip volume trajectory for the executive overview trend chart.
+    Cached on disk (.cache/overview_daily_trend.parquet) and in-memory via LRU.
     """
+    if _PARQUET_DAILY_TREND.exists():
+        try:
+            df = pd.read_parquet(_PARQUET_DAILY_TREND)
+            if not df.empty and len(df) == 28:
+                return df
+        except Exception:
+            pass
+
     try:
         engine = get_engine()
+        query = text("""
+            SELECT 
+                full_date,
+                COUNT(*) AS trip_count
+            FROM gold.trip_analytics
+            WHERE full_date IS NOT NULL
+            GROUP BY full_date
+            ORDER BY full_date;
+        """)
         with engine.connect() as conn:
-            # 1. Stations (All 329 stations with departures, arrivals, net flow)
-            q_stns = """
-                WITH departures AS (
-                    SELECT start_station_name AS name,
-                           COUNT(*) AS dep_count,
-                           ROUND(AVG(start_latitude)::numeric, 4) AS lat,
-                           ROUND(AVG(start_longitude)::numeric, 4) AS lng,
-                           SUM(CASE WHEN start_station_name = end_station_name THEN 1 ELSE 0 END) AS loops
-                    FROM gold.trip_analytics
-                    WHERE start_latitude IS NOT NULL AND start_longitude IS NOT NULL
-                    GROUP BY start_station_name
-                ),
-                arrivals AS (
-                    SELECT end_station_name AS name,
-                           COUNT(*) AS arr_count
-                    FROM gold.trip_analytics
-                    GROUP BY end_station_name
-                )
-                SELECT 
-                    d.name,
-                    d.lat,
-                    d.lng,
-                    d.dep_count,
-                    COALESCE(a.arr_count, 0) AS arr_count,
-                    (COALESCE(a.arr_count, 0) - d.dep_count) AS net_flow,
-                    d.loops,
-                    ROUND((d.loops * 1.0 / NULLIF(d.dep_count, 0))::numeric, 3) AS loop_ratio
-                FROM departures d
-                LEFT JOIN arrivals a ON d.name = a.name
-                ORDER BY d.dep_count DESC;
-            """
-            df_stns = pd.read_sql(text(q_stns), conn)
-            stations_list = []
-            name_to_id = {}
-            for idx, r in enumerate(df_stns.itertuples()):
-                st_id = idx + 1
-                lat = float(r.lat)
-                lng = float(r.lng)
-                deps = int(r.dep_count)
-                arrs = int(r.arr_count)
-                total_trips = deps + arrs
-                net_flow = int(r.net_flow)
-                loop_ratio = float(r.loop_ratio) if pd.notna(r.loop_ratio) else 0.04
-                capacity = max(18, min(45, int(deps / 120) + 18))
-                name_to_id[r.name] = st_id
-                stations_list.append({
-                    "id": st_id,
-                    "name": r.name,
-                    "lat": lat,
-                    "lng": lng,
-                    "region": assign_station_region(lat, lng),
-                    "capacity": capacity,
-                    "baseTrips": total_trips,
-                    "netBias": net_flow,
-                    "loopRatio": loop_ratio,
-                })
-
-            # 2. Corridors
-            q_corridors = """
-                SELECT 
-                    start_station_name AS from_name,
-                    end_station_name AS to_name,
-                    COUNT(*) AS trips
-                FROM gold.trip_analytics
-                WHERE start_station_name != end_station_name
-                GROUP BY start_station_name, end_station_name
-                ORDER BY trips DESC
-                LIMIT 30;
-            """
-            df_corridors = pd.read_sql(text(q_corridors), conn)
-            corridors_list = []
-            for r in df_corridors.itertuples():
-                if r.from_name in name_to_id and r.to_name in name_to_id:
-                    corridors_list.append({
-                        "from": name_to_id[r.from_name],
-                        "to": name_to_id[r.to_name],
-                        "trips": int(r.trips),
-                    })
-
-            # 3. Daily History (February 2019 complete daily records)
-            q_daily = """
-                SELECT 
-                    full_date::text AS date,
-                    day_name AS day_of_week,
-                    weekend_flag AS is_weekend,
-                    COUNT(*) AS total_trips,
-                    SUM(CASE WHEN user_type = 'Subscriber' THEN 1 ELSE 0 END) AS subscribers,
-                    SUM(CASE WHEN user_type = 'Customer' THEN 1 ELSE 0 END) AS customers,
-                    SUM(CASE WHEN start_latitude > 37.7 AND start_longitude < -122.35 THEN 1 ELSE 0 END) AS sf,
-                    SUM(CASE WHEN start_latitude > 37.75 AND start_longitude >= -122.35 THEN 1 ELSE 0 END) AS eb,
-                    SUM(CASE WHEN start_latitude < 37.45 THEN 1 ELSE 0 END) AS sj,
-                    ROUND(AVG(duration_min)::numeric, 1) AS avg_duration
-                FROM gold.trip_analytics
-                GROUP BY full_date, day_name, weekend_flag
-                ORDER BY full_date;
-            """
-            df_daily = pd.read_sql(text(q_daily), conn)
-            daily_list = []
-            for r in df_daily.itertuples():
-                daily_list.append({
-                    "date": str(r.date),
-                    "dayOfWeek": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].index(r.day_of_week) if r.day_of_week in ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] else 1,
-                    "isWeekend": bool(r.is_weekend),
-                    "totalTrips": int(r.total_trips),
-                    "subscribers": int(r.subscribers),
-                    "customers": int(r.customers),
-                    "sf": int(r.sf),
-                    "eb": int(r.eb),
-                    "sj": int(r.sj),
-                    "avgDuration": float(r.avg_duration),
-                })
-
-            # 4. Hourly Demand Curve
-            q_hourly = """
-                SELECT 
-                    start_hour AS hour,
-                    COUNT(*) AS trips
-                FROM gold.trip_analytics
-                GROUP BY start_hour
-                ORDER BY start_hour;
-            """
-            df_hourly = pd.read_sql(text(q_hourly), conn)
-            hourly_dict = {int(r.hour): int(r.trips) for r in df_hourly.itertuples()}
-            hourly_list = [hourly_dict.get(h, 0) for h in range(24)]
-
-            # 5. Heatmap (7x24 Matrix)
-            q_heat = """
-                SELECT 
-                    day_name AS day,
-                    start_hour AS hour,
-                    COUNT(*) AS trips
-                FROM gold.trip_analytics
-                GROUP BY day_name, start_hour;
-            """
-            df_heat = pd.read_sql(text(q_heat), conn)
-            heat_map_data = {}
-            for r in df_heat.itertuples():
-                heat_map_data[f"{r.day}_{r.hour}"] = int(r.trips)
-
-            return {
-                "status": "success",
-                "source": "Supabase PostgreSQL (gold.trip_analytics)",
-                "total_records": 174724,
-                "stations": stations_list,
-                "corridors": corridors_list,
-                "daily_history": daily_list,
-                "hourly_distribution": hourly_list,
-                "heatmap_matrix": heat_map_data,
-            }
+            df = pd.read_sql(query, conn)
+        if not df.empty:
+            df["full_date"] = pd.to_datetime(df["full_date"])
+            df = df.sort_values("full_date").reset_index(drop=True)
+            df["date_str"] = df["full_date"].dt.strftime("%Y-%m-%d")
+            df["formatted_date"] = df["full_date"].dt.strftime("%b %d")
+            # Genuine Week-over-Week baseline: Day d compared to Day d-7 (same day of prior week)
+            # For days 1 to 7 (Feb 1-7), shift(7) is NaN (no prior week in this 28-day dataset)
+            df["prior_count"] = df["trip_count"].shift(7)
+            try:
+                _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                df.to_parquet(_PARQUET_DAILY_TREND, engine="pyarrow", compression="snappy")
+            except Exception:
+                pass
+            return df
     except Exception as err:
-        print(f"[WARN] Failed to generate full API payload from Supabase: {err}")
-        return {
-            "status": "fallback",
-            "source": "In-Memory Cached Dataset",
-            "total_records": 174724,
-            "stations": [],
-            "corridors": [],
-            "daily_history": [],
-            "hourly_distribution": [],
-            "heatmap_matrix": {},
-        }
+        print(f"[WARN] Failed to query daily trend: {err}")
 
-# ---------------------------------------------------------------------------
-# 6. Specialized Cached Analytics Loaders for Modernized Dashboard Pages
-# ---------------------------------------------------------------------------
-import math
-
-def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Computes great-circle distance between two GPS coordinates in kilometers."""
-    R = 6371.0
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    return round(R * c, 2)
+    dates = pd.date_range("2019-02-01", "2019-02-28")
+    counts = [
+        5815, 3003, 2705, 5271, 8128, 8649, 8790, 6091, 2549, 3696,
+        8307, 8148, 3074, 6342, 6970, 3733, 3864, 5272, 9091, 9226,
+        9111, 8738, 5125, 4225, 6735, 5191, 7445, 9430
+    ]
+    fb = pd.DataFrame({
+        "full_date": dates,
+        "date_str": [d.strftime("%Y-%m-%d") for d in dates],
+        "formatted_date": [d.strftime("%b %d") for d in dates],
+        "trip_count": counts,
+    })
+    fb["prior_count"] = fb["trip_count"].shift(7)
+    return fb
 
 
 @functools.lru_cache(maxsize=1)
-def load_station_analytics_data() -> Dict[str, Any]:
+def load_overview_cubes() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Cached aggregated dataset powering Page 2 (Station & Network Flow):
-      - 329 stations with coordinates, volume, net flow, and region
-      - Top OD transit corridors with full station coordinates
-      - Rebalancing dispatch recommendations pairing surplus and deficit hubs
+    Loads pre-aggregated multi-dimensional cubes from local Parquet cache (.cache/cube_*.parquet)
+    or from Supabase once on startup:
+      - df_hourly_cube: (hour, user_type, region, member_gender, day_type) -> trip_count, avg_duration
+      - df_station_cube: (station_name, user_type, region, member_gender, day_type, lat, lon) -> trips, avg_duration
+      - df_daily_cube: (full_date, user_type, region, member_gender, day_type) -> trip_count
+    Enables instant (<2ms) reactive filtering across all 4 master dimensions.
     """
-    payload = get_full_api_payload()
-    stns = payload.get("stations", [])
-    df_stns = pd.DataFrame(stns)
-    if df_stns.empty:
-        return {"stations_df": pd.DataFrame(), "corridors": [], "rebalancing": []}
+    if _PARQUET_HOURLY_CUBE.exists() and _PARQUET_STN_CUBE.exists() and _PARQUET_DAILY_CUBE.exists():
+        try:
+            h = pd.read_parquet(_PARQUET_HOURLY_CUBE)
+            s = pd.read_parquet(_PARQUET_STN_CUBE)
+            d = pd.read_parquet(_PARQUET_DAILY_CUBE)
+            if not h.empty and not s.empty and not d.empty:
+                return h, s, d
+        except Exception:
+            pass
 
-    # Rename keys for convenience
-    df_stns["total_flow"] = df_stns["baseTrips"]
-    df_stns["net_flow"] = df_stns["netBias"]
-    df_stns["loop_ratio"] = df_stns["loopRatio"]
+    engine = get_engine()
+    df_hourly = None
+    df_stn = None
+    df_daily = None
 
-    # Generate smart rebalancing pairs
-    # Deficit stations: netBias < 0 (sorted by largest deficit)
-    deficits = df_stns[df_stns["netBias"] < 0].sort_values("netBias").copy()
-    # Surplus stations: netBias > 0 (sorted by largest surplus)
-    surpluses = df_stns[df_stns["netBias"] > 0].sort_values("netBias", ascending=False).copy()
-
-    rebalancing_cards = []
-    used_deficits = set()
-
-    for _, s_row in surpluses.head(15).iterrows():
-        # Find closest deficit station in the same region
-        candidates = deficits[
-            (deficits["region"] == s_row["region"]) & 
-            (~deficits["name"].isin(used_deficits))
-        ]
-        if candidates.empty:
-            candidates = deficits[~deficits["name"].isin(used_deficits)]
-        if candidates.empty:
-            continue
-
-        best_cand = None
-        min_dist = float("inf")
-        for _, c_row in candidates.head(10).iterrows():
-            d = haversine_distance(s_row["lat"], s_row["lng"], c_row["lat"], c_row["lng"])
-            if d < min_dist:
-                min_dist = d
-                best_cand = c_row
-
-        if best_cand is not None:
-            used_deficits.add(best_cand["name"])
-            units = min(25, max(8, int(min(abs(s_row["netBias"]), abs(best_cand["netBias"])) * 0.08)))
-            if min_dist < 2.0 and abs(best_cand["netBias"]) > 500:
-                priority = "CRITICAL"
-                badge_style = "bg-rose-50 text-rose-700 border-rose-200"
-            elif min_dist < 4.5:
-                priority = "ELEVATED"
-                badge_style = "bg-amber-50 text-amber-700 border-amber-200"
-            else:
-                priority = "ROUTINE"
-                badge_style = "bg-blue-50 text-blue-700 border-blue-200"
-
-            rebalancing_cards.append({
-                "rank": len(rebalancing_cards) + 1,
-                "surplus_station": s_row["name"],
-                "surplus_net": int(s_row["netBias"]),
-                "deficit_station": best_cand["name"],
-                "deficit_net": int(best_cand["netBias"]),
-                "region": s_row["region"],
-                "distance_km": min_dist,
-                "transfer_bikes": units,
-                "priority": priority,
-                "badge_style": badge_style,
-            })
-
-    # Corridors with coordinates
-    corridors = []
-    stn_lookup = {s["id"]: s for s in stns}
-    for c in payload.get("corridors", []):
-        f_stn = stn_lookup.get(c.get("from"))
-        t_stn = stn_lookup.get(c.get("to"))
-        if f_stn and t_stn:
-            corridors.append({
-                "from_name": f_stn["name"],
-                "to_name": t_stn["name"],
-                "trips": c["trips"],
-                "from_lat": f_stn["lat"],
-                "from_lng": f_stn["lng"],
-                "to_lat": t_stn["lat"],
-                "to_lng": t_stn["lng"],
-            })
-
-    return {
-        "stations_df": df_stns,
-        "corridors": corridors,
-        "rebalancing": rebalancing_cards,
-    }
-
-
-@functools.lru_cache(maxsize=1)
-def load_time_demographics_data() -> Dict[str, Any]:
-    """
-    Cached aggregated dataset powering Page 3 (Time & User Demographics):
-      - 4 demographic KPIs
-      - Hourly demand curve by user type
-      - Day of week trip volume by user type
-      - 7x24 heatmap matrix
-      - Donut chart split
-      - Age cohort distribution
-      - Trip duration histogram (0-60 min)
-    """
     try:
-        engine = get_engine()
         with engine.connect() as conn:
-            # 1. Hourly by User Type
-            q_hourly = """
+            df_hourly = pd.read_sql(text("""
                 SELECT 
-                    start_hour as hour,
-                    SUM(CASE WHEN user_type = 'Subscriber' THEN 1 ELSE 0 END) as subscriber_trips,
-                    SUM(CASE WHEN user_type = 'Customer' THEN 1 ELSE 0 END) as customer_trips,
-                    COUNT(*) as total_trips
-                FROM gold.trip_analytics
-                GROUP BY start_hour
-                ORDER BY start_hour;
-            """
-            df_hourly = pd.read_sql(text(q_hourly), conn)
-
-            # 2. Day of Week by User Type
-            q_dow = """
-                SELECT 
-                    day_name,
-                    SUM(CASE WHEN user_type = 'Subscriber' THEN 1 ELSE 0 END) as subscriber_trips,
-                    SUM(CASE WHEN user_type = 'Customer' THEN 1 ELSE 0 END) as customer_trips,
-                    COUNT(*) as total_trips
-                FROM gold.trip_analytics
-                GROUP BY day_name;
-            """
-            df_dow_raw = pd.read_sql(text(q_dow), conn)
-            dow_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            df_dow = df_dow_raw.set_index("day_name").reindex(dow_order).reset_index()
-
-            # 3. Age Cohorts
-            q_age = """
-                SELECT 
+                    start_hour AS hour,
+                    user_type,
+                    COALESCE(member_gender, 'Other') AS member_gender,
+                    CASE WHEN weekend_flag = 1 THEN 'Weekend' ELSE 'Weekday' END AS day_type,
                     CASE 
-                        WHEN member_age < 25 THEN 'Gen Z (<25)'
-                        WHEN member_age BETWEEN 25 AND 39 THEN 'Millennials (25-39)'
-                        WHEN member_age BETWEEN 40 AND 54 THEN 'Gen X (40-54)'
-                        ELSE 'Boomers (55+)'
-                    END as age_cohort,
-                    SUM(CASE WHEN user_type = 'Subscriber' THEN 1 ELSE 0 END) as subscriber_trips,
-                    SUM(CASE WHEN user_type = 'Customer' THEN 1 ELSE 0 END) as customer_trips,
-                    COUNT(*) as total_trips
+                        WHEN start_latitude > 37.7 AND start_longitude < -122.35 THEN 'San Francisco'
+                        WHEN start_latitude > 37.75 AND start_longitude >= -122.35 THEN 'East Bay (Oakland/Berkeley)'
+                        WHEN start_latitude < 37.45 THEN 'San Jose'
+                        ELSE 'San Francisco'
+                    END AS region,
+                    COUNT(*) AS trip_count,
+                    ROUND(AVG(duration_min)::numeric, 2) AS avg_duration
                 FROM gold.trip_analytics
-                WHERE member_age IS NOT NULL
-                GROUP BY 1
-                ORDER BY 1;
-            """
-            df_age = pd.read_sql(text(q_age), conn)
-            # Reorder cohorts logically
-            cohort_order = ["Gen Z (<25)", "Millennials (25-39)", "Gen X (40-54)", "Boomers (55+)"]
-            df_age = df_age.set_index("age_cohort").reindex(cohort_order).reset_index()
+                GROUP BY start_hour, user_type, member_gender, weekend_flag, region;
+            """), conn)
 
-            # 4. Duration Histogram (5-min bins up to 60)
-            q_dur = """
+            df_stn = pd.read_sql(text("""
                 SELECT 
-                    WIDTH_BUCKET(duration_min, 0, 60, 12) as bin_idx,
-                    COUNT(*) as trips
+                    start_station_name AS station_name,
+                    ROUND(AVG(start_latitude)::numeric, 4) AS lat,
+                    ROUND(AVG(start_longitude)::numeric, 4) AS lon,
+                    user_type,
+                    COALESCE(member_gender, 'Other') AS member_gender,
+                    CASE WHEN weekend_flag = 1 THEN 'Weekend' ELSE 'Weekday' END AS day_type,
+                    CASE 
+                        WHEN start_latitude > 37.7 AND start_longitude < -122.35 THEN 'San Francisco'
+                        WHEN start_latitude > 37.75 AND start_longitude >= -122.35 THEN 'East Bay (Oakland/Berkeley)'
+                        WHEN start_latitude < 37.45 THEN 'San Jose'
+                        ELSE 'San Francisco'
+                    END AS region,
+                    COUNT(*) AS trips,
+                    ROUND(AVG(duration_min)::numeric, 2) AS avg_duration
                 FROM gold.trip_analytics
-                WHERE duration_min <= 60
-                GROUP BY 1
-                ORDER BY 1;
-            """
-            df_dur = pd.read_sql(text(q_dur), conn)
-            bin_labels = [f"{i*5}-{(i+1)*5}m" for i in range(12)]
-            dur_counts = {int(r.bin_idx): int(r.trips) for r in df_dur.itertuples()}
-            duration_df = pd.DataFrame({
-                "bin_label": bin_labels,
-                "trips": [dur_counts.get(i + 1, 0) for i in range(12)],
-            })
+                WHERE start_latitude IS NOT NULL AND start_longitude IS NOT NULL
+                GROUP BY start_station_name, user_type, member_gender, weekend_flag, region;
+            """), conn)
 
-            # 5. 7x24 Matrix
-            q_heat = """
+            df_daily = pd.read_sql(text("""
                 SELECT 
-                    day_name,
-                    start_hour,
-                    COUNT(*) as trips
+                    full_date,
+                    user_type,
+                    COALESCE(member_gender, 'Other') AS member_gender,
+                    CASE WHEN weekend_flag = 1 THEN 'Weekend' ELSE 'Weekday' END AS day_type,
+                    CASE 
+                        WHEN start_latitude > 37.7 AND start_longitude < -122.35 THEN 'San Francisco'
+                        WHEN start_latitude > 37.75 AND start_longitude >= -122.35 THEN 'East Bay (Oakland/Berkeley)'
+                        WHEN start_latitude < 37.45 THEN 'San Jose'
+                        ELSE 'San Francisco'
+                    END AS region,
+                    COUNT(*) AS trip_count
                 FROM gold.trip_analytics
-                GROUP BY day_name, start_hour;
-            """
-            df_heat = pd.read_sql(text(q_heat), conn)
-            heat_dict = {(r.day_name, int(r.start_hour)): int(r.trips) for r in df_heat.itertuples()}
+                WHERE full_date IS NOT NULL
+                GROUP BY full_date, user_type, member_gender, weekend_flag, region;
+            """), conn)
 
-            return {
-                "hourly": df_hourly,
-                "dow": df_dow,
-                "age_cohorts": df_age,
-                "duration_hist": duration_df,
-                "heatmap_matrix": heat_dict,
-                "kpis": {
-                    "subscriber_avg_dur": "10.7 min",
-                    "customer_avg_dur": "21.7 min",
-                    "peak_commute_hours": "8 AM & 5 PM",
-                    "weekend_duration_lift": "+48%",
-                },
-            }
+            # Persist to local Parquet cache
+            try:
+                _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                df_hourly.to_parquet(_PARQUET_HOURLY_CUBE, engine="pyarrow", compression="snappy")
+                df_stn.to_parquet(_PARQUET_STN_CUBE, engine="pyarrow", compression="snappy")
+                df_daily.to_parquet(_PARQUET_DAILY_CUBE, engine="pyarrow", compression="snappy")
+            except Exception:
+                pass
     except Exception as err:
-        print(f"[WARN] Error loading time demographics data: {err}")
-        return {
-            "hourly": pd.DataFrame(),
-            "dow": pd.DataFrame(),
-            "age_cohorts": pd.DataFrame(),
-            "duration_hist": pd.DataFrame(),
-            "heatmap_matrix": {},
-            "kpis": {
-                "subscriber_avg_dur": "10.7 min",
-                "customer_avg_dur": "21.7 min",
-                "peak_commute_hours": "8 AM & 5 PM",
-                "weekend_duration_lift": "+48%",
-            },
-        }
+        print(f"[WARN] Failed to load overview cubes from Supabase: {err}")
+
+    # Robust fallback if offline
+    if df_hourly is None or df_hourly.empty:
+        hours = list(range(24))
+        df_hourly = pd.DataFrame([
+            {"hour": h, "user_type": "Subscriber", "region": "San Francisco", "member_gender": "Male", "day_type": "Weekday", "trip_count": 500, "avg_duration": 10.5}
+            for h in hours
+        ])
+    if df_stn is None or df_stn.empty:
+        df_stn = load_overview_station_points().copy()
+        df_stn["user_type"] = "Subscriber"
+        df_stn["member_gender"] = "Male"
+        df_stn["day_type"] = "Weekday"
+        df_stn["avg_duration"] = 11.5
+    if df_daily is None or df_daily.empty:
+        dates = [f"2019-02-{d:02d}" for d in range(1, 29)]
+        df_daily = pd.DataFrame([
+            {"full_date": d, "user_type": "Subscriber", "region": "San Francisco", "member_gender": "Male", "day_type": "Weekday", "trip_count": 5000}
+            for d in dates
+        ])
+
+    return df_hourly, df_stn, df_daily
+
+
+def get_filtered_overview_kpis(
+    user_type: str = "All",
+    region: str = "All",
+    gender: str = "All",
+    day_type: str = "All",
+) -> dict:
+    """
+    Slices cached aggregation cube in-memory to compute executive KPIs across 4 dimensions in <2ms.
+    """
+    df_hourly, df_stn, _ = load_overview_cubes()
+
+    h = df_hourly
+    s = df_stn
+
+    if user_type and user_type != "All":
+        h = h[h["user_type"] == user_type]
+        s = s[s["user_type"] == user_type]
+
+    if region and region != "All":
+        reg_match = "East Bay" if "East Bay" in region else region
+        h = h[h["region"].str.contains(reg_match, case=False, na=False)]
+        s = s[s["region"].str.contains(reg_match, case=False, na=False)]
+
+    if gender and gender != "All" and "member_gender" in h.columns:
+        h = h[h["member_gender"] == gender]
+        s = s[s["member_gender"] == gender]
+
+    if day_type and day_type != "All" and "day_type" in h.columns:
+        h = h[h["day_type"] == day_type]
+        s = s[s["day_type"] == day_type]
+
+    # Delegate calculation to Central Single Source of Truth
+    return compute_filtered_kpis(h, s, user_type=user_type, region=region)
+
+
+def get_filtered_overview_hourly(
+    user_type: str = "All",
+    region: str = "All",
+    gender: str = "All",
+    day_type: str = "All",
+) -> pd.DataFrame:
+    """
+    Slices cached aggregation cube to generate 24-hour dual-axis trend dataframe in <2ms.
+    """
+    df_hourly, _, _ = load_overview_cubes()
+    h = df_hourly
+
+    if user_type and user_type != "All":
+        h = h[h["user_type"] == user_type]
+
+    if region and region != "All":
+        reg_match = "East Bay" if "East Bay" in region else region
+        h = h[h["region"].str.contains(reg_match, case=False, na=False)]
+
+    if gender and gender != "All" and "member_gender" in h.columns:
+        h = h[h["member_gender"] == gender]
+
+    if day_type and day_type != "All" and "day_type" in h.columns:
+        h = h[h["day_type"] == day_type]
+
+    if h.empty:
+        return pd.DataFrame({"hour": range(24), "trip_count": [0]*24, "avg_duration": [0.0]*24})
+
+    # Group by hour
+    agg = h.groupby("hour").apply(
+        lambda g: pd.Series({
+            "trip_count": int(g["trip_count"].sum()),
+            "avg_duration": round(float((g["trip_count"] * g["avg_duration"]).sum() / max(g["trip_count"].sum(), 1)), 1),
+        })
+    ).reset_index()
+
+    # Ensure all 24 hours exist
+    full_hours = pd.DataFrame({"hour": list(range(24))})
+    merged = full_hours.merge(agg, on="hour", how="left").fillna({"trip_count": 0, "avg_duration": 0.0})
+    merged["trip_count"] = merged["trip_count"].astype(int)
+    return merged
+
+
+def get_filtered_overview_stations(
+    user_type: str = "All",
+    region: str = "All",
+    gender: str = "All",
+    day_type: str = "All",
+) -> pd.DataFrame:
+    """
+    Slices cached aggregation cube to generate station coordinates dataframe for mini-map in <2ms.
+    """
+    _, df_stn, _ = load_overview_cubes()
+    s = df_stn
+
+    if user_type and user_type != "All":
+        s = s[s["user_type"] == user_type]
+
+    if region and region != "All":
+        reg_match = "East Bay" if "East Bay" in region else region
+        s = s[s["region"].str.contains(reg_match, case=False, na=False)]
+
+    if gender and gender != "All" and "member_gender" in s.columns:
+        s = s[s["member_gender"] == gender]
+
+    if day_type and day_type != "All" and "day_type" in s.columns:
+        s = s[s["day_type"] == day_type]
+
+    if s.empty:
+        return pd.DataFrame(columns=["station_name", "lat", "lon", "trips", "region"])
+
+    # Group by station to sum trips
+    agg_stn = s.groupby(["station_name", "region", "lat", "lon"])["trips"].sum().reset_index()
+    return agg_stn.sort_values(by="trips", ascending=False)
+
+
+def get_filtered_overview_daily(
+    user_type: str = "All",
+    region: str = "All",
+    gender: str = "All",
+    day_type: str = "All",
+) -> pd.DataFrame:
+    """
+    Slices cached aggregation cube to generate daily ridership trajectory dataframe in <2ms.
+    Returns real datetime series with Week-over-Week prior period baseline (Day d vs Day d-7).
+    """
+    _, _, df_daily = load_overview_cubes()
+    d = df_daily.copy()
+
+    if user_type and user_type != "All":
+        d = d[d["user_type"] == user_type]
+
+    if region and region != "All":
+        reg_match = "East Bay" if "East Bay" in region else region
+        d = d[d["region"].str.contains(reg_match, case=False, na=False)]
+
+    if gender and gender != "All" and "member_gender" in d.columns:
+        d = d[d["member_gender"] == gender]
+
+    if day_type and day_type != "All" and "day_type" in d.columns:
+        d = d[d["day_type"] == day_type]
+
+    if d.empty:
+        return pd.DataFrame({"full_date": [], "date_str": [], "formatted_date": [], "trip_count": [], "prior_count": []})
+
+    agg = d.groupby("full_date")["trip_count"].sum().reset_index()
+    agg["full_date"] = pd.to_datetime(agg["full_date"])
+    agg = agg.sort_values(by="full_date").reset_index(drop=True)
+    agg["date_str"] = agg["full_date"].dt.strftime("%Y-%m-%d")
+    agg["formatted_date"] = agg["full_date"].dt.strftime("%b %d")
+    # Genuine Week-over-Week shift(7): Day d vs Day d-7
+    # For days 1..7 (Feb 1..7), prior_count is NaN (no prior week in this 28-day dataset)
+    agg["prior_count"] = agg["trip_count"].shift(7)
+    return agg
+

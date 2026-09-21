@@ -1,15 +1,14 @@
-﻿"""
-app.py – Ford GoBike Master Modern Analytics Platform
-=====================================================
-Unified enterprise SaaS analytics application:
-  - Dash Engine with multi-page URL routing: "/", "/stations", "/time-user"
-  - Tailwind CSS via Play CDN + Inter typography + design tokens
-  - Interactive Plotly figures bound to real Supabase Gold layer data
-  - Seamless responsive layout with fixed sidebar and sticky filter bar
+"""
+app.py – Ford GoBike Master Dashboard Application Entry Point
+==============================================================
+Central Enterprise BI application uniting:
+  - Executive Overview
+  - Member 5: Station & Network Flow Analysis
+  - Member 4: Time & User Demographics Analysis
 
 Run Standalone:
     python app.py
-    (Serves at http://127.0.0.1:8050)
+    (Opens http://127.0.0.1:8050)
 """
 
 from __future__ import annotations
@@ -23,33 +22,42 @@ if str(_CURRENT_DIR) not in sys.path:
     sys.path.insert(0, str(_CURRENT_DIR))
 
 from dash import Dash
-from flask import jsonify, send_from_directory
 from config import APP_TITLE, APP_HOST, APP_PORT, DEBUG_MODE
 from layout import create_master_layout
+from data_loader import check_db_health, load_overview_cubes
 from callbacks.routing import register_routing_callbacks
 from callbacks.global_filter_callbacks import register_global_filter_callbacks
-from callbacks.station_callbacks import register_station_callbacks
-from data_loader import get_full_api_payload
+from callbacks.global_filter_sync import register_global_filter_sync_callbacks
+from callbacks.overview_callbacks import register_overview_callbacks
+from callbacks.export_callbacks import register_export_callbacks
+from pages.user_trips_page import register_user_trips_callbacks
+from utils.module_loader import get_station_module, get_time_user_module
 
 # ---------------------------------------------------------------------------
-# 1. Application Initialization & SaaS Index Shell
+# 1. Application Initialization
 # ---------------------------------------------------------------------------
 app = Dash(
     __name__,
     title=APP_TITLE,
-    routes_pathname_prefix="/",
     assets_folder=str(_CURRENT_DIR / "assets"),
+    external_scripts=[
+        "https://cdn.tailwindcss.com",
+        "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js",
+    ],
+    external_stylesheets=[
+        "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap",
+        "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
+    ],
     suppress_callback_exceptions=True,
 )
 
-# Enterprise SaaS HTML5 Shell with Tailwind Play CDN & Inter Typography
+# Custom HTML Index Shell
 app.index_string = """<!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
     {%metas%}
     <title>{%title%}</title>
     {%favicon%}
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -58,69 +66,26 @@ app.index_string = """<!DOCTYPE html>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', -apple-system, 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif'],
                     },
                     colors: {
                         brand: {
-                            dark: '#0B1329',
-                            DEFAULT: '#14B8A6',
-                        },
-                        subscriber: {
-                            DEFAULT: '#14B8A6',
-                            dark: '#0F766E',
-                            soft: 'rgba(20, 184, 166, 0.12)',
-                        },
-                        customer: {
-                            DEFAULT: '#A855F7',
-                            dark: '#7E22CE',
-                            soft: 'rgba(168, 85, 247, 0.12)',
-                        },
-                        deficit: {
-                            DEFAULT: '#F97316',
-                            dark: '#C2410C',
-                            soft: 'rgba(249, 115, 22, 0.14)',
-                        },
-                        surplus: {
-                            DEFAULT: '#3B82F6',
-                            dark: '#1D4ED8',
-                            soft: 'rgba(59, 130, 246, 0.14)',
-                        },
-                        balanced: '#94A3B8',
-                    },
-                    boxShadow: {
-                        'card': '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
-                        'card-hover': '0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04)',
+                            50: '#f0fdf4',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
                     }
                 }
             }
         }
     </script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #F8FAFC;
-        }
-        /* Custom scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #F1F5F9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #CBD5E1;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94A3B8;
-        }
-    </style>
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-teal-500 selection:text-white min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-500 selection:text-white">
     {%app_entry%}
     <footer>
         {%config%}
@@ -131,47 +96,76 @@ app.index_string = """<!DOCTYPE html>
 </html>
 """
 
-# Expose WSGI server
+# Expose WSGI server for production deployment (Gunicorn / uWSGI)
 server = app.server
 
 # ---------------------------------------------------------------------------
-# 2. Supplementary Endpoints
-# ---------------------------------------------------------------------------
-@server.route("/api/data")
-def serve_api_data():
-    """Provides real-time Supabase Gold data payload to developers or external tools."""
-    return jsonify(get_full_api_payload())
-
-
-@server.route("/interactive")
-def serve_interactive():
-    """Optional reference HTML5 view."""
-    return send_from_directory(str(_CURRENT_DIR), "index.html")
-
-# ---------------------------------------------------------------------------
-# 3. Layout Mount
+# 2. Layout Definition
 # ---------------------------------------------------------------------------
 app.layout = create_master_layout()
 
 # ---------------------------------------------------------------------------
-# 4. Callbacks Registration
+# 3. Callbacks Registration
 # ---------------------------------------------------------------------------
-print(">> Registering URL Routing Callbacks...", flush=True)
+print(">> Initializing Master Dashboard Routing Callbacks...", flush=True)
 register_routing_callbacks(app)
 
 print(">> Registering Global Filter Bar Callbacks...", flush=True)
 register_global_filter_callbacks(app)
 
-print(">> Registering Station & Network Flow Callbacks...", flush=True)
+print(">> Registering Member 5 (Station Analysis) Callbacks...", flush=True)
+_, register_station_callbacks = get_station_module()
 register_station_callbacks(app)
 
-print(f">> Master Dashboard Initialized! Total Callbacks: {len(app.callback_map)}", flush=True)
+print(">> Registering Member 4 (Time & User Analysis) Callbacks...", flush=True)
+_, register_time_user_callbacks = get_time_user_module()
+register_time_user_callbacks(app)
+
+print(">> Registering Global->Local Filter Bridge Callbacks...", flush=True)
+register_global_filter_sync_callbacks(app)
+
+print(">> Registering Executive Overview Callbacks...", flush=True)
+register_overview_callbacks(app)
+
+print(">> Registering Member 3 (User Trips) Callbacks...", flush=True)
+register_user_trips_callbacks(app)
+
+print(">> Registering Global Export Summary Callbacks...", flush=True)
+register_export_callbacks(app)
+
+print(f">> Total Callbacks Registered: {len(app.callback_map)}", flush=True)
 
 # ---------------------------------------------------------------------------
-# 5. Local Entry Point
+# 4. Pre-flight Cloud Ingestion Check & Cache Pre-warming
+# ---------------------------------------------------------------------------
+print("\n" + "=" * 65, flush=True)
+print(">> [SUPABASE LIVE CONNECTION] Verifying cloud database health...", flush=True)
+health = check_db_health()
+if health.get("status") == "healthy":
+    print(f">> [SUCCESS] Connected to Supabase! Verified {health['total_records']:,} records ({health['latency_ms']}ms latency)", flush=True)
+    load_overview_cubes()
+    print(">> [READY] Executive data cubes pre-warmed in memory (<2ms slicing).", flush=True)
+    try:
+        from utils.module_loader import load_clean_station_data
+        load_clean_station_data()
+        print(">> [READY] Station network dataset pre-warmed in memory.", flush=True)
+    except Exception as e:
+        print(f">> [WARN] Failed to pre-warm station data: {e}", flush=True)
+    try:
+        from utils.module_loader import load_clean_time_user_data
+        load_clean_time_user_data()
+        print(">> [READY] Demographics & user trips dataset pre-warmed in memory.", flush=True)
+    except Exception as e:
+        print(f">> [WARN] Failed to pre-warm time-user data: {e}", flush=True)
+else:
+    print(f">> [WARN] Supabase health status: {health}", flush=True)
+print("=" * 65 + "\n", flush=True)
+
+# ---------------------------------------------------------------------------
+# 5. Entry Point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    print(f"\n=======================================================")
+    print(f"=======================================================")
     print(f"   Ford GoBike Master Analytics Platform Running")
     print(f"   URL: http://{APP_HOST}:{APP_PORT}")
     print(f"=======================================================\n")

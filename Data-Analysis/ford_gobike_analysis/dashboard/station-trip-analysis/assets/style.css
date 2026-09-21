@@ -749,8 +749,9 @@ body {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 380px;
-  max-width: 92%;
+  width: 320px;
+  max-width: 30%;
+  min-width: 260px;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -934,13 +935,13 @@ body {
 }
 
 .drawer-split-inbound {
-  background-color: #10B981;
+  background-color: #3B82F6;
   height: 100%;
   transition: width 0.4s ease;
 }
 
 .drawer-split-outbound {
-  background-color: #F43F5E;
+  background-color: #F97316;
   height: 100%;
   transition: width 0.4s ease;
 }

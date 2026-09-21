@@ -32,6 +32,7 @@ DEBUG_MODE = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 ROUTE_OVERVIEW = "/"
 ROUTE_STATIONS = "/stations"
 ROUTE_TIME_USER = "/time-user"
+ROUTE_USER_TRIPS = "/user-trips"
 
 NAV_ITEMS = [
     {
@@ -40,7 +41,7 @@ NAV_ITEMS = [
         "label": "Executive Overview",
         "icon": "fas fa-chart-pie",
         "badge": "Overview",
-        "badge_color": "bg-teal-500/10 text-teal-400 border border-teal-500/20",
+        "badge_color": "bg-indigo-900/60 text-indigo-300",
         "description": "Cross-cutting fleet insights, summary metrics & status",
     },
     {
@@ -48,8 +49,8 @@ NAV_ITEMS = [
         "route": ROUTE_STATIONS,
         "label": "Station & Network Flow",
         "icon": "fas fa-map-marked-alt",
-        "badge": "M-5",
-        "badge_color": "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+        "badge": "Flow",
+        "badge_color": "bg-emerald-900/60 text-emerald-300",
         "description": "Geospatial traffic, top corridors & network imbalance",
     },
     {
@@ -57,14 +58,23 @@ NAV_ITEMS = [
         "route": ROUTE_TIME_USER,
         "label": "Time & Rider Demographics",
         "icon": "fas fa-user-clock",
-        "badge": "M-4",
-        "badge_color": "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+        "badge": "Demographics",
+        "badge_color": "bg-teal-900/60 text-teal-300",
         "description": "Commuter rhythms, hourly demand & demographic splits",
+    },
+    {
+        "id": "nav-user-trips",
+        "route": ROUTE_USER_TRIPS,
+        "label": "Rider & Trip Dynamics",
+        "icon": "fas fa-users-cog",
+        "badge": "Cohorts",
+        "badge_color": "bg-purple-900/60 text-purple-300",
+        "description": "Rider cohorts, gender behaviors, duration profiles & user trip velocity",
     },
 ]
 
 # ---------------------------------------------------------------------------
-# 4. Master Shell Component IDs
+# 4. Master Component IDs
 # ---------------------------------------------------------------------------
 ID_URL = "master-url"
 ID_PAGE_CONTENT = "master-page-content"
@@ -73,90 +83,79 @@ ID_SIDEBAR_TOGGLE = "master-sidebar-toggle"
 ID_DB_STATUS = "master-db-status"
 ID_NAV_CONTAINER = "master-nav-container"
 
+# Overview Page IDs
+ID_OVERVIEW_TRIPS_METRIC     = "master-overview-trips"
+ID_OVERVIEW_STATIONS_METRIC  = "master-overview-stations"
+ID_OVERVIEW_SUBSCRIBER_METRIC= "master-overview-subscribers"
+ID_OVERVIEW_DURATION_METRIC  = "master-overview-duration"
+ID_OVERVIEW_RECENT_CHART     = "master-overview-recent-chart"
+
+# Export Component IDs
+ID_GLOBAL_EXPORT_BTN         = "global-export-btn"
+ID_GLOBAL_DOWNLOAD_EXPORT    = "global-export-download"
+
 # ---------------------------------------------------------------------------
 # 5. Global Filter Bar IDs (shared across all pages via dcc.Store)
 # ---------------------------------------------------------------------------
-ID_GLOBAL_STORE         = "master-global-filters"        # dcc.Store(id="master-global-filters", storage_type="session")
-ID_GLOBAL_TIMEFRAME     = "master-global-timeframe"      # Dropdown/segmented: All, Weekday, Weekend
-ID_GLOBAL_USER_FILTER   = "master-global-user-filter"    # Dropdown: All, Subscriber, Customer
-ID_GLOBAL_REGION_FILTER = "master-global-region-filter"  # Dropdown: All, San Francisco, East Bay, San Jose
-ID_GLOBAL_RESET_BTN     = "master-global-reset-btn"      # Reset button
-ID_GLOBAL_CHIPS         = "master-global-active-chips"   # Active filter chips row
+ID_GLOBAL_STORE        = "master-global-filter-store"   # dcc.Store holds the dict
+ID_GLOBAL_USER_FILTER  = "master-global-user-filter"    # Dropdown: Rider Type
+ID_GLOBAL_REGION_FILTER= "master-global-region-filter"  # Dropdown: Region
+ID_GLOBAL_GENDER_FILTER= "master-global-gender-filter"  # Dropdown: Gender (New Filter 1)
+ID_GLOBAL_DAY_FILTER   = "master-global-day-filter"     # Dropdown: Day Type (New Filter 2)
+ID_GLOBAL_RESET_BTN    = "master-global-reset-btn"      # Reset button
+ID_GLOBAL_CHIPS        = "master-global-active-chips"   # Active filter chips row
 
 # Default values written to the Store on initial load
 GLOBAL_FILTER_DEFAULTS = {
-    "timeframe": "All",
     "user_type": "All",
     "region": "All",
+    "gender": "All",
+    "day_type": "All",
+    "timeframe": "all",
 }
 
+# Human-readable labels for the chips
 USER_FILTER_LABELS = {
-    "All": "All Riders",
+    "All":        "All Riders",
     "Subscriber": "Subscribers",
-    "Customer": "Casual Customers",
+    "Customer":   "Casual",
 }
-
 REGION_FILTER_LABELS = {
-    "All": "All Bay Area",
-    "San Francisco": "San Francisco",
-    "East Bay": "East Bay",
-    "San Jose": "San Jose",
+    "All":                        "All Bay Area",
+    "San Francisco":              "San Francisco",
+    "East Bay (Oakland/Berkeley)":"East Bay",
+    "San Jose":                   "San Jose",
+}
+GENDER_FILTER_LABELS = {
+    "All":    "All Genders",
+    "Male":   "Male",
+    "Female": "Female",
+    "Other":  "Other",
+}
+DAY_FILTER_LABELS = {
+    "All":     "All Days",
+    "Weekday": "Weekdays",
+    "Weekend": "Weekends",
 }
 
 # ---------------------------------------------------------------------------
-# 6. Page 1: Executive Overview IDs
-# ---------------------------------------------------------------------------
-ID_OVERVIEW_DEMAND_CHART  = "master-overview-demand-chart"
-ID_OVERVIEW_STATION_MAP   = "master-overview-station-map"
-ID_OVERVIEW_INSIGHTS_GRID = "master-overview-insights-grid"
-
-# ---------------------------------------------------------------------------
-# 7. Page 2: Station & Network Flow IDs
-# ---------------------------------------------------------------------------
-ID_STATION_TOPN_SLIDER              = "station-topn-slider"
-ID_STATION_CORRIDOR_TOGGLE          = "station-corridor-toggle"
-ID_STATION_MAP                      = "station-map-graph"
-ID_STATION_DRAWER                   = "station-profile-drawer"
-ID_STATION_DRAWER_CONTENT           = "station-drawer-content"
-ID_STATION_DRAWER_CLOSE             = "station-drawer-close-btn"
-ID_STATION_CHART_BUSIEST            = "station-chart-busiest"
-ID_STATION_CHART_DEFICIT            = "station-chart-deficit"
-ID_STATION_CHART_SURPLUS            = "station-chart-surplus"
-ID_STATION_CHART_LOOPS              = "station-chart-loops"
-ID_STATION_REBALANCING_CONTAINER    = "station-rebalancing-grid"
-ID_STATION_REBALANCING_DOWNLOAD_BTN = "station-rebalance-download-btn"
-ID_STATION_REBALANCING_DOWNLOAD     = "station-rebalance-download"
-
-# ---------------------------------------------------------------------------
-# 8. Page 3: Time & User Demographics IDs
-# ---------------------------------------------------------------------------
-ID_TU_HOURLY_CHART   = "tu-hourly-demand-chart"
-ID_TU_DOW_CHART      = "tu-dow-volume-chart"
-ID_TU_HEATMAP        = "tu-heatmap-matrix"
-ID_TU_DONUT          = "tu-user-split-donut"
-ID_TU_AGE_CHART      = "tu-age-cohort-chart"
-ID_TU_DURATION_HIST  = "tu-duration-hist-chart"
-
-# ---------------------------------------------------------------------------
-# 9. Design Tokens & Semantic Color Palette
+# 5. Theme Palette (Modern Executive BI Theme)
 # ---------------------------------------------------------------------------
 COLORS = {
-    # Surfaces & Borders
-    "brand_dark": "#0B1329",
-    "card_bg": "#FFFFFF",
-    "body_bg": "#F8FAFC",
+    "bg_body": "#F8FAFC",
+    "bg_sidebar": "#0F172A",
+    "bg_card": "#FFFFFF",
     "border": "#E2E8F0",
-    "text_main": "#0F172A",
-    "text_muted": "#64748B",
-    "text_subtle": "#94A3B8",
-
-    # Semantic Status Roles
-    "subscriber": "#14B8A6",       # Primary Teal (Subscribers, 90.5%)
-    "customer": "#A855F7",         # Purple (Casual Customers, 9.5%)
-    "deficit": "#F97316",          # Orange/Coral (Net Deficit / Outbound > Inbound)
-    "surplus": "#3B82F6",          # Blue (Net Surplus / Inbound > Outbound)
-    "balanced": "#94A3B8",         # Slate (Balanced flow)
+    "border_sidebar": "#1E293B",
+    "text_primary": "#0F172A",
+    "text_secondary": "#64748B",
+    "text_light": "#94A3B8",
+    "text_sidebar": "#E2E8F0",
+    "text_sidebar_muted": "#64748B",
+    "accent_emerald": "#10B981",
+    "accent_teal": "#0D9488",
+    "accent_indigo": "#6366F1",
+    "accent_purple": "#A855F7",
 }
 
 FONT_FAMILY = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-

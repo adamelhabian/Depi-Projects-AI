@@ -54,6 +54,7 @@ def get_station_module() -> Tuple[Callable[[], Any], Callable[[Any], None]]:
         _STATION_CALLBACKS_FN = st_callbacks
     finally:
         sys.path = old_path
+        _clean_colliding_modules()
 
     return _STATION_LAYOUT_FN, _STATION_CALLBACKS_FN
 
@@ -79,5 +80,58 @@ def get_time_user_module() -> Tuple[Callable[[], Any], Callable[[Any], None]]:
         _TIME_USER_CALLBACKS_FN = tu_callbacks
     finally:
         sys.path = old_path
+        _clean_colliding_modules()
 
     return _TIME_USER_LAYOUT_FN, _TIME_USER_CALLBACKS_FN
+
+
+# Phase 5 fix: cache the actual DataFrames here so the _clean_colliding_modules()
+# call (which purges data_loader from sys.modules and defeats lru_cache on the
+# sub-module) does NOT cause a full Supabase re-query on every callback.
+_STATION_DATA_CACHE: Any = None
+_TIME_USER_DATA_CACHE: Any = None
+
+
+def load_clean_station_data() -> Any:
+    """
+    Dynamically load station trip data from station-trip-analysis.
+    Phase 5: caches the DataFrame in _STATION_DATA_CACHE after the first call
+    so repeated invocations never re-query Supabase (warm call is instant).
+    """
+    global _STATION_DATA_CACHE
+    if _STATION_DATA_CACHE is not None:
+        return _STATION_DATA_CACHE
+
+    old_path = list(sys.path)
+    _clean_colliding_modules()
+    try:
+        sys.path.insert(0, str(STATION_MODULE_DIR))
+        from data_loader import load_clean_data
+        _STATION_DATA_CACHE = load_clean_data()
+        return _STATION_DATA_CACHE
+    finally:
+        sys.path = old_path
+        _clean_colliding_modules()
+
+
+def load_clean_time_user_data() -> Any:
+    """
+    Dynamically load time & user data from time-user-analysis.
+    Phase 5: caches the DataFrame in _TIME_USER_DATA_CACHE after the first call
+    so repeated invocations never re-query Supabase (warm call is instant).
+    """
+    global _TIME_USER_DATA_CACHE
+    if _TIME_USER_DATA_CACHE is not None:
+        return _TIME_USER_DATA_CACHE
+
+    old_path = list(sys.path)
+    _clean_colliding_modules()
+    try:
+        sys.path.insert(0, str(TIME_USER_MODULE_DIR))
+        from data_loader import load_clean_data
+        _TIME_USER_DATA_CACHE = load_clean_data()
+        return _TIME_USER_DATA_CACHE
+    finally:
+        sys.path = old_path
+        _clean_colliding_modules()
+

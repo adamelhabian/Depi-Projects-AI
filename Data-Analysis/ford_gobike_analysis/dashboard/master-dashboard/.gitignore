@@ -17,3 +17,7 @@ htmlcov/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local High-Performance Data Cache
+.cache/
+*.parquet

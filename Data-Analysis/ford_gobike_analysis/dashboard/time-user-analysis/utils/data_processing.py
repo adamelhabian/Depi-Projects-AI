@@ -14,8 +14,10 @@ def filter_dataset(
     df: pd.DataFrame,
     user_type: str | None = None,
     day_type: str | None = None,
+    gender: str | None = None,
+    region: str | None = None,
 ) -> pd.DataFrame:
-    """Filter dataset based on user type and day-of-week classification."""
+    """Filter dataset based on user type, day-of-week classification, gender, and geographic region."""
     filtered = df
 
     # 1. Filter by User Type
@@ -34,6 +36,14 @@ def filter_dataset(
                 filtered = filtered[filtered["weekend_flag"] == 1]
             elif "day_of_week" in filtered.columns:
                 filtered = filtered[filtered["day_of_week"].isin(["Saturday", "Sunday"])]
+
+    # 3. Filter by Gender
+    if gender and gender not in {"All", "All Genders"} and "member_gender" in filtered.columns:
+        filtered = filtered[filtered["member_gender"] == gender]
+
+    # 4. Filter by Region
+    if region and region not in {"All", "All Regions"} and "region" in filtered.columns:
+        filtered = filtered[filtered["region"] == region]
 
     return filtered
 

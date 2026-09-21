@@ -34,7 +34,7 @@ def filter_panel() -> html.Section:
                                 options=[
                                     {"label": "All Riders (Combined)", "value": "All"},
                                     {"label": "Subscribers (Commuter Members)", "value": "Subscriber"},
-                                    {"label": "Customers (Casual / Day Pass)", "value": "Customer"},
+                                    {"label": "Casual (Day Pass / Non-Member)", "value": "Customer"},
                                 ],
                                 value="All",
                                 clearable=False,

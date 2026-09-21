@@ -10,6 +10,23 @@ from __future__ import annotations
 import plotly.graph_objects as go
 from config import COLORS, FONT_FAMILY
 
+# Shared Diverging Color Scale for Station Net Flow Semantics:
+# Deficit (net < 0): Orange #F97316 (dock depletion risk / bike restocking needed)
+# Balanced (net ~ 0): Light Grey #94A3B8
+# Surplus (net > 0): Blue #3B82F6 (dock overflow risk / bike clearance needed)
+# Symmetric around 0
+COLOR_DEFICIT = "#F97316"
+COLOR_DEFICIT_BORDER = "#EA580C"
+COLOR_BALANCED = "#94A3B8"
+COLOR_SURPLUS = "#3B82F6"
+COLOR_SURPLUS_BORDER = "#2563EB"
+
+COLORSCALE_NET_FLOW = [
+    [0.0, "#F97316"],   # Negative net flow (deficit)
+    [0.5, "#94A3B8"],   # Balanced at 0
+    [1.0, "#3B82F6"],   # Positive net flow (surplus)
+]
+
 
 def apply_chart_theme(
     fig: go.Figure,

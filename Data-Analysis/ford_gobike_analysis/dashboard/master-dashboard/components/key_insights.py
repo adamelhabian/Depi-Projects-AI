@@ -1,12 +1,10 @@
-﻿"""
-components/key_insights.py – Dynamic Executive Key Insights Panel
-==================================================================
-Auto-generates 4 strategic data-driven takeaways derived directly
-from the gold dataset metrics:
-  1. Peak Commute Dominance (share of trips during 8-9am & 5-6pm)
-  2. Subscriber Loyalty (90.5% trips with avg duration vs customer)
-  3. Network Asymmetry (top deficit vs top surplus station gap)
-  4. Weekend vs Weekday Behavior (duration spike on weekends)
+"""
+components/key_insights.py – Computed System Insights Panel
+============================================================
+Matches the exact SaaS visual card from the reference HTML and Screenshot 1:
+  - Real-time pulse indicator & badge
+  - 4 algorithmically synthesized operational insights
+  - Contextual recommendation footer pointing to Station Flow
 """
 
 from __future__ import annotations
@@ -15,48 +13,33 @@ from typing import Dict, Any, Optional
 from dash import html
 import pandas as pd
 
+from utils.metrics_calculator import (
+    DEFAULT_KPIS,
+    get_insight_commute_crest,
+    get_insight_fleet_redistribution,
+    get_insight_subscription_dominance,
+    get_insight_leisure_ratio,
+)
 
-def _insight_card(
-    badge_label: str,
-    badge_color: str,
+
+def _insight_item(
+    icon_class: str,
+    icon_color: str,
     title: str,
-    description: str,
-    stat_highlight: str,
-    icon: str,
+    text: str,
 ) -> html.Div:
-    """Individual strategic insight card."""
+    """Individual synthesized insight item inside the panel."""
     return html.Div(
-        className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-all",
+        className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:bg-slate-100/70 transition-colors",
         children=[
             html.Div(
+                className="flex items-center gap-2 mb-1",
                 children=[
-                    html.Div(
-                        className="flex items-center justify-between mb-2.5",
-                        children=[
-                            html.Span(
-                                badge_label,
-                                className=f"text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border {badge_color}",
-                            ),
-                            html.I(className=f"{icon} text-slate-400 text-xs"),
-                        ],
-                    ),
-                    html.H4(
-                        title,
-                        className="text-sm font-semibold text-slate-900 leading-snug mb-1",
-                    ),
-                    html.P(
-                        description,
-                        className="text-xs text-slate-500 leading-relaxed",
-                    ),
+                    html.I(className=f"{icon_class} {icon_color} text-xs shrink-0"),
+                    html.Span(title, className="text-xs font-bold text-slate-900"),
                 ],
             ),
-            html.Div(
-                className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]",
-                children=[
-                    html.Span("Key Takeaway:", className="text-slate-400 font-medium"),
-                    html.Span(stat_highlight, className="font-semibold text-slate-800 font-mono"),
-                ],
-            ),
+            html.P(text, className="text-[11px] text-slate-500 leading-relaxed"),
         ],
     )
 
@@ -64,90 +47,88 @@ def _insight_card(
 def render_key_insights(
     kpis: Optional[Dict[str, Any]] = None,
     hourly_df: Optional[pd.DataFrame] = None,
-) -> html.Section:
+) -> html.Div:
     """
-    Renders the 4-column executive insight cards summarizing key operational takeaways.
+    Renders the Computed System Insights panel matching the reference UI.
     """
     if not kpis:
-        kpis = {
-            "total_trips": "174,724",
-            "unique_stations": "329",
-            "subscriber_pct": "90.5%",
-            "avg_duration": "11.7 min",
-        }
+        kpis = DEFAULT_KPIS.copy()
 
-    sub_pct = kpis.get("subscriber_pct", "90.5%")
-    avg_dur = kpis.get("avg_duration", "11.7 min")
+    sub_pct = kpis.get("subscriber_pct", DEFAULT_KPIS["subscriber_pct"])
+    avg_dur = kpis.get("avg_duration", DEFAULT_KPIS["avg_duration"])
+    total_trips = kpis.get("total_trips", DEFAULT_KPIS["total_trips"])
+    rebalance_count = kpis.get("rebalance_alerts", DEFAULT_KPIS["rebalance_alerts"])
+    busiest_day = kpis.get("busiest_day", DEFAULT_KPIS["busiest_day"])
+    ratio_str = kpis.get("duration_ratio_str", DEFAULT_KPIS["duration_ratio_str"])
+    casual_dur = kpis.get("casual_duration_str", DEFAULT_KPIS["casual_duration_str"])
+    sub_dur = kpis.get("sub_duration_str", DEFAULT_KPIS["sub_duration_str"])
 
-    return html.Section(
-        className="mb-8",
+    return html.Div(
+        className="analytics-card p-5 flex flex-col justify-between h-full bg-white rounded-xl border border-slate-200/90 shadow-2xs",
         children=[
-            # Header
             html.Div(
-                className="flex items-center justify-between mb-3.5",
                 children=[
+                    # Panel Header
                     html.Div(
-                        className="flex items-center gap-2",
+                        className="flex items-center justify-between mb-2",
                         children=[
-                            html.Span(
-                                className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"
+                            html.Div(
+                                className="flex items-center gap-2",
+                                children=[
+                                    html.Span(className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"),
+                                    html.H3("Computed System Insights", className="text-sm font-bold text-slate-900"),
+                                ],
                             ),
-                            html.H3(
-                                "Executive Insights & Operational Takeaways",
-                                className="text-xs font-bold uppercase tracking-wider text-slate-700",
+                            html.Span(
+                                "REAL-TIME",
+                                className="text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider",
                             ),
                         ],
                     ),
-                    html.Span(
-                        "Auto-Derived from gold.trip_analytics",
-                        className="text-[11px] font-medium text-slate-400 hidden sm:inline-block font-mono",
+                    html.P(
+                        "Synthesized algorithmically from current slice of trip records.",
+                        className="text-xs text-slate-400 mb-4",
+                    ),
+
+                    # Insights List
+                    html.Div(
+                        className="flex flex-col gap-2.5",
+                        children=[
+                            _insight_item(
+                                icon_class="far fa-calendar-check",
+                                icon_color="text-teal-600",
+                                title="Weekly Commute Crest",
+                                text=get_insight_commute_crest(busiest_day),
+                            ),
+                            _insight_item(
+                                icon_class="fas fa-truck-fast",
+                                icon_color="text-blue-600",
+                                title="Fleet Redistribution Demand",
+                                text=get_insight_fleet_redistribution(rebalance_count),
+                            ),
+                            _insight_item(
+                                icon_class="fas fa-user-check",
+                                icon_color="text-emerald-600",
+                                title="Subscription Dominance",
+                                text=get_insight_subscription_dominance(sub_pct, avg_dur),
+                            ),
+                            _insight_item(
+                                icon_class="fas fa-compass",
+                                icon_color="text-purple-600",
+                                title="Rider Cohort Dynamic",
+                                text=get_insight_leisure_ratio(ratio_str, casual_dur, sub_dur),
+                            ),
+                        ],
                     ),
                 ],
             ),
 
-            # 4 Insights Grid
+            # Panel Recommendation Footer
             html.Div(
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4",
+                className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-2",
                 children=[
-                    # 1. Peak Commute Dominance
-                    _insight_card(
-                        badge_label="Demand Rhythm",
-                        badge_color="bg-amber-50 text-amber-700 border-amber-200",
-                        title="Peak Commute Dominance",
-                        description="42.6% of daily volume concentrates in twin rush-hour windows (8-9 AM & 5-6 PM), driven by office commuter migration.",
-                        stat_highlight="42.6% in Peak Hours",
-                        icon="fas fa-bolt",
-                    ),
-
-                    # 2. Subscriber Loyalty
-                    _insight_card(
-                        badge_label="User Stickiness",
-                        badge_color="bg-teal-50 text-teal-700 border-teal-200",
-                        title="Subscriber Loyalty (90.5%)",
-                        description=f"{sub_pct} of trips come from annual subscribers averaging 10.7 min, while casual customers average 21.8 min for leisure.",
-                        stat_highlight="10.7m vs 21.8m duration",
-                        icon="fas fa-users",
-                    ),
-
-                    # 3. Network Asymmetry
-                    _insight_card(
-                        badge_label="Fleet Flow",
-                        badge_color="bg-blue-50 text-blue-700 border-blue-200",
-                        title="Network Flow Asymmetry",
-                        description="San Francisco Caltrain creates a +1,248 surplus in morning rush, while Market & 10th suffers a -1,192 net deficit daily.",
-                        stat_highlight="2,440 Net Flow Gap",
-                        icon="fas fa-arrows-split-up-and-left",
-                    ),
-
-                    # 4. Weekend vs Weekday Behavior
-                    _insight_card(
-                        badge_label="Rider Patterns",
-                        badge_color="bg-purple-50 text-purple-700 border-purple-200",
-                        title="Weekend Duration Spike",
-                        description="Weekend trips drop 85% in total volume but surge +48% in duration (15.8 min), reflecting recreational and scenic waterfront rides.",
-                        stat_highlight="+48% Longer Rides",
-                        icon="fas fa-sun",
-                    ),
+                    html.I(className="fas fa-compass text-teal-500 text-xs shrink-0"),
+                    html.Span("Recommended next action: Review fleet dispatch pairings on the Station Flow page."),
                 ],
             ),
         ],
