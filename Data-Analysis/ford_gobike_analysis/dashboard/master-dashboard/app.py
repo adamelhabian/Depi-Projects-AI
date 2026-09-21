@@ -58,6 +58,7 @@ app.index_string = """<!DOCTYPE html>
 <html lang="en">
 <head>
     {%metas%}
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{%title%}</title>
     {%favicon%}
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -47,7 +47,6 @@ def render_sidebar(active_route: str = "/") -> html.Aside:
             "top": "0",
             "left": "0",
             "height": "100vh",
-            "width": "16rem",
             "overflowY": "auto",
             "zIndex": "40",
         },

@@ -65,16 +65,16 @@ def render_global_filter_bar() -> html.Div:
             ),
 
             html.Div(
-                className="flex flex-wrap items-center gap-3.5 px-6 py-2.5",
+                className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 px-3 sm:px-6 py-2.5 w-full max-w-[100vw] overflow-hidden",
                 children=[
                     # ── 1. TIMEFRAME Segmented Control ────────────────────
                     html.Div(
-                        className="flex items-center gap-1.5",
+                        className="flex items-center gap-1.5 w-full sm:w-auto",
                         title="30D & 90D are disabled because the dataset spans 28 days (Feb 2019). Full window captured under ALL.",
                         children=[
                             html.Span(
                                 "TIME:",
-                                className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0",
+                                className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 w-12 sm:w-auto",
                             ),
                             dcc.RadioItems(
                                 id="global-timeframe-filter",
@@ -86,18 +86,18 @@ def render_global_filter_bar() -> html.Div:
                                 ],
                                 value="all",
                                 inline=True,
-                                className="timeframe-segmented-control",
+                                className="timeframe-segmented-control flex-1 sm:flex-initial",
                             ),
                         ],
                     ),
 
                     # ── 2. RIDER TYPE Dropdown ────────────────────────────
                     html.Div(
-                        className="flex items-center gap-1.5 min-w-[160px]",
+                        className="flex items-center gap-1.5 w-full sm:w-auto min-w-0 sm:min-w-[160px]",
                         children=[
                             html.Span(
                                 "RIDER:",
-                                className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0",
+                                className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 w-12 sm:w-auto",
                             ),
                             html.Div(
                                 className="flex-1",
@@ -121,11 +121,11 @@ def render_global_filter_bar() -> html.Div:
 
                     # ── 3. METRO REGION Dropdown ──────────────────────────
                     html.Div(
-                        className="flex items-center gap-1.5 min-w-[185px]",
+                        className="flex items-center gap-1.5 w-full sm:w-auto min-w-0 sm:min-w-[185px]",
                         children=[
                             html.Span(
                                 "REGION:",
-                                className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0",
+                                className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 w-12 sm:w-auto",
                             ),
                             html.Div(
                                 className="flex-1",
@@ -150,11 +150,11 @@ def render_global_filter_bar() -> html.Div:
 
                     # ── 4. RIDER GENDER Dropdown (New Filter 1) ───────────
                     html.Div(
-                        className="flex items-center gap-1.5 min-w-[150px]",
+                        className="flex items-center gap-1.5 w-full sm:w-auto min-w-0 sm:min-w-[150px]",
                         children=[
                             html.Span(
                                 "GENDER:",
-                                className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0",
+                                className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 w-12 sm:w-auto",
                             ),
                             html.Div(
                                 className="flex-1",
@@ -179,11 +179,11 @@ def render_global_filter_bar() -> html.Div:
 
                     # ── 5. DAY TYPE Dropdown (New Filter 2) ───────────────
                     html.Div(
-                        className="flex items-center gap-1.5 min-w-[150px]",
+                        className="flex items-center gap-1.5 w-full sm:w-auto min-w-0 sm:min-w-[150px]",
                         children=[
                             html.Span(
                                 "DAY:",
-                                className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0",
+                                className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 w-12 sm:w-auto",
                             ),
                             html.Div(
                                 className="flex-1",
@@ -213,14 +213,14 @@ def render_global_filter_bar() -> html.Div:
                         ],
                         id=ID_GLOBAL_RESET_BTN,
                         n_clicks=0,
-                        className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg hover:bg-rose-50 transition-colors bg-transparent border border-rose-200/60 cursor-pointer",
+                        className="flex items-center justify-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-colors bg-transparent border border-rose-200/60 cursor-pointer w-full sm:w-auto shrink-0",
                         title="Reset all 4 filters to default values",
                     ),
 
                     # ── 7. Active Filter Status / Chips ───────────────────
                     html.Div(
                         id=ID_GLOBAL_CHIPS,
-                        className="ml-auto text-xs text-slate-400 italic flex items-center gap-1.5 flex-wrap",
+                        className="w-full sm:w-auto sm:ml-auto text-xs text-slate-400 italic flex items-center gap-1.5 flex-wrap pt-1 sm:pt-0",
                         children=[
                             html.Span("No active filters applied"),
                         ],
