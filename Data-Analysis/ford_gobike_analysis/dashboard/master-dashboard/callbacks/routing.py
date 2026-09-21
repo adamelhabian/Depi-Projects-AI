@@ -162,8 +162,28 @@ def register_routing_callbacks(app) -> None:
             nav_class(ROUTE_USER_TRIPS),
         ]
 
-    # 4. Interactive Collapsible Navigation Sidebar
-    # 4a. User clicks toggle or close button -> flip persistent store
+    # 4. Interactive Collapsible Navigation Sidebar & Mobile Drawer
+    # 4a. Mobile Navigation Drawer State
+    @app.callback(
+        Output("master-mobile-drawer-open-store", "data"),
+        [
+            Input("master-sidebar-toggle-btn", "n_clicks"),
+            Input("master-sidebar-close-btn", "n_clicks"),
+            Input("master-sidebar-backdrop", "n_clicks"),
+            Input(ID_URL, "pathname"),
+        ],
+        State("master-mobile-drawer-open-store", "data"),
+        prevent_initial_call=True,
+    )
+    def handle_mobile_drawer_state(toggle_clicks, close_clicks, backdrop_clicks, pathname, is_open):
+        """Toggle or close mobile drawer on button click, backdrop click, or route navigation."""
+        trigger = dash.ctx.triggered_id
+        if trigger == "master-sidebar-toggle-btn":
+            return not bool(is_open)
+        # Any of close button, backdrop click, or route navigation closes the mobile drawer
+        return False
+
+    # 4b. Desktop Collapsible Navigation Sidebar
     @app.callback(
         Output("master-sidebar-collapsed-store", "data"),
         [
@@ -173,25 +193,41 @@ def register_routing_callbacks(app) -> None:
         State("master-sidebar-collapsed-store", "data"),
         prevent_initial_call=True,
     )
-    def toggle_navigation_sidebar(toggle_clicks, close_clicks, is_collapsed):
-        """User explicitly clicked toggle or close button to change sidebar state."""
+    def toggle_desktop_sidebar(toggle_clicks, close_clicks, is_collapsed):
+        """User explicitly clicked toggle or close button to change desktop sidebar state."""
         return not bool(is_collapsed)
 
-    # 4b. Sync visual CSS classes with persistent store (default is False = OPEN)
+    # 4c. Synchronize visual CSS classes for sidebar, main wrapper, and backdrop
     @app.callback(
         [
             Output(ID_SIDEBAR, "className"),
             Output("master-main-wrapper", "className"),
+            Output("master-sidebar-backdrop", "className"),
         ],
-        Input("master-sidebar-collapsed-store", "data"),
+        [
+            Input("master-sidebar-collapsed-store", "data"),
+            Input("master-mobile-drawer-open-store", "data"),
+        ],
     )
-    def apply_sidebar_visual_state(is_collapsed):
+    def apply_sidebar_visual_state(is_desktop_collapsed, is_mobile_open):
         """Ensure sidebar open/closed state persists across page navigation and tabs."""
         base_sidebar = "w-64 bg-[#0B1329] border-r border-slate-800 flex flex-col justify-between p-5 select-none"
         base_main = "flex flex-col min-h-screen bg-slate-50"
+        base_backdrop = "master-sidebar-backdrop fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-[9990] transition-opacity duration-300"
 
-        if is_collapsed:
-            return f"{base_sidebar} sidebar-collapsed", f"{base_main} sidebar-collapsed"
-        return base_sidebar, base_main
+        sidebar_classes = [base_sidebar]
+        main_classes = [base_main]
+
+        if is_desktop_collapsed:
+            sidebar_classes.append("sidebar-collapsed")
+            main_classes.append("sidebar-collapsed")
+
+        if is_mobile_open:
+            sidebar_classes.append("sidebar-mobile-open")
+            backdrop_class = f"{base_backdrop} block opacity-100 pointer-events-auto"
+        else:
+            backdrop_class = f"{base_backdrop} hidden opacity-0 pointer-events-none"
+
+        return " ".join(sidebar_classes), " ".join(main_classes), backdrop_class
 
 

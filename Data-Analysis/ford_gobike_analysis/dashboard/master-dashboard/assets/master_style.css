@@ -51,11 +51,11 @@ body {
 }
 
 /* ==========================================================================
-   Phase 5: Responsive Layout (Desktop vs Mobile Drawer)
+   Phase 5: Responsive Layout (Desktop & Tablet >= 768px vs Mobile < 768px)
    ========================================================================== */
 
-/* Desktop Screens (> 1024px) */
-@media (min-width: 1025px) {
+/* Desktop & Tablet Screens (>= 768px) — Visually Unchanged */
+@media (min-width: 768px) {
     #master-sidebar,
     aside[id="master-sidebar"] {
         width: var(--sidebar-width) !important;
@@ -71,7 +71,7 @@ body {
         transition: margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
 
-    /* Collapsed state on Desktop */
+    /* Collapsed state on Desktop/Tablet */
     #master-sidebar.sidebar-collapsed,
     aside[id="master-sidebar"].sidebar-collapsed {
         transform: translateX(-100%) !important;
@@ -81,39 +81,80 @@ body {
         margin-left: 0 !important;
         width: 100% !important;
     }
+
+    /* Backdrop is never displayed on desktop/tablet */
+    .master-sidebar-backdrop {
+        display: none !important;
+    }
 }
 
-/* Mobile & Tablet Screens (<= 1024px) */
-@media (max-width: 1024px) {
-    /* Main wrapper ALWAYS full-width on mobile/tablet */
+/* Mobile Screens (< 768px) */
+@media (max-width: 767px) {
+    /* Prevent horizontal page overflow */
+    html, body, #master-root-container {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+        width: 100% !important;
+    }
+
+    /* Main wrapper ALWAYS full-width on mobile */
     #master-main-wrapper,
     #master-main-wrapper.sidebar-collapsed {
         margin-left: 0 !important;
         width: 100% !important;
-        min-width: 100% !important;
-        max-width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
     }
 
-    /* Sidebar is a high-z-index overlay drawer on mobile */
+    /* Sidebar is hidden off-screen by default on mobile */
     #master-sidebar,
     aside[id="master-sidebar"] {
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         height: 100vh !important;
-        width: min(18rem, 80vw) !important;
+        height: 100dvh !important;
+        width: min(18rem, 85vw) !important;
         min-width: unset !important;
-        max-width: 80vw !important;
+        max-width: 85vw !important;
         z-index: 9999 !important;
         box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.5) !important;
         transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        transform: translateX(0);
+        transform: translateX(-100%) !important;
     }
 
-    /* When closed on mobile, slide completely off-screen */
-    #master-sidebar.sidebar-collapsed,
-    aside[id="master-sidebar"].sidebar-collapsed {
-        transform: translateX(-100%) !important;
+    /* When opened via menu toggle on mobile, slide in overlay */
+    #master-sidebar.sidebar-mobile-open,
+    aside[id="master-sidebar"].sidebar-mobile-open {
+        transform: translateX(0) !important;
+    }
+
+    /* Station deep-dive drawer transforms into bottom sheet on mobile */
+    .station-drawer {
+        position: absolute !important;
+        top: auto !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        height: auto !important;
+        max-height: 60vh !important;
+        border-left: none !important;
+        border-top: 1px solid #e2e8f0 !important;
+        border-radius: 1.25rem 1.25rem 0 0 !important;
+        box-shadow: 0 -10px 25px rgba(15, 23, 42, 0.18) !important;
+        z-index: 600 !important;
+    }
+
+    .station-drawer.drawer-closed {
+        transform: translateY(100%) !important;
+    }
+
+    .station-drawer.drawer-open {
+        transform: translateY(0) !important;
     }
 }
 

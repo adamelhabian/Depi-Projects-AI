@@ -72,34 +72,35 @@ def render_kpi_banner(
     spark_dur = _create_sparkline([12.4, 12.1, 11.9, 11.8, 11.7, 11.6, 11.7], color="#14B8A6")
 
     return html.Section(
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 mb-6",
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5 mb-4 sm:mb-6",
         children=[
             # ── KPI 1: Total Trips ──────────────────────────────────────────
             html.Div(
-                className="analytics-card p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow",
+                className="analytics-card p-2.5 sm:p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow min-w-0",
                 children=[
                     html.Div(
-                        className="flex items-center justify-between mb-1",
+                        className="flex items-center justify-between mb-1 min-w-0",
                         children=[
-                            html.Span("Total Trips", className="text-xs font-medium text-slate-500"),
+                            html.Span("Total Trips", className="text-[11px] sm:text-xs font-medium text-slate-500 truncate"),
                             html.Span(
-                                html.I(className="fas fa-info-circle text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"),
+                                html.I(className="fas fa-info-circle text-[10px] sm:text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"),
                                 title="Point-to-point bike rides in selected timeframe.",
                             ),
                         ],
                     ),
                     html.Div(
                         kpis.get("total_trips", DEFAULT_KPIS["total_trips"]),
-                        className="text-2xl font-black text-slate-900 tracking-tight my-1",
+                        className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight my-0.5 sm:my-1 truncate",
                     ),
                     html.Div(
-                        className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100",
+                        className="flex items-center justify-between mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-100 min-w-0 overflow-hidden",
                         children=[
-                            html.Span("n/a", className="text-xs font-semibold text-slate-400", title="No prior comparison period available for full 28-day dataset"),
+                            html.Span("n/a", className="text-[10px] sm:text-xs font-semibold text-slate-400 truncate", title="No prior comparison period available for full 28-day dataset"),
                             dcc.Graph(
                                 figure=spark_trips,
                                 config={"displayModeBar": False, "staticPlot": True},
-                                style={"height": "24px", "width": "68px"},
+                                style={"height": "22px", "width": "55px"},
+                                className="shrink-0",
                             ),
                         ],
                     ),
@@ -108,94 +109,97 @@ def render_kpi_banner(
 
             # ── KPI 2: Active Stations ──────────────────────────────────────
             html.Div(
-                className="analytics-card p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow",
+                className="analytics-card p-2.5 sm:p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow min-w-0",
                 children=[
                     html.Div(
-                        className="flex items-center justify-between mb-1",
+                        className="flex items-center justify-between mb-1 min-w-0",
                         children=[
-                            html.Span("Active Stations", className="text-xs font-medium text-slate-500"),
+                            html.Span("Active Stations", className="text-[11px] sm:text-xs font-medium text-slate-500 truncate"),
                             html.Span(
-                                html.I(className="fas fa-info-circle text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"),
+                                html.I(className="fas fa-info-circle text-[10px] sm:text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"),
                                 title="Total operational docking hubs with at least one departure or arrival.",
                             ),
                         ],
                     ),
                     html.Div(
                         kpis.get("unique_stations", DEFAULT_KPIS["unique_stations"]),
-                        className="text-2xl font-black text-slate-900 tracking-tight my-1",
+                        className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight my-0.5 sm:my-1 truncate",
                     ),
                     html.Div(
-                        className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100",
+                        className="flex items-center justify-between mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-100 min-w-0 overflow-hidden",
                         children=[
-                            html.Span("● Operational", className="text-xs font-bold text-slate-500 flex items-center gap-1"),
+                            html.Span("Operational", className="text-[10px] sm:text-[11px] font-semibold text-slate-600 truncate"),
                             dcc.Graph(
                                 figure=spark_stations,
                                 config={"displayModeBar": False, "staticPlot": True},
-                                style={"height": "24px", "width": "68px"},
+                                style={"height": "22px", "width": "55px"},
+                                className="shrink-0",
                             ),
                         ],
                     ),
                 ],
             ),
 
-            # ── KPI 3: Subscriber Ratio ─────────────────────────────────────
+            # ── KPI 3: Subscriber Share ─────────────────────────────────────
             html.Div(
-                className="analytics-card p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow",
+                className="analytics-card p-2.5 sm:p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow min-w-0",
                 children=[
                     html.Div(
-                        className="flex items-center justify-between mb-1",
+                        className="flex items-center justify-between mb-1 min-w-0",
                         children=[
-                            html.Span("Subscriber Ratio", className="text-xs font-medium text-slate-500"),
+                            html.Span("Subscriber Share", className="text-[11px] sm:text-xs font-medium text-slate-500 truncate"),
                             html.Span(
-                                html.I(className="fas fa-info-circle text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"),
-                                title="Percentage of rides initiated by annual subscription holders.",
+                                html.I(className="fas fa-info-circle text-[10px] sm:text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"),
+                                title="Proportion of total trips completed by annual members vs casual customers.",
                             ),
                         ],
                     ),
                     html.Div(
                         kpis.get("subscriber_pct", DEFAULT_KPIS["subscriber_pct"]),
-                        className="text-2xl font-black text-slate-900 tracking-tight my-1",
+                        className="text-xl sm:text-2xl font-black text-teal-600 tracking-tight my-0.5 sm:my-1 truncate",
                     ),
                     html.Div(
-                        className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100",
+                        className="flex items-center justify-between mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-100 min-w-0 overflow-hidden",
                         children=[
-                            html.Span("n/a", className="text-xs font-semibold text-slate-400", title="No prior comparison period available for full 28-day dataset"),
+                            html.Span("Annual pass", className="text-[10px] sm:text-[11px] font-semibold text-teal-700 truncate"),
                             dcc.Graph(
                                 figure=spark_subs,
                                 config={"displayModeBar": False, "staticPlot": True},
-                                style={"height": "24px", "width": "68px"},
+                                style={"height": "22px", "width": "55px"},
+                                className="shrink-0",
                             ),
                         ],
                     ),
                 ],
             ),
 
-            # ── KPI 4: Avg Duration ─────────────────────────────────────────
+            # ── KPI 4: Median Duration ──────────────────────────────────────
             html.Div(
-                className="analytics-card p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow",
+                className="analytics-card p-2.5 sm:p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow min-w-0",
                 children=[
                     html.Div(
-                        className="flex items-center justify-between mb-1",
+                        className="flex items-center justify-between mb-1 min-w-0",
                         children=[
-                            html.Span("Average Trip Duration", className="text-xs font-medium text-slate-500"),
+                            html.Span("Median Duration", className="text-[11px] sm:text-xs font-medium text-slate-500 truncate"),
                             html.Span(
-                                html.I(className="fas fa-info-circle text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"),
-                                title=kpis.get("duration_tooltip", DEFAULT_KPIS["duration_tooltip"]),
+                                html.I(className="fas fa-info-circle text-[10px] sm:text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"),
+                                title="50th-percentile trip length across fleet.",
                             ),
                         ],
                     ),
                     html.Div(
-                        kpis.get("avg_duration", DEFAULT_KPIS["avg_duration"]),
-                        className="text-2xl font-black text-slate-900 tracking-tight my-1",
+                        kpis.get("median_duration", DEFAULT_KPIS["median_duration"]),
+                        className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight my-0.5 sm:my-1 truncate",
                     ),
                     html.Div(
-                        className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100",
+                        className="flex items-center justify-between mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-100 min-w-0 overflow-hidden",
                         children=[
-                            html.Span("n/a", className="text-xs font-semibold text-slate-400", title="No prior comparison period available for full 28-day dataset"),
+                            html.Span("Per trip avg", className="text-[10px] sm:text-[11px] font-semibold text-slate-600 truncate"),
                             dcc.Graph(
                                 figure=spark_dur,
                                 config={"displayModeBar": False, "staticPlot": True},
-                                style={"height": "24px", "width": "68px"},
+                                style={"height": "22px", "width": "55px"},
+                                className="shrink-0",
                             ),
                         ],
                     ),
@@ -204,27 +208,27 @@ def render_kpi_banner(
 
             # ── KPI 5: Peak Commute ─────────────────────────────────────────
             html.Div(
-                className="analytics-card p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow",
+                className="analytics-card p-2.5 sm:p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow min-w-0",
                 children=[
                     html.Div(
-                        className="flex items-center justify-between mb-1",
+                        className="flex items-center justify-between mb-1 min-w-0",
                         children=[
-                            html.Span("Peak Commute", className="text-xs font-medium text-slate-500"),
+                            html.Span("Peak Commute", className="text-[11px] sm:text-xs font-medium text-slate-500 truncate"),
                             html.Span(
-                                html.I(className="fas fa-info-circle text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"),
+                                html.I(className="fas fa-info-circle text-[10px] sm:text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"),
                                 title="Hour with highest simultaneous dispatch volume.",
                             ),
                         ],
                     ),
                     html.Div(
                         kpis.get("peak_commute", DEFAULT_KPIS["peak_commute"]),
-                        className="text-2xl font-black text-purple-600 tracking-tight my-1",
+                        className="text-xl sm:text-2xl font-black text-purple-600 tracking-tight my-0.5 sm:my-1 truncate",
                     ),
                     html.Div(
-                        className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100",
+                        className="flex items-center justify-between mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-100 min-w-0 overflow-hidden",
                         children=[
-                            html.Span("Evening rush", className="text-xs font-medium text-slate-500"),
-                            html.Span("PM Peak", className="text-[10px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100"),
+                            html.Span("Evening rush", className="text-[10px] sm:text-xs font-medium text-slate-500 truncate"),
+                            html.Span("PM Peak", className="text-[9px] sm:text-[10px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 shrink-0"),
                         ],
                     ),
                 ],
@@ -232,27 +236,27 @@ def render_kpi_banner(
 
             # ── KPI 6: Rebalance Alerts ─────────────────────────────────────
             html.Div(
-                className="analytics-card p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow",
+                className="analytics-card p-2.5 sm:p-4 relative overflow-hidden flex flex-col justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow min-w-0",
                 children=[
                     html.Div(
-                        className="flex items-center justify-between mb-1",
+                        className="flex items-center justify-between mb-1 min-w-0",
                         children=[
-                            html.Span("Rebalance Alerts", className="text-xs font-medium text-slate-500"),
+                            html.Span("Rebalance Alerts", className="text-[11px] sm:text-xs font-medium text-slate-500 truncate"),
                             html.Span(
-                                html.I(className="fas fa-info-circle text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"),
+                                html.I(className="fas fa-info-circle text-[10px] sm:text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"),
                                 title=kpis.get("rebalance_tooltip", DEFAULT_KPIS["rebalance_tooltip"]),
                             ),
                         ],
                     ),
                     html.Div(
                         str(kpis.get("rebalance_alerts", DEFAULT_KPIS["rebalance_alerts"])),
-                        className="text-2xl font-black text-orange-500 tracking-tight my-1",
+                        className="text-xl sm:text-2xl font-black text-orange-500 tracking-tight my-0.5 sm:my-1 truncate",
                     ),
                     html.Div(
-                        className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100",
+                        className="flex items-center justify-between mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-100 min-w-0 overflow-hidden",
                         children=[
-                            html.Span("Needs Van Dispatch", className="text-xs font-medium text-slate-500"),
-                            html.I(className="fas fa-triangle-exclamation text-xs text-orange-500"),
+                            html.Span("Net deficit hubs", className="text-[10px] sm:text-xs font-medium text-slate-500 truncate"),
+                            html.Span("Action req.", className="text-[9px] sm:text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100 shrink-0"),
                         ],
                     ),
                 ],

@@ -29,8 +29,15 @@ def create_master_layout() -> html.Div:
             dcc.Location(id=ID_URL, refresh=False),
             dcc.Download(id=ID_GLOBAL_DOWNLOAD_EXPORT),
             dcc.Store(id="master-sidebar-collapsed-store", data=False, storage_type="local"),
+            dcc.Store(id="master-mobile-drawer-open-store", data=False),
 
-            # 2. Fixed Sidebar – always visible regardless of scroll position
+            # Mobile Drawer Backdrop Overlay (click outside to close on mobile)
+            html.Div(
+                id="master-sidebar-backdrop",
+                className="master-sidebar-backdrop fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-[9990] transition-opacity duration-300 hidden pointer-events-none opacity-0",
+            ),
+
+            # 2. Fixed Sidebar / Mobile Navigation Drawer
             render_sidebar(active_route="/"),
 
             # 3. Main Content Area – offset controlled cleanly via CSS media queries
