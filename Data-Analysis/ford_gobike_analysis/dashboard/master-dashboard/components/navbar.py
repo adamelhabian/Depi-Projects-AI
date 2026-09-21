@@ -51,18 +51,18 @@ def render_navbar(active_route: str = "/") -> html.Header:
                 children=[
                     # Live Cloud Badge
                     html.Div(
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700",
+                        className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700",
                         children=[
                             html.Span(className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"),
                             html.Span("Supabase Cloud Active"),
                         ],
                     ),
 
-                    # Export Summary Button
+                    # Export Button
                     html.Button(
                         [
                             html.I(className="fas fa-download text-xs mr-1.5"),
-                            html.Span("Export Summary"),
+                            html.Span("Export Summary", className="hidden sm:inline"),
                         ],
                         id=ID_GLOBAL_EXPORT_BTN,
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer",

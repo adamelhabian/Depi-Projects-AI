@@ -649,3 +649,55 @@ p, span, label, td, th, li, a {
 }
 
 
+
+/* ==========================================================================
+   Mobile Responsive Overrides
+   ========================================================================== */
+@media (max-width: 1024px) {
+    /* Make sidebar overlay on mobile */
+    #master-sidebar,
+    aside[id="master-sidebar"] {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 9999 !important;
+        /* Sidebar is hidden by default on mobile unless toggled OPEN (meaning no .sidebar-collapsed) */
+        transform: translateX(-100%) !important;
+        box-shadow: 10px 0 15px -3px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* When it does NOT have collapsed class, show it on mobile */
+    #master-sidebar:not(.sidebar-collapsed),
+    aside[id="master-sidebar"]:not(.sidebar-collapsed) {
+        transform: translateX(0) !important;
+    }
+
+    /* Main wrapper is always full width on mobile */
+    #master-main-wrapper {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+
+/* ==========================================================================
+   Phase 5 Mobile: Overlay Drawer Sidebar
+   ========================================================================== */
+@media (max-width: 1024px) {
+    #master-sidebar,
+    aside[id="master-sidebar"] {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 9999 !important;
+        box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    
+    #master-main-wrapper {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+

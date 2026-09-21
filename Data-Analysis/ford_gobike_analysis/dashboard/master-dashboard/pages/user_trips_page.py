@@ -350,7 +350,7 @@ def render_user_trips_page() -> html.Div:
         children=[
             # ── 1. Headline 4 KPI Cards ──────────────────────────────────
             html.Section(
-                className="grid grid-cols-2 lg:grid-cols-4 gap-4",
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4",
                 children=[
                     html.Div(
                         className="analytics-card p-4 flex flex-col justify-between bg-white rounded-xl border border-slate-200 shadow-2xs",
