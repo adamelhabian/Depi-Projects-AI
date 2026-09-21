@@ -8,13 +8,11 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# =========================================
-# Database Connection
-# =========================================
 
-# =========================================
+
+
 # Database Initialization
-# =========================================
+
 
 def initialize_database(engine):
     """
@@ -63,10 +61,8 @@ def get_engine():
     return create_engine(DATABASE_URL)
 
 
-# =========================================
-# Bronze
-# =========================================
 
+# Bronze
 def load_bronze(df, engine):
     """
     Load raw DataFrame into bronze.trips.
@@ -95,10 +91,8 @@ def load_bronze(df, engine):
     )
 
 
-# =========================================
-# Silver
-# =========================================
 
+# Silver
 def load_to_silver(df, engine):
     """
     Load transformed DataFrame into silver.trips.
@@ -124,9 +118,7 @@ def load_to_silver(df, engine):
     )
 
 
-# =========================================
 # Warehouse - Dimensions
-# =========================================
 
 def load_dimensions(engine):
     """
@@ -136,9 +128,9 @@ def load_dimensions(engine):
 
     with engine.begin() as connection:
 
-        # ---------------------------------
+        
         # Clear existing dimensions
-        # ---------------------------------
+       
 
         connection.execute(
             text("TRUNCATE TABLE warehouse.fact_trip")
@@ -160,9 +152,9 @@ def load_dimensions(engine):
             text("TRUNCATE TABLE warehouse.dim_user CASCADE")
         )
 
-        # ---------------------------------
+      
         # dim_date
-        # ---------------------------------
+    
 
         connection.execute(
             text("""
@@ -227,9 +219,9 @@ def load_dimensions(engine):
             """)
         )
 
-        # ---------------------------------
+     
         # dim_time
-        # ---------------------------------
+       
 
         connection.execute(
             text("""
@@ -290,9 +282,8 @@ def load_dimensions(engine):
             """)
         )
 
-        # ---------------------------------
+        
         # dim_station
-        # ---------------------------------
 
         connection.execute(
             text("""
@@ -346,9 +337,9 @@ def load_dimensions(engine):
             """)
         )
 
-        # ---------------------------------
+      
         # dim_user
-        # ---------------------------------
+   
 
         connection.execute(
             text("""
@@ -373,9 +364,9 @@ def load_dimensions(engine):
     print("Warehouse dimensions loaded successfully.")
 
 
-# =========================================
+
 # Warehouse - Fact
-# =========================================
+
 
 def load_fact(engine):
     """
@@ -491,9 +482,9 @@ def load_fact(engine):
     print("Warehouse fact table loaded successfully.")
 
 
-# =========================================
+
 # Validation
-# =========================================
+
 
 def validate_load(engine):
     """
