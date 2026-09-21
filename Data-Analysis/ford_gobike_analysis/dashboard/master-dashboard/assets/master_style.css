@@ -51,32 +51,70 @@ body {
 }
 
 /* ==========================================================================
-   Phase 5: Sidebar width lock & Collapsible Navigation Drawer
+   Phase 5: Responsive Layout (Desktop vs Mobile Drawer)
    ========================================================================== */
-#master-sidebar,
-aside[id="master-sidebar"] {
-    width: var(--sidebar-width) !important;
-    min-width: var(--sidebar-width) !important;
-    max-width: var(--sidebar-width) !important;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    transform: translateX(0);
+
+/* Desktop Screens (> 1024px) */
+@media (min-width: 1025px) {
+    #master-sidebar,
+    aside[id="master-sidebar"] {
+        width: var(--sidebar-width) !important;
+        min-width: var(--sidebar-width) !important;
+        max-width: var(--sidebar-width) !important;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        transform: translateX(0);
+    }
+
+    #master-main-wrapper {
+        margin-left: var(--sidebar-width) !important;
+        width: calc(100% - var(--sidebar-width)) !important;
+        transition: margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    /* Collapsed state on Desktop */
+    #master-sidebar.sidebar-collapsed,
+    aside[id="master-sidebar"].sidebar-collapsed {
+        transform: translateX(-100%) !important;
+    }
+
+    #master-main-wrapper.sidebar-collapsed {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
 }
 
-#master-main-wrapper {
-    margin-left: var(--sidebar-width) !important;
-    width: calc(100% - var(--sidebar-width)) !important;
-    transition: margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
+/* Mobile & Tablet Screens (<= 1024px) */
+@media (max-width: 1024px) {
+    /* Main wrapper ALWAYS full-width on mobile/tablet */
+    #master-main-wrapper,
+    #master-main-wrapper.sidebar-collapsed {
+        margin-left: 0 !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+    }
 
-/* Collapsed sidebar states */
-#master-sidebar.sidebar-collapsed,
-aside[id="master-sidebar"].sidebar-collapsed {
-    transform: translateX(-100%) !important;
-}
+    /* Sidebar is a high-z-index overlay drawer on mobile */
+    #master-sidebar,
+    aside[id="master-sidebar"] {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100vh !important;
+        width: min(18rem, 80vw) !important;
+        min-width: unset !important;
+        max-width: 80vw !important;
+        z-index: 9999 !important;
+        box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.5) !important;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        transform: translateX(0);
+    }
 
-#master-main-wrapper.sidebar-collapsed {
-    margin-left: 0 !important;
-    width: 100% !important;
+    /* When closed on mobile, slide completely off-screen */
+    #master-sidebar.sidebar-collapsed,
+    aside[id="master-sidebar"].sidebar-collapsed {
+        transform: translateX(-100%) !important;
+    }
 }
 
 /* ==========================================================================
@@ -649,55 +687,4 @@ p, span, label, td, th, li, a {
 }
 
 
-
-/* ==========================================================================
-   Mobile Responsive Overrides
-   ========================================================================== */
-@media (max-width: 1024px) {
-    /* Make sidebar overlay on mobile */
-    #master-sidebar,
-    aside[id="master-sidebar"] {
-        position: fixed !important;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        z-index: 9999 !important;
-        /* Sidebar is hidden by default on mobile unless toggled OPEN (meaning no .sidebar-collapsed) */
-        transform: translateX(-100%) !important;
-        box-shadow: 10px 0 15px -3px rgba(0, 0, 0, 0.5);
-    }
-    
-    /* When it does NOT have collapsed class, show it on mobile */
-    #master-sidebar:not(.sidebar-collapsed),
-    aside[id="master-sidebar"]:not(.sidebar-collapsed) {
-        transform: translateX(0) !important;
-    }
-
-    /* Main wrapper is always full width on mobile */
-    #master-main-wrapper {
-        margin-left: 0 !important;
-        width: 100% !important;
-    }
-}
-
-
-/* ==========================================================================
-   Phase 5 Mobile: Overlay Drawer Sidebar
-   ========================================================================== */
-@media (max-width: 1024px) {
-    #master-sidebar,
-    aside[id="master-sidebar"] {
-        position: fixed !important;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        z-index: 9999 !important;
-        box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.5);
-    }
-    
-    #master-main-wrapper {
-        margin-left: 0 !important;
-        width: 100% !important;
-    }
-}
 
