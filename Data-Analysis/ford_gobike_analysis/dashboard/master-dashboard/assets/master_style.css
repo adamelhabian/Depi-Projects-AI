@@ -159,6 +159,54 @@ body {
 }
 
 /* ==========================================================================
+   Zero-Dependency Native Fallbacks (Ensures 100% styling on iOS Safari)
+   ========================================================================== */
+#master-sidebar,
+aside[id="master-sidebar"] {
+    background-color: #0B1329 !important;
+    border-right: 1px solid #1E293B !important;
+    color: #94A3B8 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 1.25rem !important;
+    box-sizing: border-box !important;
+}
+
+#master-navbar-container header {
+    height: 3.5rem !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+    background-color: #FFFFFF !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+}
+
+.sidebar-nav-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 0.625rem 0.875rem !important;
+    border-radius: 0.5rem !important;
+    color: #94A3B8 !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+}
+
+.sidebar-nav-item.active {
+    color: #2DD4BF !important;
+    background-color: rgba(20, 184, 166, 0.15) !important;
+    font-weight: 600 !important;
+    border-right: 2px solid #2DD4BF !important;
+}
+
+.sidebar-nav-item:not(.active):hover {
+    color: #F8FAFC !important;
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* ==========================================================================
    Phase 5: Filter bar sticky positioning
    ========================================================================== */
 .master-filter-bar-sticky {
