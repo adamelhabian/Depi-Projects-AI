@@ -39,9 +39,11 @@ from utils.module_loader import get_station_module, get_time_user_module
 app = Dash(
     __name__,
     title=APP_TITLE,
+    meta_tags=[
+        {"name": "viewport", "content": "width=device-width, initial-scale=1, maximum-scale=1"}
+    ],
     assets_folder=str(_CURRENT_DIR / "assets"),
     external_scripts=[
-        "https://cdn.tailwindcss.com",
         "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js",
     ],
     external_stylesheets=[
