@@ -27,6 +27,8 @@ ID_KPI_AVG_DURATION       = "tu-kpi-avg-duration"
 # Filter Controls
 ID_USER_FILTER            = "tu-user-filter"
 ID_DAY_FILTER             = "tu-day-filter"
+ID_GENDER_FILTER          = "tu-gender-filter"
+ID_REGION_FILTER          = "tu-region-filter"
 
 # Core Visualizations (5 Core Charts)
 ID_TRIPS_BY_HOUR          = "tu-trips-by-hour"
@@ -59,7 +61,7 @@ FONT_FAMILY = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
 CHART_HEIGHT_LINE    = 340
 CHART_HEIGHT_HEATMAP = 340
-CHART_HEIGHT_BAR     = 340
+CHART_HEIGHT_BAR     = 280
 
 # ---------------------------------------------------------------------------
 # Analytical Schema Contract

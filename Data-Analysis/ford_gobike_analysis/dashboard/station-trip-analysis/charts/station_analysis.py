@@ -13,11 +13,18 @@ import plotly.graph_objects as go
 import pandas as pd
 
 from config import COLORS, CHART_HEIGHT_BAR, CHART_HEIGHT_IMBALANCE, CHART_HEIGHT_LEISURE
-from utils.theme import apply_chart_theme, empty_figure
+from utils.theme import (
+    apply_chart_theme,
+    empty_figure,
+    COLOR_DEFICIT,
+    COLOR_DEFICIT_BORDER,
+    COLOR_SURPLUS,
+    COLOR_SURPLUS_BORDER,
+)
 
 
-def _clean_short_station(name: str, max_chars: int = 24) -> str:
-    """Clean and abbreviate station names while retaining distinctive cross streets."""
+def _clean_short_station(name: str) -> str:
+    """Clean and abbreviate station prefixes without truncation or ellipses."""
     s = str(name).strip()
     s = (
         s.replace("San Francisco ", "SF ")
@@ -31,9 +38,6 @@ def _clean_short_station(name: str, max_chars: int = 24) -> str:
         paren = s.split("(")[1].split(")")[0].strip()
         paren = paren.replace("Market St at ", "").replace("St at ", "/")
         s = f"{main_part} ({paren})"
-
-    if len(s) > max_chars:
-        s = s[: max_chars - 1].rstrip() + "…"
     return s
 
 
@@ -58,7 +62,7 @@ def create_top_stations_chart(
     station_names = top_stations["station_name"].tolist()
 
     display_ticks = [
-        _clean_short_station(name, 22)
+        _clean_short_station(name)
         for name in station_names
     ]
 
@@ -121,7 +125,7 @@ def create_top_stations_chart(
     fig = apply_chart_theme(
         fig,
         height=dynamic_height,
-        margin=dict(l=10, r=30, t=10, b=30),
+        margin=dict(l=180, r=30, t=10, b=30),
     )
 
     fig.update_layout(
@@ -134,6 +138,7 @@ def create_top_stations_chart(
         yaxis=dict(
             title="",
             showgrid=False,
+            automargin=True,
             categoryorder="array",
             categoryarray=station_names,
             tickmode="array",
@@ -160,6 +165,8 @@ def create_top_stations_chart(
 def create_flow_imbalance_chart(flow_imbalance: pd.DataFrame) -> go.Figure:
     """
     Diverging horizontal bar chart ordered strictly from highest surplus down to largest deficit.
+    Surplus = Blue #3B82F6 (bike clearance needed)
+    Deficit = Orange #F97316 (bike re-stocking needed)
     """
     if flow_imbalance.empty:
         return empty_figure("No flow imbalance data available for the selected filters.", height=CHART_HEIGHT_IMBALANCE)
@@ -168,14 +175,14 @@ def create_flow_imbalance_chart(flow_imbalance: pd.DataFrame) -> go.Figure:
     dynamic_height = max(340, n_bars * 28 + 60)
 
     station_names = flow_imbalance["station_name"].tolist()
-    display_ticks = [_clean_short_station(name, 22) for name in station_names]
+    display_ticks = [_clean_short_station(name) for name in station_names]
 
     bar_colors = [
-        "rgba(16, 185, 129, 0.85)" if val >= 0 else "rgba(244, 63, 94, 0.85)"
+        COLOR_SURPLUS if val >= 0 else COLOR_DEFICIT
         for val in flow_imbalance["net_flow"]
     ]
     border_colors = [
-        "#059669" if val >= 0 else "#e11d48"
+        COLOR_SURPLUS_BORDER if val >= 0 else COLOR_DEFICIT_BORDER
         for val in flow_imbalance["net_flow"]
     ]
 
@@ -225,7 +232,7 @@ def create_flow_imbalance_chart(flow_imbalance: pd.DataFrame) -> go.Figure:
     fig = apply_chart_theme(
         fig,
         height=dynamic_height,
-        margin=dict(l=10, r=30, t=10, b=30),
+        margin=dict(l=180, r=30, t=10, b=30),
     )
 
     fig.update_layout(
@@ -239,6 +246,7 @@ def create_flow_imbalance_chart(flow_imbalance: pd.DataFrame) -> go.Figure:
         yaxis=dict(
             title="",
             showgrid=False,
+            automargin=True,
             categoryorder="array",
             categoryarray=station_names,
             tickmode="array",
@@ -273,7 +281,7 @@ def create_round_trip_hotspots_chart(round_trip_df: pd.DataFrame) -> go.Figure:
     dynamic_height = max(340, n_bars * 28 + 60)
 
     station_names = round_trip_df["station_name"].tolist()
-    display_ticks = [_clean_short_station(name, 22) for name in station_names]
+    display_ticks = [_clean_short_station(name) for name in station_names]
 
     custom_data = round_trip_df[
         ["station_name", "round_trips", "total_departures", "round_trip_pct"]
@@ -298,50 +306,73 @@ def create_round_trip_hotspots_chart(round_trip_df: pd.DataFrame) -> go.Figure:
         )
     ]
 
-    fig = go.Figure(
+    # Modern Lollipop Chart (Stem + Glowing Circle Node) for high-end visual variety
+    fig = go.Figure()
+
+    # 1. Horizontal stems (bars with slim width)
+    fig.add_trace(
         go.Bar(
             x=round_trip_df["round_trip_pct"],
             y=station_names,
             orientation="h",
+            width=0.15,
             marker=dict(
-                color=bar_colors,
-                line=dict(color="#9333ea", width=1),
+                color="rgba(168, 85, 247, 0.4)",
+                line=dict(width=0),
+            ),
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+
+    # 2. Glowing circular lollipop markers at the tip
+    fig.add_trace(
+        go.Scatter(
+            x=round_trip_df["round_trip_pct"],
+            y=station_names,
+            mode="markers+text",
+            marker=dict(
+                size=18,
+                color="#A855F7",
+                line=dict(color="#FFFFFF", width=2),
+                symbol="circle",
             ),
             customdata=custom_data,
-            text=[f"{pct:.1f}% ({r:,} loops)" for pct, r in zip(round_trip_df["round_trip_pct"], round_trip_df["round_trips"])],
-            textposition="auto",
-            textfont=dict(color="#0f172a", size=10, family="Inter"),
+            text=[f"  {pct:.1f}% ({r:,} loops)" for pct, r in zip(round_trip_df["round_trip_pct"], round_trip_df["round_trips"])],
+            textposition="middle right",
+            textfont=dict(color="#0F172A", size=10.5, family="Inter"),
             hovertext=hover_texts,
             hoverinfo="text",
+            showlegend=False,
         )
     )
 
     fig = apply_chart_theme(
         fig,
         height=dynamic_height,
-        margin=dict(l=10, r=30, t=10, b=30),
+        margin=dict(l=180, r=40, t=10, b=30),
     )
 
     fig.update_layout(
         xaxis=dict(
             title="",
             ticksuffix="%",
-            range=[0, max(40, round_trip_df["round_trip_pct"].max() + 5)],
+            range=[0, max(35, round_trip_df["round_trip_pct"].max() + 12)],
             showgrid=True,
             gridcolor="#f1f5f9",
         ),
         yaxis=dict(
             title="",
             showgrid=False,
+            automargin=True,
             categoryorder="array",
             categoryarray=station_names,
             tickmode="array",
             tickvals=station_names,
             ticktext=display_ticks,
             tickfont=dict(color="#334155", size=11, family="Inter"),
-            autorange="reversed",  # Highest ratio at top, lowest at bottom
+            autorange="reversed",
         ),
-        bargap=0.22,
         hoverlabel=dict(
             bgcolor="rgba(15, 23, 42, 0.95)",
             bordercolor="rgba(255, 255, 255, 0.15)",

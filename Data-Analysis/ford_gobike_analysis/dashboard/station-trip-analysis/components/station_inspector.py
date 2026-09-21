@@ -56,7 +56,7 @@ def render_station_inspector(profile: dict | None = None) -> html.Div:
     rt_pct = profile.get("round_trip_pct", 0.0)
     recommendation = profile.get("recommendation", "Self-balancing corridor hub.")
 
-    flow_color = "#059669" if net >= 0 else "#DC2626"
+    flow_color = "#3B82F6" if net > 0 else ("#F97316" if net < 0 else "#64748B")
 
     return html.Div(
         className="station-drawer-content",
@@ -79,11 +79,11 @@ def render_station_inspector(profile: dict | None = None) -> html.Div:
                         ],
                     ),
                     html.Button(
-                        icon_close("w-4 h-4 inline-block"),
+                        "✕",
                         id=ID_DRAWER_CLOSE_BTN,
                         className="drawer-close-btn",
                         n_clicks=0,
-                        title="Close Drawer",
+                        title="Close Station Profile (✕)",
                     ),
                 ],
             ),
@@ -155,12 +155,12 @@ def render_station_inspector(profile: dict | None = None) -> html.Div:
                                 className="drawer-split-labels",
                                 children=[
                                     html.Span([
-                                        html.Span(className="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1.5"),
+                                        html.Span(className="w-2 h-2 rounded-full bg-blue-500 inline-block mr-1.5"),
                                         "Inbound: ",
                                         html.Strong(f"{arrs:,}"),
                                     ]),
                                     html.Span([
-                                        html.Span(className="w-2 h-2 rounded-full bg-pink-500 inline-block mr-1.5"),
+                                        html.Span(className="w-2 h-2 rounded-full bg-orange-500 inline-block mr-1.5"),
                                         "Outbound: ",
                                         html.Strong(f"{deps:,}"),
                                     ]),
@@ -222,7 +222,7 @@ def render_station_inspector(profile: dict | None = None) -> html.Div:
                 ],
             ),
 
-            # ── 6. Footer Button: Focus Map on Station ───────────────────
+            # ── 6. Footer Buttons: Focus Map on Station & Close Panel ─────
             html.Div(
                 className="drawer-footer",
                 children=[
@@ -233,6 +233,7 @@ def render_station_inspector(profile: dict | None = None) -> html.Div:
                         ],
                         id=ID_DRAWER_FOCUS_BTN,
                         className="drawer-focus-btn",
+                        style={"width": "100%"},
                         n_clicks=0,
                     ),
                 ],

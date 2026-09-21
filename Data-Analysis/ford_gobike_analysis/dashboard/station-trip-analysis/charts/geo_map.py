@@ -10,6 +10,7 @@ Interactive Plotly map displaying:
 
 from __future__ import annotations
 
+import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
 
@@ -19,7 +20,7 @@ from config import (
     REGIONS,
     CHART_HEIGHT_MAP,
 )
-from utils.theme import empty_figure
+from utils.theme import empty_figure, COLORSCALE_NET_FLOW
 
 try:
     _MAP_TRACE = go.Scattermap
@@ -29,15 +30,16 @@ except AttributeError:
     _MAP_LAYOUT_KEY = "mapbox"
 
 
-def _scale_marker_sizes(traffic_series: pd.Series, min_px: int = 7, max_px: int = 24) -> pd.Series:
-    """Scale station traffic proportionally to marker pixel diameters."""
+def _scale_marker_sizes(traffic_series: pd.Series, min_px: float = 6.0, max_px: float = 22.0) -> pd.Series:
+    """Scale station traffic proportionally using square root to marker pixel diameters to avoid massive overlap."""
     if traffic_series.empty:
         return traffic_series
-    mn = traffic_series.min()
-    mx = traffic_series.max()
+    sqrt_traffic = np.sqrt(traffic_series.clip(lower=0))
+    mn = sqrt_traffic.min()
+    mx = sqrt_traffic.max()
     if mn == mx:
-        return pd.Series([12] * len(traffic_series), index=traffic_series.index)
-    return min_px + (traffic_series - mn) / (mx - mn) * (max_px - min_px)
+        return pd.Series([10.0] * len(traffic_series), index=traffic_series.index)
+    return min_px + (sqrt_traffic - mn) / (mx - mn) * (max_px - min_px)
 
 
 def _scale_line_width(trip_count: int, min_count: int, max_count: int,
@@ -78,7 +80,10 @@ def create_station_map(
     if station_metrics.empty:
         return empty_figure("No station data available for the selected filters.", height=CHART_HEIGHT_MAP)
 
-    valid_stations = station_metrics[station_metrics.get("has_valid_coords", True) == True].copy()
+    if "has_valid_coords" in station_metrics.columns:
+        valid_stations = station_metrics[station_metrics["has_valid_coords"] == True].copy()
+    else:
+        valid_stations = station_metrics.copy()
     valid_stations = valid_stations.dropna(subset=["lat", "lon"])
 
     # Filter by region if requested
@@ -130,6 +135,7 @@ def create_station_map(
                     line=dict(width=line_w, color=COLORS["accent_teal"]),
                     opacity=0.7,
                     text=f"<b>{origin}</b> → <b>{dest}</b><br>Trips: <b>{trip_count:,}</b>",
+                    customdata=[[origin], [dest]],
                     hoverinfo="text",
                     name="",
                     showlegend=False,
@@ -139,6 +145,9 @@ def create_station_map(
     # -----------------------------------------------------------------------
     # Layer 2: Station Markers
     # -----------------------------------------------------------------------
+    # Sort stations ascending by total traffic so large markers are plotted behind small ones
+    valid_stations = valid_stations.sort_values("total_traffic", ascending=True).reset_index(drop=True)
+
     marker_sizes = _scale_marker_sizes(valid_stations["total_traffic"])
 
     hover_texts = []
@@ -159,6 +168,8 @@ def create_station_map(
             f"<span style='color:{COLORS['accent_dim']};font-size:11px;'>Click for Deep Dive</span>"
         )
 
+    max_flow = max(float(valid_stations["net_flow"].abs().max()), 1.0)
+
     station_trace = _MAP_TRACE(
         lat=valid_stations["lat"],
         lon=valid_stations["lon"],
@@ -166,17 +177,16 @@ def create_station_map(
         marker=dict(
             size=marker_sizes,
             color=valid_stations["net_flow"],
-            colorscale=[
-                [0.0, COLORS["danger"]],      # Outbound pressure (deficit)
-                [0.5, "#94A3B8"],             # Balanced
-                [1.0, COLORS["success"]],     # Inbound pressure (surplus)
-            ],
+            colorscale=COLORSCALE_NET_FLOW,
+            cmin=-max_flow,
+            cmax=max_flow,
+            cauto=False,
             showscale=False,
-            opacity=0.9,
+            opacity=0.78,
             sizemode="diameter",
         ),
         text=hover_texts,
-        customdata=valid_stations["station_name"].values,
+        customdata=[[s] for s in valid_stations["station_name"]],
         hoverinfo="text",
         name="Stations",
     )
@@ -194,6 +204,7 @@ def create_station_map(
 
     fig.update_layout(
         **{_MAP_LAYOUT_KEY: map_dict},
+        clickmode="event+select",
         paper_bgcolor=COLORS["bg_card"],
         plot_bgcolor=COLORS["bg_card"],
         height=CHART_HEIGHT_MAP,

@@ -268,9 +268,10 @@ def compute_flow_imbalance(station_metrics: pd.DataFrame, top_n: int) -> pd.Data
 # 4. Feature 5: Leisure & Tourism Hotspots (Round-Trip Analysis)
 # ---------------------------------------------------------------------------
 
-def compute_round_trip_hotspots(df: pd.DataFrame, top_n: int = 5) -> pd.DataFrame:
+def compute_round_trip_hotspots(df: pd.DataFrame, top_n: int = 5, min_departures: int = 100) -> pd.DataFrame:
     """
     Identify stations with the highest round-trip ratio (where start_station == end_station).
+    Filters stations with at least `min_departures` (default 100) to eliminate small-sample bias.
     Sorted strictly descending by round_trip_pct so largest percentage is first.
     """
     cols = ["station_name", "round_trips", "total_departures", "round_trip_pct"]
@@ -294,8 +295,8 @@ def compute_round_trip_hotspots(df: pd.DataFrame, top_n: int = 5) -> pd.DataFram
         (merged["round_trips"] / merged["total_departures"]) * 100
     ).round(1)
 
-    # Filter stations with at least 15 departures to avoid 1-trip outliers
-    valid = merged[merged["total_departures"] >= 15]
+    # Filter stations with at least min_departures (default 100) to eliminate small-sample bias
+    valid = merged[merged["total_departures"] >= min_departures]
     if valid.empty:
         valid = merged
 

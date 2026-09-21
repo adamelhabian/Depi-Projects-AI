@@ -60,22 +60,31 @@ logger = logging.getLogger(__name__)
 
 
 def _extract_station_name(click_data: dict | None) -> str | None:
-    """Safely parse clicked station name from map scatter or horizontal bar chart."""
+    """Safely parse clicked station name from map scatter, corridor lines, or horizontal bar chart."""
     if not click_data or "points" not in click_data or not click_data["points"]:
         return None
     pt = click_data["points"][0]
 
-    # 1. Inspect customdata (preferred for map and bars)
+    # 1. Inspect customdata (can be scalar, 1D array or 2D array)
     cd = pt.get("customdata")
-    if isinstance(cd, (list, tuple)) and len(cd) > 0:
-        return str(cd[0])
-    if isinstance(cd, str):
-        return cd
+    if isinstance(cd, (list, tuple)):
+        if len(cd) > 0 and cd[0] is not None:
+            return str(cd[0]).strip()
+    elif cd is not None and str(cd).strip() != "":
+        return str(cd).strip()
 
-    # 2. Inspect category y-axis value
+    # 2. Inspect category y-axis value (for horizontal bar charts)
     y_val = pt.get("y")
-    if isinstance(y_val, str):
-        return y_val
+    if isinstance(y_val, str) and y_val.strip() != "":
+        return y_val.strip()
+
+    # 3. Fallback: Parse from hover text / text if available
+    txt = pt.get("text") or pt.get("hovertext")
+    if isinstance(txt, str):
+        import re
+        match = re.search(r"<b>(.*?)</b>", txt)
+        if match:
+            return match.group(1).strip()
 
     return None
 
@@ -102,6 +111,8 @@ def register_callbacks(app: dash.Dash) -> None:
             Input(ID_TOP_N_SLIDER, "value"),
             Input(ID_REGION_FILTER, "value"),
             Input(ID_MAP_FLOW_LINES_TOGGLE, "value"),
+            Input("m5-gender-filter", "value"),
+            Input("m5-day-filter", "value"),
         ],
     )
     def update_dashboard(
@@ -109,25 +120,36 @@ def register_callbacks(app: dash.Dash) -> None:
         top_n: int | None,
         selected_region: str | None,
         flow_lines_toggle: list[str] | None,
+        selected_gender: str | None = "All",
+        selected_day: str | None = "All",
     ):
         """
-        Respond to User Type, Top N, Region, and Map Overlay filter changes.
+        Respond to User Type, Top N, Region, Gender, Day Type, and Map Overlay filter changes.
         """
         n = int(top_n) if top_n else 10
         user_filter = selected_user or "All"
         region_filter = selected_region or "All"
+        gender_filter = selected_gender or "All"
+        day_filter = selected_day or "All"
         show_flow_lines = "show" in (flow_lines_toggle or [])
 
         # 1. Load cached cleaned dataset
         df = load_clean_data()
 
-        # 2. User Membership filtering
-        if user_filter != "All" and "user_type" in df.columns:
-            filtered_df = df[df["user_type"] == user_filter]
-        else:
-            filtered_df = df
+        # 2. Multi-dimensional filtering
+        filtered_df = df
+        if user_filter != "All" and "user_type" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["user_type"] == user_filter]
 
-        # 3. Canonical station metrics for the active user slice
+        if gender_filter != "All" and "member_gender" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["member_gender"] == gender_filter]
+
+        if day_filter == "Weekday" and "weekend_flag" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["weekend_flag"] == 0]
+        elif day_filter == "Weekend" and "weekend_flag" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["weekend_flag"] == 1]
+
+        # 3. Canonical station metrics for the active slice
         station_metrics = compute_canonical_station_metrics(filtered_df)
 
         # 4. Regional filtering
@@ -214,10 +236,16 @@ def register_callbacks(app: dash.Dash) -> None:
         triggered = ctx.triggered_id
         if triggered == ID_DRAWER_CLOSE_BTN:
             return None
-        elif triggered == ID_MAP and map_click:
-            return _extract_station_name(map_click)
+        elif triggered == ID_MAP:
+            if map_click:
+                stn = _extract_station_name(map_click)
+                return stn  # Station name if node clicked, None if empty map clicked (dismisses drawer)
+            return None
         elif triggered == ID_TOP_STATIONS and bar_click:
-            return _extract_station_name(bar_click)
+            stn = _extract_station_name(bar_click)
+            if stn:
+                return stn
+            return dash.no_update
         return dash.no_update
 
     # -----------------------------------------------------------------------

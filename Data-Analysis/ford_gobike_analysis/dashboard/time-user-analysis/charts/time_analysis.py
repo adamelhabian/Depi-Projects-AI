@@ -631,33 +631,39 @@ def create_avg_duration_by_hour_chart(df: pd.DataFrame) -> go.Figure:
         return _empty("No duration data available for the selected filters.",
                       CHART_HEIGHT_LINE)
 
-    avg_dur = (
+    hour_stats = (
         df.groupby("hour")["duration_min"]
-          .mean()
+          .agg(["mean", "count"])
           .reindex(range(24))
     )
-    plot_data = avg_dur.dropna()
+    plot_data = hour_stats.dropna(subset=["mean"])
 
     if plot_data.empty:
         return _empty("No duration data available for the selected filter scope.",
                       CHART_HEIGHT_LINE)
 
-    peak_hour = int(plot_data.idxmax())
-    peak_val  = float(plot_data.max())
-    min_hour  = int(plot_data.idxmin())
-    min_val   = float(plot_data.min())
-    avg_val   = float(plot_data.mean())
+    peak_hour = int(plot_data["mean"].idxmax())
+    peak_val  = float(plot_data["mean"].max())
+    min_hour  = int(plot_data["mean"].idxmin())
+    min_val   = float(plot_data["mean"].min())
+    avg_val   = float(plot_data["mean"].mean())
 
     spread = peak_val - min_val
 
     hours  = plot_data.index.to_numpy()
-    values = plot_data.values.astype(float)
+    values = plot_data["mean"].values.astype(float)
+    counts = plot_data["count"].values.astype(int)
 
     hover_texts = [
         f"<b>{h:02d}:00 – {h:02d}:59</b><br>"
-        f"Average duration: <b>{v:.1f} min</b>"
-        for h, v in zip(hours, values)
+        f"Average duration: <b>{v:.1f} min</b><br>"
+        f"Sample size: <b>{c:,} trips</b>"
+        + ("<br><span style='color:#F97316;font-size:10px;'>* Low sample size (<50 trips)</span>" if c < 50 else "")
+        for h, v, c in zip(hours, values, counts)
     ]
+
+    marker_colors = ["#CBD5E1" if c < 50 else "#FFFFFF" for c in counts]
+    marker_border_colors = ["#94A3B8" if c < 50 else _PURPLE for c in counts]
 
     fig = go.Figure()
 
@@ -684,8 +690,8 @@ def create_avg_duration_by_hour_chart(df: pd.DataFrame) -> go.Figure:
             line=dict(color=_PURPLE, width=2.6, shape="spline", smoothing=0.85),
             marker=dict(
                 size=6,
-                color="#FFFFFF",
-                line=dict(color=_PURPLE, width=2),
+                color=marker_colors,
+                line=dict(color=marker_border_colors, width=2),
             ),
             hovertext=hover_texts,
             hoverinfo="text",

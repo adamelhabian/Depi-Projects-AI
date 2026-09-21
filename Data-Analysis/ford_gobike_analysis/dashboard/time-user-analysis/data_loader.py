@@ -21,7 +21,8 @@ from config import REQUIRED_COLUMNS
 logger = logging.getLogger(__name__)
 
 # Ensure .env is loaded from module directory
-_ENV_PATH = Path(__file__).resolve().parent / ".env"
+_CURRENT_DIR = Path(__file__).resolve().parent
+_ENV_PATH = _CURRENT_DIR / ".env"
 if _ENV_PATH.exists():
     load_dotenv(dotenv_path=_ENV_PATH)
 else:
@@ -37,6 +38,12 @@ _QUERY_COLUMNS = [
     "member_age",
     "member_gender",
     "age_group",
+    """CASE 
+        WHEN start_latitude > 37.7 AND start_longitude < -122.35 THEN 'San Francisco'
+        WHEN start_latitude > 37.75 AND start_longitude >= -122.35 THEN 'East Bay (Oakland/Berkeley)'
+        WHEN start_latitude < 37.45 THEN 'San Jose'
+        ELSE 'San Francisco'
+    END AS region""",
 ]
 
 
@@ -56,10 +63,8 @@ def _load_from_supabase() -> pd.DataFrame:
     Raises RuntimeError if connection fails (no CSV fallback).
     """
     db_url = os.getenv("DATABASE_URL")
-    if not db_url or "XXXX" in db_url:
-        raise RuntimeError(
-            "DATABASE_URL is not configured in .env. Supabase connection is strictly required."
-        )
+    if not db_url:
+        raise ValueError("[Member 4] DATABASE_URL missing from environment variables.")
 
     try:
         from sqlalchemy import create_engine
@@ -92,12 +97,28 @@ def _load_from_supabase() -> pd.DataFrame:
         ) from err
 
 
+_CACHE_DIR = _CURRENT_DIR.parent / ".cache"
+_PARQUET_PATH = _CACHE_DIR / "time_user_cleaned.parquet"
+
+
 @functools.lru_cache(maxsize=1)
 def load_clean_data() -> pd.DataFrame:
     """
-    Single-load, high-performance cached loader.
-    Exclusively loads from Supabase Cloud Database and caches in memory.
+    Single-load, ultra-high-performance cached loader.
+    Exclusively loads from local Parquet disk cache if available (<0.5s),
+    or fetches directly from Supabase Cloud Database and creates the cache.
     """
+    # 0. Check local Parquet cache for instant cold start
+    if _PARQUET_PATH.exists():
+        try:
+            logger.info("[Member 4] Loading from instant Parquet cache: %s", _PARQUET_PATH)
+            df = pd.read_parquet(_PARQUET_PATH)
+            if not df.empty and len(df) > 100000:
+                print(f">> [PARQUET CACHE HIT] Loaded {len(df):,} time-user trips in <0.6s from {_PARQUET_PATH.name}", flush=True)
+                return df
+        except Exception as cache_err:
+            logger.warning("[Member 4] Parquet cache read failed (%s); re-fetching from Supabase.", cache_err)
+
     df = _load_from_supabase()
 
     validate_dataset(df)
@@ -111,6 +132,17 @@ def load_clean_data() -> pd.DataFrame:
 
     if "age_group" in df.columns and df["age_group"].dtype != "category":
         df["age_group"] = df["age_group"].astype("category")
+
+    if "region" in df.columns and df["region"].dtype != "category":
+        df["region"] = df["region"].astype("category")
+
+    # Persist to Parquet disk cache for instant subsequent runs
+    try:
+        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        df.to_parquet(_PARQUET_PATH, engine="pyarrow", compression="snappy")
+        logger.info("[Member 4] Saved instant Parquet cache: %s", _PARQUET_PATH)
+    except Exception as save_err:
+        logger.warning("[Member 4] Failed to save Parquet cache: %s", save_err)
 
     logger.info("[Member 4] Ready with %d valid trips loaded from Supabase.", len(df))
     return df
