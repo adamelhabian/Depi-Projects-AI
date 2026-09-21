@@ -67,8 +67,9 @@ def validate_dataset(df: pd.DataFrame) -> None:
 def _load_from_supabase() -> pd.DataFrame | None:
     """Query essential columns from Supabase gold.trip_analytics view with connection pooling."""
     db_url = os.getenv("DATABASE_URL")
-    if not db_url or "XXXX" in db_url:
-        db_url = "postgresql://postgres.mvolsievttmxgwbkuovy:ford-gobike1234@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
+    if not db_url:
+        logger.warning("[Member 5] DATABASE_URL not configured in environment.")
+        return None
 
     try:
         from sqlalchemy import create_engine

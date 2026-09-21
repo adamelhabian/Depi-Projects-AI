@@ -37,7 +37,7 @@ load_dotenv(_CURRENT_DIR.parent / ".env")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    DATABASE_URL = "postgresql://postgres.mvolsievttmxgwbkuovy:ford-gobike1234@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
+    raise ValueError("DATABASE_URL is missing. Please define DATABASE_URL in your .env file.")
 
 _ENGINE: Optional[Engine] = None
 _CACHED_SUMMARY_DF: Optional[pd.DataFrame] = None

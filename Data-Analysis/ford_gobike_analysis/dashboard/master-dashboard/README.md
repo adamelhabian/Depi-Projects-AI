@@ -94,9 +94,9 @@ pip install -r requirements.txt
 ```
 
 ### 2. Verify Cloud Connection
-Verify that `.env` contains the valid Supabase database URI:
+Verify that `.env` contains your Supabase database URI:
 ```env
-DATABASE_URL=postgresql://postgres.mvolsievttmxgwbkuovy:ford-gobike1234@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
+DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname>
 ```
 
 ### 3. Launch the Master Platform

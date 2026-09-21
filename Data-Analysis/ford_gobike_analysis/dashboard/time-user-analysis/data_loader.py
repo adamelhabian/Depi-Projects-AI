@@ -63,8 +63,8 @@ def _load_from_supabase() -> pd.DataFrame:
     Raises RuntimeError if connection fails (no CSV fallback).
     """
     db_url = os.getenv("DATABASE_URL")
-    if not db_url or "XXXX" in db_url:
-        db_url = "postgresql://postgres.mvolsievttmxgwbkuovy:ford-gobike1234@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
+    if not db_url:
+        raise ValueError("[Member 4] DATABASE_URL missing from environment variables.")
 
     try:
         from sqlalchemy import create_engine

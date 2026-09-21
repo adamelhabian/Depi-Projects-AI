@@ -86,7 +86,7 @@ pip install -r requirements.txt
 ### 2. Configure Environment
 Ensure `.env` contains your Supabase PostgreSQL credentials:
 ```env
-DATABASE_URL=postgresql://postgres.mvolsievttmxgwbkuovy:ford-gobike1234@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
+DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname>
 ```
 
 ### 3. Run the Dashboard
