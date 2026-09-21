@@ -1,340 +1,254 @@
-# Ford GoBike Data Engineering & Analytics Platform
+# 🚲 Ford GoBike Data Engineering & Mobility Analytics Platform
 
-An end-to-end Data Engineering and Analytics project built using the **Ford GoBike bike-sharing dataset**.
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?logo=postgresql&logoColor=white)
+![Plotly Dash](https://img.shields.io/badge/Dashboard-Plotly%20Dash-0083B0?logo=plotly&logoColor=white)
+![Data Engineering](https://img.shields.io/badge/ETL-SQLAlchemy%20%7C%20Pandas-150458?logo=pandas&logoColor=white)
+![Cloud Native](https://img.shields.io/badge/Architecture-100%25%20Supabase%20Cloud-orange)
+![DEPI](https://img.shields.io/badge/Program-DEPI%20Data%20Analysis-success)
 
-The project processes raw data through an ETL pipeline, stores it in a PostgreSQL Data Warehouse using **Supabase**, and provides analytics through an interactive **Streamlit dashboard**.
+An enterprise-grade, end-to-end Data Engineering and Mobility Analytics platform built on the **Ford GoBike (Bay Wheels)** bike-sharing system.
 
-## Project Architecture
+The entire architecture is **100% cloud-native**, hosted on **Supabase PostgreSQL** with zero reliance on local CSV files. The platform manages data across four centralized warehouse layers (Bronze → Silver → Warehouse → Gold) and serves real-time operational mobility intelligence through a modular **Plotly Dash** application.
 
-```text
-Raw CSV
-   ↓
-Extract
-   ↓
-Bronze Layer
-   ↓
-Transform
-   ↓
-Silver Layer
-   ↓
-Data Warehouse
-   ↓
-Gold Layer
-   ↓
-Dashboard
-```
+---
 
-## Data Layers
+## 🏗️ Cloud Data Warehouse Architecture
 
-### Bronze
-
-Stores the original raw data with minimal changes.
+All data layers, transformations, and analytical aggregations reside directly within the centralized **Supabase PostgreSQL** cloud instance:
 
 ```text
-bronze.trips
+                  Supabase PostgreSQL Cloud
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   Bronze Layer (Raw Storage: bronze.trips)                  │
+│        ↓                                                    │
+│   Silver Layer (Cleaned & Validated: silver.trips)          │
+│        ↓                                                    │
+│   Warehouse Layer (Star Schema: fact_trip + Dimensions)     │
+│        ↓                                                    │
+│   Gold Layer (Analytics SQL Views: gold.trip_analytics)     │
+│                                                             │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ SQLAlchemy Cloud Connection
+                               ↓
+             Interactive Mobility Dashboard (Plotly Dash)
 ```
 
-### Silver
+### Data Layers Overview
 
-Contains cleaned and transformed data.
+| Layer | Schema / Table | Purpose & Details |
+| :--- | :--- | :--- |
+| **Bronze** | `bronze.trips` | Stores full-fidelity raw ride records directly in Supabase. |
+| **Silver** | `silver.trips` | Type-standardized, validated, and enriched records (duration in minutes, member age, age groups, temporal features). |
+| **Warehouse** | `warehouse.*` | Production **Star Schema** containing `warehouse.fact_trip` joined to dimension tables (`dim_station`, `dim_user`, `dim_date`, `dim_time`). |
+| **Gold** | `gold.trip_analytics` | High-performance aggregated SQL views created directly inside Supabase to power analytical queries and UI components. |
 
-Main transformations include:
+---
 
-- Data type handling
-- Missing-value handling
-- Date and time extraction
-- Age calculation
-- Feature creation
-- Data validation
+## 🏛️ Dimensional Model (Star Schema)
+
+The analytical warehouse is organized as a Star Schema to guarantee high-performance analytics, fast joins, and eliminate data redundancy:
+
+```mermaid
+erDiagram
+    dim_station ||--o{ fact_trip : "start / end station"
+    dim_date    ||--o{ fact_trip : "trip date"
+    dim_time    ||--o{ fact_trip : "trip time"
+    dim_user    ||--o{ fact_trip : "user profile"
+
+    fact_trip {
+        bigint trip_id PK
+        int date_id FK
+        int time_id FK
+        int start_station_id FK
+        int end_station_id FK
+        int user_id FK
+        int duration_sec
+        float duration_min
+    }
+    dim_station {
+        int station_id PK
+        string station_name
+        float latitude
+        float longitude
+    }
+    dim_user {
+        int user_id PK
+        string user_type
+        string member_gender
+        int member_birth_year
+        int age
+        string age_group
+    }
+    dim_date {
+        int date_id PK
+        date full_date
+        string day_name
+        int day_of_week
+        boolean is_weekend
+    }
+    dim_time {
+        int time_id PK
+        int hour
+        string time_period
+        string peak_period
+    }
+```
+
+---
+
+## ⚙️ Cloud ELT Pipeline
+
+The data transformation and warehouse build pipeline is orchestrated via `pipeline/pipeline.py` connecting directly to Supabase via SQLAlchemy:
 
 ```text
-silver.trips
+Connect (Supabase PostgreSQL via SQLAlchemy Engine)
+   ↓
+Read Raw Data (bronze.trips)
+   ↓
+Transform & Cleanse Data
+   ↓
+Load Cleaned Data (silver.trips)
+   ↓
+Populate Dimension Tables (dim_date, dim_time, dim_station, dim_user)
+   ↓
+Populate Fact Table (fact_trip)
+   ↓
+Create / Refresh Gold Views (gold.trip_analytics)
+   ↓
+Pipeline Validation & Health Check
 ```
 
-### Data Warehouse
+---
 
-The warehouse uses a **Star Schema**.
+## 🔬 Key Empirical Findings & Analytics
 
-**Fact Table**
+Analyzing **183,416+ trips** in the Gold Layer revealed critical operational patterns:
 
-```text
-warehouse.fact_trip
-```
+| Insight Domain | Finding | Operational & Business Takeaway |
+| :--- | :--- | :--- |
+| **User Hierarchy** | **89.2%** Subscribers vs. **10.8%** casual Customers. | The network functions as an essential daily commute service rather than tourist leisure. |
+| **Duration Paradox** | Customers average **21.9 mins** per trip; Subscribers average **10.7 mins**. | Casual riders explore recreationally; subscribers prioritize transit speed and efficiency. |
+| **Peak Commute Pulses** | Heavy bimodal weekday peaks at **8:00–9:00 AM** and **5:00–6:00 PM**. | Fleet maintenance windows must be scheduled during midday and late-night lulls. |
+| **Transit Arteries** | Top origin and destination hubs connect directly to BART & Caltrain lines. | Bike-sharing serves as the vital "first-mile / last-mile" link in Bay Area public transit. |
+| **Dock Rebalancing** | Heavy dock depletion in residential zones; surplus accumulation at commercial transit hubs. | Deploy proactive van-dispatch rebalancing during morning and evening commute windows. |
 
-**Dimension Tables**
+---
 
-```text
-warehouse.dim_date
-warehouse.dim_time
-warehouse.dim_station
-warehouse.dim_user
-```
-
-### Gold
-
-Contains analytics-ready SQL views used by the dashboard.
-
-```text
-gold.*
-```
-
-## ETL Pipeline
-
-The pipeline is managed through:
-
-```text
-pipeline/pipeline.py
-```
-
-Workflow:
-
-```text
-Extract
-   ↓
-Load Bronze
-   ↓
-Transform
-   ↓
-Load Silver
-   ↓
-Build Dimensions
-   ↓
-Build Fact Table
-   ↓
-Create Gold Views
-   ↓
-Validate
-```
-
-## Project Structure
+## 📁 Repository Structure
 
 ```text
 ford_gobike_analysis/
 │
 ├── dashboard/
 │   ├── master-dashboard/
-│   │   ├── app.py
-│   │   ├── callbacks/
-│   │   │   ├── export_callbacks.py
-│   │   │   ├── global_filter_callbacks.py
+│   │   ├── app.py                      # Master Plotly Dash application entry point
+│   │   ├── config.py                   # App configuration & theme settings
+│   │   ├── data_loader.py              # Cloud data loader querying Supabase directly
+│   │   ├── layout.py                   # Main layout container
+│   │   ├── callbacks/                  # Interactive Dash callbacks
 │   │   │   ├── global_filter_sync.py
 │   │   │   ├── overview_callbacks.py
 │   │   │   └── routing.py
-│   │   ├── components/
-│   │   │   ├── footer.py
+│   │   ├── components/                 # UI components, layout bars, & KPI cards
 │   │   │   ├── global_filter_bar.py
-│   │   │   ├── key_insights.py
 │   │   │   ├── kpi_banner.py
 │   │   │   └── navbar.py
 │   │   ├── assets/
-│   │   │   └── master_style.css
-│   │   ├── README.md
-│   │   ├── Procfile
-│   │   └── requirements.txt
+│   │   │   └── master_style.css        # Dashboard styling & dark theme
+│   │   ├── pages/                      # Multi-page modular layouts
+│   │   └── Procfile                    # Deployment configuration
 │   │
-│   ├── station-trip-analysis/
-│   │   ├── assets/
-│   │   │   └── style.css
-│   │   ├── README.md
-│   │   └── requirements.txt
-│   │
-│   ├── time-user-analysis/
-│   │   ├── assets/
-│   │   │   └── style.css
-│   │   ├── README.md
-│   │   └── requirements.txt
-│   │
-│   ├── database.py
-│   ├── Procfile
-│   ├── .gitignore
-│   └── requirements.txt
+│   ├── station-trip-analysis/          # Station & Route flow analysis module
+│   ├── time-user-analysis/             # Time-series & User demographic module
+│   └── database.py                     # Centralized SQLAlchemy connection to Supabase
 │
-├── data/
-│   └── bronze/
-│       └── raw source data
+├── pipeline/
+│   ├── __init__.py
+│   ├── extract.py                      # Supabase Bronze layer extractor
+│   ├── transform.py                    # Silver cleansing & feature engineering
+│   ├── load.py                         # Star Schema warehouse builder
+│   └── pipeline.py                     # Master ELT orchestrator
+│
+├── database/
+│   ├── bronze/
+│   │   └── create_tables.sql           # Bronze table schema (bronze.trips)
+│   ├── silver/
+│   │   └── create_tables.sql           # Silver table schema (silver.trips)
+│   ├── warehouse/
+│   │   ├── dimensions.sql              # Dimensions DDL (dim_date, dim_station, etc.)
+│   │   └── facts.sql                   # Fact table DDL (fact_trip)
+│   └── gold/
+│       └── views.sql                   # Analytical views (gold.trip_analytics)
 │
 ├── eda/
-│   └── notebooks/
+│   └── notebooks/                      # Exploratory Data Analysis notebooks
 │       ├── EDA_adam.ipynb
 │       ├── EDA_youssef.ipynb
 │       ├── EDA_Taspeeh.ipynb
 │       └── EDA_Tspeeh_Time_User.ipynb
 │
 ├── preprocessing/
-│   ├── preprocessing.ipynb
-│   └── cleaned_fordgobike_master.csv
+│   └── preprocessing.ipynb             # Feature engineering & transformation research
 │
-├── Gold_DF/
-│   ├── station_metrics/
-│   │   ├── station_metrics.ipynb
-│   │   └── Station_Metrics.csv
-│   │
-│   ├── top_destination/
-│   │   ├── top_destination..ipynb
-│   │   └── Top_Destination.csv
-│   │
-│   └── top_routes/
-│       ├── Top_Routes.ipynb
-│       └── Top_Routes.csv
-│
-├── database/
-│   ├── bronze/
-│   │   └── create_tables.sql
-│   │
-│   ├── silver/
-│   │   └── create_tables.sql
-│   │
-│   ├── gold/
-│   │   └── views.sql
-│   │
-│   └── warehouse/
-│       ├── dimensions.sql
-│       └── facts.sql
-│
-├── pipeline/
-│
-├── ExploratoryDataAnalysis_Phase/
-│   ├── EDA_by_Tspeeh/
-│   └── UI/
-│       └── UI.ipynb
-│
-├── README.md
-├── requirements.txt
-└── .gitignore
+├── requirements.txt                    # Project dependencies
+└── README.md
 ```
 
-## Dashboard
+---
 
-The dashboard is built with **Streamlit** and **Plotly**.
+## 🚀 Quickstart & Setup Guide
 
-It uses the Gold layer to provide analytics such as:
-
-- Total trips
-- Active stations
-- Average trip duration
-- Subscriber ratio
-- Peak hours
-- Station flow
-- Rider demographics
-- Trip patterns
-- Interactive filtering
-
-## Database
-
-The project uses **PostgreSQL through Supabase**.
-
-```text
-Python ETL Pipeline
-        ↓
-SQLAlchemy
-        ↓
-Supabase PostgreSQL
-        ↓
-┌─────────┬─────────┬────────────┬────────┐
-│ Bronze  │ Silver  │ Warehouse  │  Gold  │
-└─────────┴─────────┴────────────┴────────┘
-```
-
-The database connection is stored in an environment variable:
-
-```env
-DATABASE_URL=your_supabase_database_url
-```
-
-Database credentials are not stored in the repository.
-
-## Technologies
-
-- Python
-- Pandas
-- SQLAlchemy
-- PostgreSQL
-- Supabase
-- SQL
-- Streamlit
-- Plotly
-- Jupyter Notebook
-- Git & GitHub
-
-## How to Run
-
-### 1. Clone the repository
-
+### 1. Clone the Repository
 ```bash
-git clone <repository-url>
-cd ford_gobike_analysis
+git clone https://github.com/adamelhabian/Depi-Projects-AI.git
+cd Depi-Projects-AI/Data-Analysis/ford_gobike_analysis
 ```
 
-### 2. Create a virtual environment
-
+### 2. Set Up Virtual Environment
 ```bash
-python -m venv .venv_DA
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
+
+# macOS / Linux
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
-Activate it:
-
-```bash
-.venv_DA\Scripts\activate
-```
-
-### 3. Install dependencies
-
+### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure the database
-
-Create a `.env` file:
-
+### 4. Configure Supabase Cloud Connection
+Create a `.env` file in the root directory (or in `dashboard/master-dashboard/.env`):
 ```env
-DATABASE_URL=your_supabase_database_url
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@[YOUR-SUPABASE-HOST]:5432/postgres
 ```
 
-### 5. Run the ETL pipeline
-
+### 5. Run the Cloud ELT Pipeline (Optional if DB is already loaded)
 ```bash
 python pipeline/pipeline.py
 ```
 
-### 6. Run the dashboard
-
+### 6. Launch the Interactive Dashboard
 ```bash
-streamlit run dashboard/app.py
+python dashboard/master-dashboard/app.py
 ```
+Open your browser and navigate to: **`http://127.0.0.1:8050`**
 
-## Team Workflow
+---
 
-```text
-Data Source
-    ↓
-Data Engineering
-    ↓
-Data Warehouse
-    ↓
-Gold Analytics
-    ↓
-Dashboard
-```
+## 👥 Contributors & Roles
 
-The centralized Supabase database allows the team to work with the same data source instead of using separate local databases.
+Developed collaboratively as part of the **DEPI Data Analysis & Engineering Program**:
 
-## Key Outcome
-
-The project demonstrates a complete Data Engineering workflow:
-
-**Raw Data → ETL → Data Warehouse → Gold Analytics → Interactive Dashboard**
-
-It combines data cleaning, ETL, dimensional modeling, cloud PostgreSQL, SQL analytics, and interactive visualization in one end-to-end platform.
-
-## Contributors
-
-This project was developed collaboratively by a team of five members as part of the **DEPI Data Analysis & Engineering project**.
-
-| Contributor                   |
-| ----------------------------- |
-| **Adam Elhabian**             |
-| **Mina Safwat**               |
-| **Maya Amged**                |
-| **Youssef Mohamed Abdelkrem** |
-| **Tasbeeh Hassan**            |
+| Contributor | Focus Area & Responsibilities | Links |
+| :--- | :--- | :--- |
+| **Youssef Mohamed Abdelkrem** | Station & Trip Flow Analytics, Spatial Mapping & Dash UI | [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com) [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?logo=linkedin)](https://linkedin.com) |
+| **Adam Elhabian** | Cloud ELT Pipeline & Ingestion Architecture | [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com) [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?logo=linkedin)](https://linkedin.com) |
+| **Mina Safwat** | Data Warehouse Architecture & Star Schema Modeling | [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com) [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?logo=linkedin)](https://linkedin.com) |
+| **Maya Amged** | Gold Layer Analytics & SQL View Optimizations | [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com) [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?logo=linkedin)](https://linkedin.com) |
+| **Tasbeeh Hassan** | Time-Series & Demographic Analysis | [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com) [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?logo=linkedin)](https://linkedin.com) |
