@@ -1,0 +1,33 @@
+PART 1 — ML Preparation & Analysis
+
+1. Define X and y
+   Separate the input features (X) from the target variable (y).
+   Prepare the ML inputs that will be used by the modeling stage.
+
+2. Train/Test Split
+   Split the dataset into training and testing subsets.
+   Keep the test set unseen during model training.
+
+3. Evaluation Metrics
+   Define the regression metrics that will be used to measure model performance.
+   Prepare the evaluation criteria for comparing predictions with actual values.
+
+4. Evaluation Setup
+   Prepare the evaluation process and explain how model performance will be measured.
+   Provide the required inputs and metrics for evaluating different models.
+
+5. Learning Curves
+   Analyze training and validation performance as the training-set size increases.
+   Use the curves to identify possible underfitting or overfitting behavior.
+
+6. Complexity Analysis
+   Analyze how model complexity affects training and validation performance.
+   Study the relationship between model complexity, bias, and variance.
+
+7. Bias/Variance Analysis
+   Identify signs of high bias or high variance from model performance.
+   Use the analysis to understand the model's generalization behavior.
+
+8. Model Materials & Documentation
+   Prepare the theoretical and practical materials for the selected regression models.
+   Provide the required concepts, parameters, metrics, and implementation guidance for Youssef.

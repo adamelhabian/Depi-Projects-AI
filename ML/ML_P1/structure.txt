@@ -1,0 +1,73 @@
+                         HOUSING DATASET
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │         MAYA         │
+                    │   Data Analysis &    │
+                    │     Preprocessing    │
+                    ├──────────────────────┤
+                    │ • Data Understanding │
+                    │ • EDA                │
+                    │ • Missing Values     │
+                    │ • Duplicates         │
+                    │ • Outliers           │
+                    │ • Data Cleaning      │
+                    │ • Encoding           │
+                    │ • Scaling             │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                       ML-READY DATASET
+                               │
+                               ▼
+              ─────────────────────────────────
+                     MACHINE LEARNING
+              ─────────────────────────────────
+                         │           │
+             ┌───────────┘           └───────────┐
+             ▼                                   ▼
+    ┌──────────────────────┐          ┌──────────────────────┐
+    │       TSPEEH         │          │       YOUSSEF        │
+    │ ML Preparation &     │          │ Modeling &           │
+    │ Analysis             │          │ Optimization         │
+    ├──────────────────────┤          ├──────────────────────┤
+    │ • Define X & y       │          │ • Models             │
+    │ • Train/Test Split   │          │ • Model Training     │
+    │ • Evaluation Metrics │          │ • Cross-Validation   │
+    │ • Evaluation Setup   │          │ • Hyperparameter     │
+    │ • Learning Curves    │          │   Tuning             │
+    │ • Complexity         │          │ • Model Comparison   │
+    │   Analysis            │          │ • Final Model        │
+    │ • Bias/Variance      │          │ • Final Evaluation   │
+    │   Analysis            │          │                      │
+    │ • Model Materials    │          │                      │
+    │   & Documentation    │          │                      │
+    └──────────┬───────────┘          └──────────┬───────────┘
+               │                                 │
+               │    X_train / X_test             │
+               │    y_train / y_test              │
+               └───────────────┬─────────────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │     FINAL ML MODEL   │
+                    │  Trained & Optimized │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │         ADAM         │
+                    │       Backend        │
+                    │ • Load Final Model   │
+                    │ • Prediction API     │
+                    │ • Handle User Input  │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │         MINA         │
+                    │      Frontend        │
+                    │ • User Interface     │
+                    │ • Input Form         │
+                    │ • Display Prediction │
+                    └──────────────────────┘
