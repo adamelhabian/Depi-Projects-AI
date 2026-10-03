@@ -31,3 +31,47 @@ PART 1 — ML Preparation & Analysis
 8. Model Materials & Documentation
    Prepare the theoretical and practical materials for the selected regression models.
    Provide the required concepts, parameters, metrics, and implementation guidance for Youssef.
+
+   REAL DATA
+   ↓
+1. Dataset Understanding
+   ↓
+2. Data Quality Analysis
+   ↓
+3. Define X and y
+   ↓
+4. EDA
+   ├── Target Distribution
+   ├── Feature Distributions
+   ├── Correlation
+   ├── Feature vs Target
+   └── Outlier Analysis
+   ↓
+5. Train / Test Split
+   ↓
+6. Baseline
+   ↓
+7. Regression Models
+   ├── Linear Regression
+   ├── Polynomial Regression
+   ├── Ridge Regression
+   ├── Lasso Regression
+   └── Decision Tree Regressor
+   ↓
+8. Evaluation Metrics
+   ├── MAE
+   ├── MSE
+   ├── RMSE
+   └── R²
+   ↓
+9. Learning Curves
+   ↓
+10. Complexity Analysis
+   ↓
+11. Bias / Variance Analysis
+   ↓
+12. Residual Analysis
+   ↓
+13. Model Comparison
+   ↓
+14. Documentation

@@ -1,4 +1,4 @@
-PART 1 — Modeling & Optimization
+PART 2 — Modeling & Optimization
 
 1. Model Selection
    Select suitable regression algorithms for the housing price prediction problem.
