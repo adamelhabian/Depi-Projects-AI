@@ -3,7 +3,7 @@ import pickle
 
 from flask import Flask, render_template, request
 
-from src.backend.services.prediction_service import predict_house_price
+from backend.services.prediction_service import predict_house_price
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -13,7 +13,7 @@ MODEL_PATH = os.path.join(BASE_DIR, "models", "model.pkl")
 SCALER_PATH = os.path.join(BASE_DIR, "models", "scaler.pkl")
 
 
-PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))
 
 FRONTEND_DIR = os.path.join(PROJECT_DIR, "frontend")
 TEMPLATE_DIR = os.path.join(FRONTEND_DIR, "templates")
