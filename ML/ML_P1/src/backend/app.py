@@ -3,7 +3,7 @@ import pickle
 
 from flask import Flask, render_template, request
 
-from services.prediction_service import predict_house_price
+from src.backend.services.prediction_service import predict_house_price
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -12,7 +12,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "model.pkl")
 SCALER_PATH = os.path.join(BASE_DIR, "models", "scaler.pkl")
 
-FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
+
+PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+
+FRONTEND_DIR = os.path.join(PROJECT_DIR, "frontend")
 TEMPLATE_DIR = os.path.join(FRONTEND_DIR, "templates")
 STATIC_DIR = os.path.join(FRONTEND_DIR, "static")
 
@@ -24,12 +27,10 @@ app = Flask(
 )
 
 
-# loading machine learning model made by team ML
 with open(MODEL_PATH, "rb") as file:
     model = pickle.load(file)
 
 
-# Loading scaler of features used by team ML
 with open(SCALER_PATH, "rb") as file:
     scaler = pickle.load(file)
 
@@ -43,12 +44,10 @@ def home():
 def predict():
 
     try:
-        # Get values entered by user from the HTML form
         rm = float(request.form["RM"])
         lstat = float(request.form["LSTAT"])
         ptratio = float(request.form["PTRATIO"])
 
-        # some validation
         if rm <= 0:
             return render_template(
                 "index.html",
@@ -67,7 +66,6 @@ def predict():
                 error="PTRATIO must be greater than 0."
             )
 
-        # Make prediction
         output = predict_house_price(
             model,
             scaler,
