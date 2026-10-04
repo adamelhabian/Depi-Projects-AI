@@ -1,32 +1,324 @@
 <!doctype html>
+<html lang="en">
 
-<html>
-  <head>
-    <title>House Price Prediction</title>
-  </head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <body>
-    ```
-    <h1>Boston House Price Prediction</h1>
+  <title>Boston House Price Prediction</title>
 
-    <form action="/predict" method="POST">
-      <label>RM:</label>
-      <input type="number" step="any" name="RM" required />
-      <br /><br />
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+  >
+</head>
 
-      <label>LSTAT:</label>
-      <input type="number" step="any" name="LSTAT" required />
-      <br /><br />
+<body>
 
-      <label>PTRATIO:</label>
-      <input type="number" step="any" name="PTRATIO" required />
-      <br /><br />
+  <main class="page">
 
-      <button type="submit">Predict</button>
-    </form>
+    <!-- ================= HERO ================= -->
 
-    {% if target %}
-    <h2>Predicted MEDV: {{ target }}</h2>
-    {% endif %} ```
-  </body>
+    <section class="hero">
+
+      <div class="badge">
+        Machine Learning Prediction
+      </div>
+
+      <h1>
+        Boston House Price
+        <span>Prediction</span>
+      </h1>
+
+      <p>
+        Estimate the median value of a house using
+        three important features from the Boston Housing dataset.
+      </p>
+
+    </section>
+
+
+    <!-- ================= MAIN SECTION ================= -->
+
+    <section class="main-section">
+
+      <!-- Prediction Form -->
+
+      <div class="prediction-card">
+
+        <div class="card-header">
+
+          <div>
+            <p class="eyebrow">PREDICTION</p>
+
+            <h2>
+              Enter House Information
+            </h2>
+          </div>
+
+          <div class="model-icon">
+            ML
+          </div>
+
+        </div>
+
+
+        <form action="/predict" method="POST">
+
+          <!-- RM -->
+
+          <div class="input-group">
+
+            <label for="RM">
+              <span>RM</span>
+              <small>Average number of rooms</small>
+            </label>
+
+            <input
+              type="number"
+              step="1"
+              id="RM"
+              name="RM"
+              placeholder="e.g. 6"
+              required
+            >
+
+          </div>
+
+
+          <!-- LSTAT -->
+
+          <div class="input-group">
+
+            <label for="LSTAT">
+              <span>LSTAT</span>
+              <small>Lower status population (%)</small>
+            </label>
+
+            <input
+              type="number"
+              step="0.1"
+              id="LSTAT"
+              name="LSTAT"
+              placeholder="e.g. 10.2"
+              required
+            >
+
+          </div>
+
+
+          <!-- PTRATIO -->
+
+          <div class="input-group">
+
+            <label for="PTRATIO">
+              <span>PTRATIO</span>
+              <small>Pupil-teacher ratio</small>
+            </label>
+
+            <input
+              type="number"
+              step="0.1"
+              id="PTRATIO"
+              name="PTRATIO"
+              placeholder="e.g. 15.3"
+              required
+            >
+
+          </div>
+
+
+          <button type="submit">
+            Predict House Price
+            <span>→</span>
+          </button>
+
+        </form>
+
+
+        <!-- Prediction Result -->
+
+        {% if target %}
+
+        <div class="result">
+
+          <div class="result-label">
+            Predicted MEDV
+          </div>
+
+          <div class="result-value">
+            {{ target }}
+          </div>
+
+          <div class="result-description">
+            Estimated median house value
+          </div>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- Error -->
+
+        {% if error %}
+
+        <div class="error">
+
+          <strong>
+            Prediction Error
+          </strong>
+
+          <span>
+            {{ error }}
+          </span>
+
+        </div>
+
+        {% endif %}
+
+      </div>
+
+
+      <!-- ================= HOUSE IMAGE ================= -->
+
+      <div class="house-image">
+
+        <img
+          src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
+          alt="House exterior"
+        >
+
+        <div class="image-overlay">
+
+          <span>
+            BOSTON HOUSING
+          </span>
+
+          <h2>
+            Find your estimated
+            house value.
+          </h2>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= ABOUT MODEL ================= -->
+
+    <section class="about-model">
+
+      <div class="about-header">
+
+        <p class="eyebrow">
+          ABOUT THE MODEL
+        </p>
+
+        <h2>
+          Understanding the Features
+        </h2>
+
+        <p>
+          These three features are used by the machine learning
+          model to estimate the median value of a house.
+        </p>
+
+      </div>
+
+
+      <div class="features">
+
+
+        <!-- RM -->
+
+        <div class="feature">
+
+          <div class="feature-number">
+            01
+          </div>
+
+          <h3>
+            RM
+          </h3>
+
+          <p>
+            Average number of rooms per dwelling.
+          </p>
+
+        </div>
+
+
+        <!-- LSTAT -->
+
+        <div class="feature">
+
+          <div class="feature-number">
+            02
+          </div>
+
+          <h3>
+            LSTAT
+          </h3>
+
+          <p>
+            Percentage of the population with lower
+            socioeconomic status.
+          </p>
+
+        </div>
+
+
+        <!-- PTRATIO -->
+
+        <div class="feature">
+
+          <div class="feature-number">
+            03
+          </div>
+
+          <h3>
+            PTRATIO
+          </h3>
+
+          <p>
+            Pupil-teacher ratio by town.
+          </p>
+
+        </div>
+
+
+        <!-- Dataset -->
+
+        <div class="feature dataset-feature">
+
+          <div class="feature-number">
+            ML
+          </div>
+
+          <h3>
+            Boston Housing
+          </h3>
+
+          <p>
+            Regression-based machine learning prediction.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <footer>
+      Built with Flask & Machine Learning
+    </footer>
+
+  </main>
+
+</body>
+
 </html>

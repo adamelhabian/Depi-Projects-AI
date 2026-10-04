@@ -1,0 +1,659 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --background: #f5f7fb;
+  --card: #ffffff;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --light-blue: #eff6ff;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+
+  background: var(--background);
+
+  color: var(--text);
+
+  min-height: 100vh;
+}
+
+
+/* =========================
+   PAGE
+========================= */
+
+.page {
+  width: 100%;
+  max-width: 1100px;
+
+  margin: auto;
+
+  padding: 60px 25px 30px;
+}
+
+
+/* =========================
+   HERO
+========================= */
+
+.hero {
+  text-align: center;
+
+  max-width: 700px;
+
+  margin: 0 auto 45px;
+}
+
+.badge {
+  display: inline-block;
+
+  padding: 7px 14px;
+
+  margin-bottom: 18px;
+
+  border-radius: 50px;
+
+  background: var(--light-blue);
+
+  color: var(--primary);
+
+  font-size: 12px;
+
+  font-weight: bold;
+
+  letter-spacing: 0.5px;
+
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  font-size: 46px;
+
+  line-height: 1.15;
+
+  margin-bottom: 18px;
+
+  letter-spacing: -1px;
+}
+
+.hero h1 span {
+  color: var(--primary);
+}
+
+.hero p {
+  color: var(--muted);
+
+  font-size: 17px;
+
+  line-height: 1.7;
+}
+
+
+/* =========================
+   MAIN SECTION
+========================= */
+
+.main-section {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 25px;
+
+  align-items: stretch;
+}
+
+
+/* =========================
+   PREDICTION CARD
+========================= */
+
+.prediction-card {
+  background: var(--card);
+
+  border: 1px solid var(--border);
+
+  border-radius: 18px;
+
+  padding: 30px;
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+
+/* =========================
+   CARD HEADER
+========================= */
+
+.card-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 30px;
+}
+
+.eyebrow {
+  font-size: 11px;
+
+  font-weight: bold;
+
+  letter-spacing: 1.2px;
+
+  color: var(--primary);
+
+  margin-bottom: 7px;
+}
+
+.card-header h2 {
+  font-size: 22px;
+}
+
+.model-icon {
+  width: 45px;
+  height: 45px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: var(--light-blue);
+
+  color: var(--primary);
+
+  font-size: 14px;
+
+  font-weight: bold;
+}
+
+
+/* =========================
+   INPUTS
+========================= */
+
+.input-group {
+  margin-bottom: 22px;
+}
+
+.input-group label {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 9px;
+}
+
+.input-group label span {
+  font-size: 14px;
+
+  font-weight: bold;
+}
+
+.input-group label small {
+  color: var(--muted);
+
+  font-size: 12px;
+}
+
+.input-group input {
+  width: 100%;
+
+  padding: 14px 15px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 10px;
+
+  background: #fafafa;
+
+  font-size: 15px;
+
+  color: var(--text);
+
+  outline: none;
+
+  transition: 0.2s;
+}
+
+.input-group input:focus {
+  background: white;
+
+  border-color: var(--primary);
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input-group input::placeholder {
+  color: #a1a1aa;
+}
+
+
+/* =========================
+   BUTTON
+========================= */
+
+button {
+  width: 100%;
+
+  padding: 15px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background: var(--primary);
+
+  color: white;
+
+  font-size: 15px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 10px;
+
+  transition: 0.2s;
+}
+
+button:hover {
+  background: var(--primary-dark);
+
+  transform: translateY(-1px);
+}
+
+button span {
+  font-size: 20px;
+}
+
+
+/* =========================
+   RESULT
+========================= */
+
+.result {
+  margin-top: 25px;
+
+  padding: 22px;
+
+  text-align: center;
+
+  border-radius: 14px;
+
+  background: var(--light-blue);
+
+  border: 1px solid #bfdbfe;
+}
+
+.result-label {
+  font-size: 12px;
+
+  font-weight: bold;
+
+  color: var(--muted);
+
+  text-transform: uppercase;
+
+  letter-spacing: 1px;
+}
+
+.result-value {
+  margin-top: 7px;
+
+  font-size: 38px;
+
+  font-weight: bold;
+
+  color: var(--primary);
+}
+
+.result-description {
+  margin-top: 5px;
+
+  font-size: 13px;
+
+  color: var(--muted);
+}
+
+
+/* =========================
+   ERROR
+========================= */
+
+.error {
+  margin-top: 20px;
+
+  padding: 15px;
+
+  border-radius: 10px;
+
+  background: #fef2f2;
+
+  border: 1px solid #fecaca;
+
+  color: #b91c1c;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+
+  font-size: 13px;
+}
+
+.error strong {
+  font-size: 14px;
+}
+
+
+/* =========================
+   HOUSE IMAGE
+========================= */
+
+.house-image {
+  position: relative;
+
+  min-height: 100%;
+
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.house-image img {
+  width: 100%;
+
+  height: 100%;
+
+  min-height: 500px;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+
+/* Dark gradient over image */
+
+.house-image::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.65),
+      rgba(0, 0, 0, 0.05) 65%
+    );
+}
+
+
+/* Text over image */
+
+.image-overlay {
+  position: absolute;
+
+  left: 30px;
+
+  bottom: 30px;
+
+  z-index: 2;
+
+  color: white;
+
+  max-width: 300px;
+}
+
+.image-overlay span {
+  font-size: 11px;
+
+  font-weight: bold;
+
+  letter-spacing: 1.5px;
+
+  opacity: 0.85;
+}
+
+.image-overlay h2 {
+  margin-top: 8px;
+
+  font-size: 28px;
+
+  line-height: 1.2;
+}
+
+
+/* =========================
+   ABOUT MODEL
+========================= */
+
+.about-model {
+  margin-top: 25px;
+
+  background: white;
+
+  border: 1px solid var(--border);
+
+  border-radius: 18px;
+
+  padding: 30px;
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.about-header {
+  max-width: 650px;
+
+  margin-bottom: 30px;
+}
+
+.about-header h2 {
+  font-size: 25px;
+
+  margin-bottom: 10px;
+}
+
+.about-header > p:last-child {
+  color: var(--muted);
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+
+/* =========================
+   FEATURES
+========================= */
+
+.features {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  border-top: 1px solid var(--border);
+}
+
+.feature {
+  padding: 25px 20px;
+
+  border-right: 1px solid var(--border);
+}
+
+.feature:last-child {
+  border-right: none;
+}
+
+.feature-number {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 15px;
+
+  border-radius: 10px;
+
+  background: var(--light-blue);
+
+  color: var(--primary);
+
+  font-size: 11px;
+
+  font-weight: bold;
+}
+
+.feature h3 {
+  font-size: 16px;
+
+  margin-bottom: 8px;
+}
+
+.feature p {
+  color: var(--muted);
+
+  font-size: 13px;
+
+  line-height: 1.6;
+}
+
+
+/* =========================
+   FOOTER
+========================= */
+
+footer {
+  text-align: center;
+
+  margin-top: 30px;
+
+  color: #9ca3af;
+
+  font-size: 12px;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 800px) {
+
+  .page {
+    padding-top: 35px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
+
+  .main-section {
+    grid-template-columns: 1fr;
+  }
+
+  .house-image img {
+    min-height: 350px;
+  }
+
+  .features {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .feature:nth-child(2) {
+    border-right: none;
+  }
+
+  .feature:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--border);
+  }
+
+}
+
+
+@media (max-width: 500px) {
+
+  .page {
+    padding: 25px 15px;
+  }
+
+  .hero h1 {
+    font-size: 30px;
+  }
+
+  .hero p {
+    font-size: 14px;
+  }
+
+  .prediction-card,
+  .about-model {
+    padding: 22px;
+  }
+
+  .input-group label {
+    display: block;
+  }
+
+  .input-group label small {
+    display: block;
+
+    margin-top: 4px;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+  }
+
+  .feature {
+    border-right: none !important;
+
+    border-bottom: 1px solid var(--border);
+  }
+
+  .feature:last-child {
+    border-bottom: none;
+  }
+
+  .house-image img {
+    min-height: 300px;
+  }
+
+  .image-overlay h2 {
+    font-size: 23px;
+  }
+
+}
