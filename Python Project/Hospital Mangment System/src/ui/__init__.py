@@ -1,0 +1,6 @@
+from .ui_appointment import show_appointment_management
+from .ui_dashboard import show_dashboard
+from .ui_medical_operations import show_medical_operations
+from .ui_reports import show_reports
+from .ui_patient import show_patient_management
+from .ui_staffs_and_doctors import show_staff_management

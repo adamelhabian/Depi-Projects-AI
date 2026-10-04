@@ -1,0 +1,4 @@
+# Local High-Performance Data Cache
+.cache/
+*.parquet
+__pycache__/
