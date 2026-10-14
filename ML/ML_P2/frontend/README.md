@@ -25,7 +25,7 @@ ML_P2/
 │           └── main.js     # Form presets, education sync, smooth scroll
 ```
 
-## Backend Integration Details (For Mina)
+## Backend Integration Details
 
 The form submits to `POST /predict`.
 
