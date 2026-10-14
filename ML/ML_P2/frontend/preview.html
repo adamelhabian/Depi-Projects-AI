@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CharityML - Donor Intelligence & Income Prediction (Live Preview)</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/style.css">
+
+  <style>
+    /* Floating Demo Control Dock (Clean, Light-themed, User-Friendly) */
+    .demo-dock {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 50px;
+      padding: 8px 16px;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 90vw;
+      flex-wrap: wrap;
+      animation: floatUp 0.35s ease-out;
+    }
+
+    @keyframes floatUp {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 20px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
+    .demo-dock-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .demo-dock-label svg {
+      color: #2563eb;
+    }
+
+    .demo-dock-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .demo-pill-btn {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .demo-pill-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .demo-pill-btn.active {
+      background: #2563eb;
+      border-color: #1d4ed8;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    }
+
+    .demo-pill-btn-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 4px 6px;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+
+    .demo-pill-btn-close:hover {
+      color: #0f172a;
+      background: #f1f5f9;
+    }
+
+    @media (max-width: 768px) {
+      .demo-dock {
+        border-radius: 16px;
+        bottom: 16px;
+        padding: 10px 14px;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= FLOATING USER-FRIENDLY DEMO CONTROLLER ================= -->
+  <aside class="demo-dock" id="demo-dock" aria-label="Interactive Demo Dock">
+    <div class="demo-dock-label">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polygon points="10 8 16 12 10 16 10 8"/>
+      </svg>
+      <span>Interactive Demo:</span>
+    </div>
+    <div class="demo-dock-actions">
+      <button type="button" class="demo-pill-btn active" id="sim-none">Default View</button>
+      <button type="button" class="demo-pill-btn" id="sim-high">Likely Donor (&gt;50K)</button>
+      <button type="button" class="demo-pill-btn" id="sim-standard">Standard Tier (&le;50K)</button>
+      <button type="button" class="demo-pill-btn" id="sim-error">Input Warning</button>
+      <button type="button" class="demo-pill-btn-close" id="btn-close-dock" title="Hide Demo Bar">&times;</button>
+    </div>
+  </aside>
+
+  <div class="app-container">
+
+    <!-- ================= NAVIGATION ================= -->
+    <header class="app-nav">
+      <div class="brand-wrapper">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Charity<span>ML</span></h1>
+          <p class="brand-subtitle">Finding Donors Platform &bull; Census Intelligence</p>
+        </div>
+      </div>
+
+      <div class="nav-badges">
+        <span class="badge badge-primary">
+          <span class="badge-dot"></span>
+          DEPI Project 2
+        </span>
+        <span class="badge">
+          ML Classifier
+        </span>
+      </div>
+    </header>
+
+    <!-- ================= HERO ================= -->
+    <section class="hero-section">
+      <div class="hero-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+        </svg>
+        Targeted Philanthropic Assessment
+      </div>
+
+      <h2 class="hero-title">
+        Predict Donor Likelihood from <span>Demographic Insights</span>
+      </h2>
+
+      <p class="hero-description">
+        CharityML leverages machine learning classifiers trained on census data to identify individuals likely earning over $50,000 annually — empowering non-profits to optimize fundraising outreach.
+      </p>
+    </section>
+
+    <!-- ================= VISUAL PHOTOGRAPHY BANNER ================= -->
+    <div class="hero-visual-banner">
+      <img
+        src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80"
+        alt="Charity and Community Giving"
+        class="hero-visual-img"
+      >
+      <div class="hero-visual-overlay">
+        <span class="overlay-tag">COMMUNITY IMPACT</span>
+        <h3>Connecting Non-Profits With Generous Hearts</h3>
+        <p>Using predictive analytics to identify likely donors and build stronger philanthropic partnerships.</p>
+      </div>
+    </div>
+
+    <!-- ================= VISUAL STATS GRID ================= -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Census Records</span>
+        <span class="stat-value">45,222</span>
+        <span class="stat-caption">Cleaned &amp; Validated</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Model Accuracy</span>
+        <span class="stat-value">86.0%</span>
+        <span class="stat-caption">Gradient Boosting</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Income Threshold</span>
+        <span class="stat-value">&gt; $50K</span>
+        <span class="stat-caption">Donor Benchmark</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">ROC-AUC Score</span>
+        <span class="stat-value">0.917</span>
+        <span class="stat-caption">High Discrimination</span>
+      </div>
+    </div>
+
+    <!-- ================= QUICK PRESETS ================= -->
+    <div class="presets-card">
+      <div class="presets-label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <span>Quick Test Presets:</span>
+      </div>
+
+      <div class="presets-actions">
+        <button type="button" class="btn-preset" data-preset="highIncome">
+          Executive Profile (&gt;50K)
+        </button>
+        <button type="button" class="btn-preset" data-preset="techSpecialist">
+          Tech Specialist (&gt;50K)
+        </button>
+        <button type="button" class="btn-preset" data-preset="standardIncome">
+          Junior Profile (&le;50K)
+        </button>
+        <button type="button" class="btn-preset btn-preset-reset" id="btn-reset">
+          Clear Form
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= PREDICTION RESULTS (SIMULATED DYNAMICALLY IN PREVIEW) ================= -->
+    <div id="results-container" class="results-container"></div>
+
+    <!-- ================= MAIN ASSESSMENT FORM ================= -->
+    <main class="form-card">
+      <form action="/predict" method="POST" id="prediction-form" novalidate>
+
+        <!-- SECTION 1: Personal Demographics -->
+        <section class="form-section">
+          <div class="section-header">
+            <div class="section-number">1</div>
+            <div>
+              <h2>Personal Demographics</h2>
+              <p>Basic demographic attributes from census data</p>
+            </div>
+          </div>
+
+          <div class="form-grid-4">
+            <!-- Age -->
+            <div class="field-group">
+              <label for="age" class="field-label">
+                <span>Age</span>
+                <span class="field-hint">17 - 90 yrs</span>
+              </label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="age"
+                  name="age"
+                  class="form-input"
+                  min="17"
+                  max="90"
+                  placeholder="e.g. 38"
+                  value="38"
+                  required
+                >
+              </div>
+            </div>
+
+            <!-- Sex -->
+            <div class="field-group">
+              <label for="sex" class="field-label">
+                <span>Sex</span>
+              </label>
+              <select id="sex" name="sex" class="form-select" required>
+                <option value="Male" selected>Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+
+            <!-- Race -->
+            <div class="field-group">
+              <label for="race" class="field-label">
+                <span>Race</span>
+              </label>
+              <select id="race" name="race" class="form-select" required>
+                <option value="White" selected>White</option>
+                <option value="Black">Black</option>
+                <option value="Asian-Pac-Islander">Asian-Pac-Islander</option>
+                <option value="Amer-Indian-Eskimo">Amer-Indian-Eskimo</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <!-- Native Country -->
+            <div class="field-group">
+              <label for="native-country" class="field-label">
+                <span>Native Country</span>
+              </label>
+              <select id="native-country" name="native-country" class="form-select" required>
+                <option value="United-States" selected>United-States</option>
+                <option value="Canada">Canada</option>
+                <option value="Germany">Germany</option>
+                <option value="England">England</option>
+                <option value="Mexico">Mexico</option>
+                <option value="India">India</option>
+                <option value="Philippines">Philippines</option>
+                <option value="China">China</option>
+                <option value="Japan">Japan</option>
+                <option value="France">France</option>
+                <option value="Italy">Italy</option>
+                <option value="Cuba">Cuba</option>
+                <option value="South">South</option>
+                <option value="Puerto-Rico">Puerto-Rico</option>
+                <option value="Poland">Poland</option>
+                <option value="Iran">Iran</option>
+                <option value="Vietnam">Vietnam</option>
+                <option value="Taiwan">Taiwan</option>
+                <option value="Ireland">Ireland</option>
+                <option value="Greece">Greece</option>
+                <option value="Portugal">Portugal</option>
+                <option value="Dominican-Republic">Dominican-Republic</option>
+                <option value="Haiti">Haiti</option>
+                <option value="Jamaica">Jamaica</option>
+                <option value="El-Salvador">El-Salvador</option>
+                <option value="Guatemala">Guatemala</option>
+                <option value="Columbia">Columbia</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: Career & Education Profile -->
+        <section class="form-section">
+          <div class="section-header">
+            <div class="section-number">2</div>
+            <div>
+              <h2>Career &amp; Education Profile</h2>
+              <p>Employment sector, educational attainment, and workload</p>
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <!-- Workclass -->
+            <div class="field-group">
+              <label for="workclass" class="field-label">
+                <span>Workclass</span>
+              </label>
+              <select id="workclass" name="workclass" class="form-select" required>
+                <option value="Private" selected>Private Sector</option>
+                <option value="Self-emp-not-inc">Self-employed (Unincorporated)</option>
+                <option value="Self-emp-inc">Self-employed (Incorporated)</option>
+                <option value="Federal-gov">Federal Government</option>
+                <option value="Local-gov">Local Government</option>
+                <option value="State-gov">State Government</option>
+                <option value="Without-pay">Without Pay</option>
+              </select>
+            </div>
+
+            <!-- Education Level -->
+            <div class="field-group">
+              <label for="education_level" class="field-label">
+                <span>Education Level</span>
+                <span class="field-hint">Auto-syncs score</span>
+              </label>
+              <select id="education_level" name="education_level" class="form-select" required>
+                <option value="Bachelors" selected>Bachelors Degree</option>
+                <option value="Masters">Masters Degree</option>
+                <option value="Doctorate">Doctorate (PhD)</option>
+                <option value="Prof-school">Professional School</option>
+                <option value="Some-college">Some College</option>
+                <option value="Assoc-acdm">Associate Academic</option>
+                <option value="Assoc-voc">Associate Vocational</option>
+                <option value="HS-grad">High School Graduate</option>
+                <option value="12th">12th Grade</option>
+                <option value="11th">11th Grade</option>
+                <option value="10th">10th Grade</option>
+                <option value="9th">9th Grade</option>
+                <option value="7th-8th">7th - 8th Grade</option>
+                <option value="5th-6th">5th - 6th Grade</option>
+                <option value="1st-4th">1st - 4th Grade</option>
+                <option value="Preschool">Preschool</option>
+              </select>
+            </div>
+
+            <!-- Education Number -->
+            <div class="field-group">
+              <label for="education-num" class="field-label">
+                <span>Education Years</span>
+                <span class="field-hint">Scale: 1 - 16</span>
+              </label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="education-num"
+                  name="education-num"
+                  class="form-input"
+                  min="1"
+                  max="16"
+                  value="13"
+                  required
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid-2" style="margin-top: 1.25rem;">
+            <!-- Occupation -->
+            <div class="field-group">
+              <label for="occupation" class="field-label">
+                <span>Occupation</span>
+              </label>
+              <select id="occupation" name="occupation" class="form-select" required>
+                <option value="Exec-managerial" selected>Executive / Managerial</option>
+                <option value="Prof-specialty">Professional Specialty</option>
+                <option value="Tech-support">Tech Support</option>
+                <option value="Sales">Sales</option>
+                <option value="Craft-repair">Craft &amp; Repair</option>
+                <option value="Adm-clerical">Administrative Clerical</option>
+                <option value="Protective-serv">Protective Service</option>
+                <option value="Machine-op-inspct">Machine Operation &amp; Inspection</option>
+                <option value="Transport-moving">Transport &amp; Logistics</option>
+                <option value="Handlers-cleaners">Handlers &amp; Cleaners</option>
+                <option value="Farming-fishing">Farming &amp; Fishing</option>
+                <option value="Other-service">Other Service</option>
+                <option value="Priv-house-serv">Private House Service</option>
+                <option value="Armed-Forces">Armed Forces</option>
+              </select>
+            </div>
+
+            <!-- Hours per Week -->
+            <div class="field-group">
+              <label for="hours-per-week" class="field-label">
+                <span>Hours Worked per Week</span>
+                <span class="field-hint">1 - 99 hrs</span>
+              </label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="hours-per-week"
+                  name="hours-per-week"
+                  class="form-input"
+                  min="1"
+                  max="99"
+                  placeholder="e.g. 40"
+                  value="40"
+                  required
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: Financial & Family Profile -->
+        <section class="form-section">
+          <div class="section-header">
+            <div class="section-number">3</div>
+            <div>
+              <h2>Family &amp; Financial Profile</h2>
+              <p>Marital context, capital gains, and investment positions</p>
+            </div>
+          </div>
+
+          <div class="form-grid-4">
+            <!-- Marital Status -->
+            <div class="field-group">
+              <label for="marital-status" class="field-label">
+                <span>Marital Status</span>
+              </label>
+              <select id="marital-status" name="marital-status" class="form-select" required>
+                <option value="Married-civ-spouse" selected>Married (Civilian)</option>
+                <option value="Never-married">Never Married</option>
+                <option value="Divorced">Divorced</option>
+                <option value="Separated">Separated</option>
+                <option value="Widowed">Widowed</option>
+                <option value="Married-spouse-absent">Married (Spouse Absent)</option>
+                <option value="Married-AF-spouse">Married (Armed Forces)</option>
+              </select>
+            </div>
+
+            <!-- Relationship -->
+            <div class="field-group">
+              <label for="relationship" class="field-label">
+                <span>Relationship Role</span>
+              </label>
+              <select id="relationship" name="relationship" class="form-select" required>
+                <option value="Husband" selected>Husband</option>
+                <option value="Wife">Wife</option>
+                <option value="Not-in-family">Not in Family</option>
+                <option value="Own-child">Own Child</option>
+                <option value="Unmarried">Unmarried</option>
+                <option value="Other-relative">Other Relative</option>
+              </select>
+            </div>
+
+            <!-- Capital Gain -->
+            <div class="field-group">
+              <label for="capital-gain" class="field-label">
+                <span>Capital Gain ($)</span>
+                <span class="field-hint">e.g. 0 or 5000</span>
+              </label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="capital-gain"
+                  name="capital-gain"
+                  class="form-input"
+                  min="0"
+                  max="99999"
+                  placeholder="0"
+                  value="0"
+                  required
+                >
+              </div>
+            </div>
+
+            <!-- Capital Loss -->
+            <div class="field-group">
+              <label for="capital-loss" class="field-label">
+                <span>Capital Loss ($)</span>
+                <span class="field-hint">e.g. 0 or 1500</span>
+              </label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="capital-loss"
+                  name="capital-loss"
+                  class="form-input"
+                  min="0"
+                  max="4500"
+                  placeholder="0"
+                  value="0"
+                  required
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Form Submission Actions -->
+        <div class="form-actions">
+          <button type="reset" class="btn btn-secondary">
+            Reset Form
+          </button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-form">
+            <span>Assess Donor Likelihood</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+
+      </form>
+    </main>
+
+    <!-- ================= MODEL INSIGHTS & FEATURE IMPORTANCE WITH PHOTOGRAPHY ================= -->
+    <section class="insights-section">
+      <div class="insights-header">
+        <h2>Key Drivers of Donor Likelihood</h2>
+        <p>Key predictive signals identified from feature importance evaluation in Project 2</p>
+      </div>
+
+      <div class="insights-grid">
+        <div class="insight-card">
+          <div class="insight-img-wrapper">
+            <img
+              src="https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?auto=format&fit=crop&w=600&q=80"
+              alt="Capital Investment and Wealth"
+              class="insight-img"
+            >
+          </div>
+          <div class="insight-body">
+            <span class="insight-badge">Strongest Driver</span>
+            <h3>Capital Gains &amp; Wealth</h3>
+            <p>
+              Capital gains represent investment returns and disposable wealth. Individuals with positive capital gains have the highest correlation with earning &gt; $50K.
+            </p>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-img-wrapper">
+            <img
+              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80"
+              alt="Education and Academic Attainment"
+              class="insight-img"
+            >
+          </div>
+          <div class="insight-body">
+            <span class="insight-badge">High Influence</span>
+            <h3>Educational Attainment</h3>
+            <p>
+              Holders of Bachelors, Masters, or Doctorate degrees exhibit significantly higher odds of surpassing the $50K threshold compared to basic education levels.
+            </p>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-img-wrapper">
+            <img
+              src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80"
+              alt="Career Seniority and Professional Experience"
+              class="insight-img"
+            >
+          </div>
+          <div class="insight-body">
+            <span class="insight-badge">Demographic Signal</span>
+            <h3>Career Seniority &amp; Age</h3>
+            <p>
+              Experienced professionals in their peak earning years (35-55) in executive and managerial occupations represent the primary philanthropic demographic.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================= CLEAN FOOTER (NO TEAM TAGS) ================= -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p class="footer-title">
+        <strong>CharityML</strong> &bull; Census Income Classification &amp; Donor Assessment
+      </p>
+      <p class="footer-meta">
+        DEPI Machine Learning &amp; AI Project 2 &bull; All rights reserved
+      </p>
+    </div>
+  </footer>
+
+  <script src="static/js/main.js"></script>
+
+  <!-- Interactive Simulation Script for Preview Testing -->
+  <script>
+    const resBox = document.getElementById('results-container');
+    const buttons = document.querySelectorAll('.demo-pill-btn');
+    const dock = document.getElementById('demo-dock');
+    const form = document.getElementById('prediction-form');
+
+    function setActiveBtn(activeBtn) {
+      buttons.forEach(b => b.classList.remove('active'));
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    function showHighDonorResult() {
+      setActiveBtn(document.getElementById('sim-high'));
+      resBox.innerHTML = `
+        <div class="result-card result-card-donor" role="status">
+          <div class="result-grid">
+            <div class="result-icon-wrapper" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <div class="result-content">
+              <h3>Likely Donor Candidate (&gt; $50K)</h3>
+              <p>
+                The model classifies this individual as earning more than $50,000 per year.
+                <strong>Recommended Action:</strong> High priority candidate for donation outreach and philanthropic events.
+              </p>
+            </div>
+            <div>
+              <span class="result-pill-badge">Likely Donor &gt;50K</span>
+            </div>
+          </div>
+        </div>
+      `;
+      resBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showStandardResult() {
+      setActiveBtn(document.getElementById('sim-standard'));
+      resBox.innerHTML = `
+        <div class="result-card result-card-standard" role="status">
+          <div class="result-grid">
+            <div class="result-icon-wrapper" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/>
+              </svg>
+            </div>
+            <div class="result-content">
+              <h3>Standard Income Tier (&le; $50K)</h3>
+              <p>
+                The model classifies this individual as earning $50,000 or less per year.
+                <strong>Recommended Action:</strong> Best engaged through grassroots community support or volunteer campaigns.
+              </p>
+            </div>
+            <div>
+              <span class="result-pill-badge">Standard Tier &le;50K</span>
+            </div>
+          </div>
+        </div>
+      `;
+      resBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showErrorResult() {
+      setActiveBtn(document.getElementById('sim-error'));
+      resBox.innerHTML = `
+        <div class="alert-error" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <strong>Prediction Error:</strong> Age must be a positive integer between 17 and 90.
+          </div>
+        </div>
+      `;
+      resBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    document.getElementById('sim-none').addEventListener('click', (e) => {
+      setActiveBtn(e.target);
+      resBox.innerHTML = '';
+    });
+
+    document.getElementById('sim-high').addEventListener('click', showHighDonorResult);
+    document.getElementById('sim-standard').addEventListener('click', showStandardResult);
+    document.getElementById('sim-error').addEventListener('click', showErrorResult);
+
+    // Close button for floating dock
+    document.getElementById('btn-close-dock').addEventListener('click', () => {
+      dock.style.display = 'none';
+    });
+
+    // Form submission naturally calculates realistic demo prediction
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const age = parseFloat(form.elements['age'].value) || 0;
+      const capitalGain = parseFloat(form.elements['capital-gain'].value) || 0;
+      const educationNum = parseFloat(form.elements['education-num'].value) || 0;
+      const occupation = form.elements['occupation'].value;
+      const maritalStatus = form.elements['marital-status'].value;
+
+      if (age < 17 || age > 90) {
+        showErrorResult();
+        return;
+      }
+
+      // Realistic logic matching census weights
+      const isHighIncome = (capitalGain >= 4000) || 
+                           (maritalStatus.includes('Married') && educationNum >= 13 && age >= 32) ||
+                           (occupation === 'Exec-managerial' && educationNum >= 12 && age >= 35) ||
+                           (capitalGain > 0 && educationNum >= 14);
+
+      if (isHighIncome) {
+        showHighDonorResult();
+      } else {
+        showStandardResult();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CharityML - Donor Intelligence & Income Prediction</title>
+
+  <!-- Typography: Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Main Stylesheet (Supports Flask static folder and direct browser preview) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" onerror="this.onerror=null;this.href='../static/css/style.css';">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- ================= NAVIGATION ================= -->
+    <header class="app-nav">
+      <div class="brand-wrapper">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Charity<span>ML</span></h1>
+          <p class="brand-subtitle">Finding Donors Platform &bull; Census Intelligence</p>
+        </div>
+      </div>
+
+      <div class="nav-badges">
+        <span class="badge badge-primary">
+          <span class="badge-dot"></span>
+          DEPI Project 2
+        </span>
+        <span class="badge">
+          ML Classifier
+        </span>
+      </div>
+    </header>
+
+    <!-- ================= HERO ================= -->
+    <section class="hero-section">
+      <div class="hero-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+        </svg>
+        Targeted Philanthropic Assessment
+      </div>
+
+      <h2 class="hero-title">
+        Predict Donor Likelihood from <span>Demographic Insights</span>
+      </h2>
+
+      <p class="hero-description">
+        CharityML leverages machine learning classifiers trained on census data to identify individuals likely earning over $50,000 annually — empowering non-profits to optimize fundraising outreach.
+      </p>
+    </section>
+
+    <!-- ================= VISUAL PHOTOGRAPHY BANNER ================= -->
+    <div class="hero-visual-banner">
+      <img
+        src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80"
+        alt="Charity and Community Giving"
+        class="hero-visual-img"
+      >
+      <div class="hero-visual-overlay">
+        <span class="overlay-tag">COMMUNITY IMPACT</span>
+        <h3>Connecting Non-Profits With Generous Hearts</h3>
+        <p>Using predictive analytics to identify likely donors and build stronger philanthropic partnerships.</p>
+      </div>
+    </div>
+
+    <!-- ================= VISUAL STATS GRID ================= -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Census Records</span>
+        <span class="stat-value">45,222</span>
+        <span class="stat-caption">Cleaned &amp; Validated</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Model Accuracy</span>
+        <span class="stat-value">86.0%</span>
+        <span class="stat-caption">Gradient Boosting</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Income Threshold</span>
+        <span class="stat-value">&gt; $50K</span>
+        <span class="stat-caption">Donor Benchmark</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">ROC-AUC Score</span>
+        <span class="stat-value">0.917</span>
+        <span class="stat-caption">High Discrimination</span>
+      </div>
+    </div>
+
+    <!-- ================= QUICK PRESETS ================= -->
+    <div class="presets-card">
+      <div class="presets-label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <span>Quick Test Presets:</span>
+      </div>
+
+      <div class="presets-actions">
+        <button type="button" class="btn-preset" data-preset="highIncome">
+          Executive Profile (&gt;50K)
+        </button>
+        <button type="button" class="btn-preset" data-preset="techSpecialist">
+          Tech Specialist (&gt;50K)
+        </button>
+        <button type="button" class="btn-preset" data-preset="standardIncome">
+          Junior Profile (&le;50K)
+        </button>
+        <button type="button" class="btn-preset btn-preset-reset" id="btn-reset">
+          Clear Form
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= PREDICTION RESULTS (FLASK INJECTION) ================= -->
+    <div id="results-container" class="results-container">
+      {% if prediction %}
+        {% if prediction == '>50K' or prediction == 1 or prediction == '1' %}
+          <!-- High Income Result (>50K) -->
+          <div class="result-card result-card-donor" role="status">
+            <div class="result-grid">
+              <div class="result-icon-wrapper" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="result-content">
+                <h3>Likely Donor Candidate (&gt; $50K)</h3>
+                <p>
+                  The model classifies this individual as earning more than $50,000 per year.
+                  <strong>Recommended Action:</strong> High priority candidate for donation outreach and philanthropic events.
+                </p>
+              </div>
+              <div>
+                <span class="result-pill-badge">Likely Donor &gt;50K</span>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <!-- Standard Income Result (<=50K) -->
+          <div class="result-card result-card-standard" role="status">
+            <div class="result-grid">
+              <div class="result-icon-wrapper" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+              </div>
+              <div class="result-content">
+                <h3>Standard Income Tier (&le; $50K)</h3>
+                <p>
+                  The model classifies this individual as earning $50,000 or less per year.
+                  <strong>Recommended Action:</strong> Best engaged through grassroots community support or volunteer campaigns.
+                </p>
+              </div>
+              <div>
+                <span class="result-pill-badge">Standard Tier &le;50K</span>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <!-- Error Alert -->
+      {% if error %}
+        <div class="alert-error" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <strong>Prediction Error:</strong> {{ error }}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ================= MAIN ASSESSMENT FORM ================= -->
+    <main class="form-card">
+      <form action="/predict" method="POST" id="prediction-form" novalidate>
+
+        <!-- SECTION 1: Personal Demographics -->
+        <section class="form-section">
+          <div class="section-header">
+            <div class="section-number">1</div>
+            <div>
+              <h2>Personal Demographics</h2>
+              <p>Basic demographic attributes from census data</p>
+            </div>
+          </div>
+
+          <div class="form-grid-4">
+            <!-- Age -->
+            <div class="field-group">
+              <label for="age" class="field-label">
+                <span>Age</span>
+                <span class="field-hint">17 - 90 yrs</span>
+              </label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="age"
+                  name="age"
+                  class="form-input"
+                  min="17"
+                  max="90"
+                  placeholder="e.g. 38"
+                  value="{{ form_data.age if form_data else '38' }}"
+                  required
+                >
+              </div>
+            </div>
+
+            <!-- Sex -->
+            <div class="field-group">
+              <label for="sex" class="field-label">
+                <span>Sex</span>
+              </label>
+              <select id="sex" name="sex" class="form-select" required>
+                <option value="Male" {% if form_data and form_data.sex == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if form_data and form_data.sex == 'Female' %}selected{% endif %}>Female</option>
+              </select>
+            </div>
+
+            <!-- Race -->
+            <div class="field-group">
+              <label for="race" class="field-label">
+                <span>Race</span>
+              </label>
+              <select id="race" name="race" class="form-select" required>
+                <option value="White" {% if not form_data or form_data.race == 'White' %}selected{% endif %}>White</option>
+                <option value="Black" {% if form_data and form_data.race == 'Black' %}selected{% endif %}>Black</option>
+                <option value="Asian-Pac-Islander" {% if form_data and form_data.race == 'Asian-Pac-Islander' %}selected{% endif %}>Asian-Pac-Islander</option>
+                <option value="Amer-Indian-Eskimo" {% if form_data and form_data.race == 'Amer-Indian-Eskimo' %}selected{% endif %}>Amer-Indian-Eskimo</option>
+                <option value="Other" {% if form_data and form_data.race == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+
+            <!-- Native Country -->
+            <div class="field-group">
+              <label for="native-country" class="field-label">
+                <span>Native Country</span>
+              </label>
+              <select id="native-country" name="native-country" class="form-select" required>
+                <option value="United-States" selected>United-States</option>
+                <option value="Canada">Canada</option>
+                <option value="Germany">Germany</option>
+                <option value="England">England</option>
+                <option value="Mexico">Mexico</option>
+                <option value="India">India</option>
+                <option value="Philippines">Philippines</option>
+                <option value="China">China</option>
+                <option value="Japan">Japan</option>
+                <option value="France">France</option>
+                <option value="Italy">Italy</option>
+                <option value="Cuba">Cuba</option>
+                <option value="South">South</option>
+                <option value="Puerto-Rico">Puerto-Rico</option>
+                <option value="Poland">Poland</option>
+                <option value="Iran">Iran</option>
+                <option value="Vietnam">Vietnam</option>
+                <option value="Taiwan">Taiwan</option>
+                <option value="Ireland">Ireland</option>
+                <option value="Greece">Greece</option>
+                <option value="Portugal">Portugal</option>
+                <option value="Dominican-Republic">Dominican-Republic</option>
+                <option value="Haiti">Haiti</option>
+                <option value="Jamaica">Jamaica</option>
+                <option value="El-Salvador">El-Salvador</option>
+                <option value="Guatemala">Guatemala</option>
+                <option value="Columbia">Columbia</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: Career & Education Profile -->
+        <section class="form-section">
+          <div class="section-header">
+            <div class="section-number">2</div>
+            <div>
+              <h2>Career &amp; Education Profile</h2>
+              <p>Employment sector, educational attainment, and workload</p>
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <!-- Workclass -->
+            <div class="field-group">
+              <label for="workclass" class="field-label">
+                <span>Workclass</span>
+              </label>
+              <select id="workclass" name="workclass" class="form-select" required>
+                <option value="Private" selected>Private Sector</option>
+                <option value="Self-emp-not-inc">Self-employed (Unincorporated)</option>
+                <option value="Self-emp-inc">Self-employed (Incorporated)</option>
+                <option value="Federal-gov">Federal Government</option>
+                <option value="Local-gov">Local Government</option>
+                <option value="State-gov">State Government</option>
+                <option value="Without-pay">Without Pay</option>
+              </select>
+            </div>
+
+            <!-- Education Level -->
+            <div class="field-group">
+              <label for="education_level" class="field-label">
+                <span>Education Level</span>
+                <span class="field-hint">Auto-syncs score</span>
+              </label>
+              <select id="education_level" name="education_level" class="form-select" required>
+                <option value="Bachelors" selected>Bachelors Degree</option>
+                <option value="Masters">Masters Degree</option>
+                <option value="Doctorate">Doctorate (PhD)</option>
+                <option value="Prof-school">Professional School</option>
+                <option value="Some-college">Some College</option>
+                <option value="Assoc-acdm">Associate Academic</option>
+                <option value="Assoc-voc">Associate Vocational</option>
+                <option value="HS-grad">High School Graduate</option>
+                <option value="12th">12th Grade</option>
+                <option value="11th">11th Grade</option>
+                <option value="10th">10th Grade</option>
+                <option value="9th">9th Grade</option>
+                <option value="7th-8th">7th - 8th Grade</option>
+                <option value="5th-6th">5th - 6th Grade</option>
+                <option value="1st-4th">1st - 4th Grade</option>
+                <option value="Preschool">Preschool</option>
+              </select>
+            </div>
+
+            <!-- Education Number -->
+            <div class="field-group">
+              <label for="education-num" class="field-label">
+                <span>Education Years</span>
+                <span class="field-hint">Scale: 1 - 16</span>
+              </label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="education-num"
+                  name="education-num"
+                  class="form-input"
+                  min="1"
+                  max="16"
+                  value="{{ form_data['education-num'] if form_data else '13' }}"
+                  required
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid-2" style="margin-top: 1.25rem;">
+            <!-- Occupation -->
+            <div class="field-group">
+              <label for="occupation" class="field-label">
+                <span>Occupation</span>
+              </label>
+              <select id="occupation" name="occupation" class="form-select" required>
+                <option value="Exec-managerial" selected>Executive / Managerial</option>
+                <option value="Prof-specialty">Professional Specialty</option>
+                <option value="Tech-support">Tech Support</option>
+                <option value="Sales">Sales</option>
+                <option value="Craft-repair">Craft &amp; Repair</option>
+                <option value="Adm-clerical">Administrative Clerical</option>
+                <option value="Protective-serv">Protective Service</option>
+                <option value="Machine-op-inspct">Machine Operation &amp; Inspection</option>
+                <option value="Transport-moving">Transport &amp; Logistics</option>
+                <option value="Handlers-cleaners">Handlers &amp; Cleaners</option>
+                <option value="Farming-fishing">Farming &amp; Fishing</option>
+                <option value="Other-service">Other Service</option>
+                <option value="Priv-house-serv">Private House Service</option>
+                <option value="Armed-Forces">Armed Forces</option>
+              </select>
+            </div>
+
+            <!-- Hours per Week -->
+            <div class="field-group">
+              <label for="hours-per-week" class="field-label">
+                <span>Hours Worked per Week</span>
+                <span class="field-hint">1 - 99 hrs</span>
+              </label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="hours-per-week"
+                  name="hours-per-week"
+                  class="form-input"
+                  min="1"
+                  max="99"
+                  placeholder="e.g. 40"
+                  value="{{ form_data['hours-per-week'] if form_data else '40' }}"
+                  required
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: Financial & Family Profile -->
+        <section class="form-section">
+          <div class="section-header">
+            <div class="section-number">3</div>
+            <div>
+              <h2>Family &amp; Financial Profile</h2>
+              <p>Marital context, capital gains, and investment positions</p>
+            </div>
+          </div>
+
+          <div class="form-grid-4">
+            <!-- Marital Status -->
+            <div class="field-group">
+              <label for="marital-status" class="field-label">
+                <span>Marital Status</span>
+              </label>
+              <select id="marital-status" name="marital-status" class="form-select" required>
+                <option value="Married-civ-spouse" selected>Married (Civilian)</option>
+                <option value="Never-married">Never Married</option>
+                <option value="Divorced">Divorced</option>
+                <option value="Separated">Separated</option>
+                <option value="Widowed">Widowed</option>
+                <option value="Married-spouse-absent">Married (Spouse Absent)</option>
+                <option value="Married-AF-spouse">Married (Armed Forces)</option>
+              </select>
+            </div>
+
+            <!-- Relationship -->
+            <div class="field-group">
+              <label for="relationship" class="field-label">
+                <span>Relationship Role</span>
+              </label>
+              <select id="relationship" name="relationship" class="form-select" required>
+                <option value="Husband" selected>Husband</option>
+                <option value="Wife">Wife</option>
+                <option value="Not-in-family">Not in Family</option>
+                <option value="Own-child">Own Child</option>
+                <option value="Unmarried">Unmarried</option>
+                <option value="Other-relative">Other Relative</option>
+              </select>
+            </div>
+
+            <!-- Capital Gain -->
+            <div class="field-group">
+              <label for="capital-gain" class="field-label">
+                <span>Capital Gain ($)</span>
+                <span class="field-hint">e.g. 0 or 5000</span>
+              </label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="capital-gain"
+                  name="capital-gain"
+                  class="form-input"
+                  min="0"
+                  max="99999"
+                  placeholder="0"
+                  value="{{ form_data['capital-gain'] if form_data else '0' }}"
+                  required
+                >
+              </div>
+            </div>
+
+            <!-- Capital Loss -->
+            <div class="field-group">
+              <label for="capital-loss" class="field-label">
+                <span>Capital Loss ($)</span>
+                <span class="field-hint">e.g. 0 or 1500</span>
+              </label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="capital-loss"
+                  name="capital-loss"
+                  class="form-input"
+                  min="0"
+                  max="4500"
+                  placeholder="0"
+                  value="{{ form_data['capital-loss'] if form_data else '0' }}"
+                  required
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Form Submission Actions -->
+        <div class="form-actions">
+          <button type="reset" class="btn btn-secondary">
+            Reset Form
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <span>Assess Donor Likelihood</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+
+      </form>
+    </main>
+
+    <!-- ================= MODEL INSIGHTS & FEATURE IMPORTANCE WITH PHOTOGRAPHY ================= -->
+    <section class="insights-section">
+      <div class="insights-header">
+        <h2>Key Drivers of Donor Likelihood</h2>
+        <p>Key predictive signals identified from feature importance evaluation in Project 2</p>
+      </div>
+
+      <div class="insights-grid">
+        <div class="insight-card">
+          <div class="insight-img-wrapper">
+            <img
+              src="https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?auto=format&fit=crop&w=600&q=80"
+              alt="Capital Investment and Wealth"
+              class="insight-img"
+            >
+          </div>
+          <div class="insight-body">
+            <span class="insight-badge">Strongest Driver</span>
+            <h3>Capital Gains &amp; Wealth</h3>
+            <p>
+              Capital gains represent investment returns and disposable wealth. Individuals with positive capital gains have the highest correlation with earning &gt; $50K.
+            </p>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-img-wrapper">
+            <img
+              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80"
+              alt="Education and Academic Attainment"
+              class="insight-img"
+            >
+          </div>
+          <div class="insight-body">
+            <span class="insight-badge">High Influence</span>
+            <h3>Educational Attainment</h3>
+            <p>
+              Holders of Bachelors, Masters, or Doctorate degrees exhibit significantly higher odds of surpassing the $50K threshold compared to basic education levels.
+            </p>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-img-wrapper">
+            <img
+              src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80"
+              alt="Career Seniority and Professional Experience"
+              class="insight-img"
+            >
+          </div>
+          <div class="insight-body">
+            <span class="insight-badge">Demographic Signal</span>
+            <h3>Career Seniority &amp; Age</h3>
+            <p>
+              Experienced professionals in their peak earning years (35-55) in executive and managerial occupations represent the primary philanthropic demographic.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================= CLEAN FOOTER (NO TEAM TAGS) ================= -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p class="footer-title">
+        <strong>CharityML</strong> &bull; Census Income Classification &amp; Donor Assessment
+      </p>
+      <p class="footer-meta">
+        DEPI Machine Learning &amp; AI Project 2 &bull; All rights reserved
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}" onerror="this.onerror=null;this.src='../static/js/main.js';"></script>
+</body>
+</html>
