@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Main Stylesheet (Supports Flask static folder and direct browser preview) -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" onerror="this.onerror=null;this.href='../static/css/style.css';">
+<link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
 </head>
 <body>
 
@@ -583,6 +583,6 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="{{ url_for('static', filename='js/main.js') }}" onerror="this.onerror=null;this.src='../static/js/main.js';"></script>
+<script src="{{ url_for('static', path='/js/main.js') }}" defer></script>
 </body>
 </html>

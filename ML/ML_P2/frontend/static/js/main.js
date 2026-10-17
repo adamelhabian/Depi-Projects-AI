@@ -1,130 +1,347 @@
-/**
- * CharityML Donor Intelligence - Frontend UX Interactions
- * Handles preset filling, education-num syncing, and accessibility enhancements.
- */
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Education Level to Education-Num mapping based on Census dataset
-  const EDUCATION_MAP = {
-    'Preschool': 1,
-    '1st-4th': 2,
-    '5th-6th': 3,
-    '7th-8th': 4,
-    '9th': 5,
-    '10th': 6,
-    '11th': 7,
-    '12th': 8,
-    'HS-grad': 9,
-    'Some-college': 10,
-    'Assoc-voc': 11,
-    'Assoc-acdm': 12,
-    'Bachelors': 13,
-    'Masters': 14,
-    'Prof-school': 15,
-    'Doctorate': 16
-  };
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("prediction-form");
+  const resultsContainer = document.getElementById("results-container");
 
-  const form = document.getElementById('prediction-form');
-  const educationSelect = document.getElementById('education_level');
-  const educationNumInput = document.getElementById('education-num');
-  const resultsContainer = document.getElementById('results-container');
+  // ==========================================
+  // 1. Show Loading, Error, and Prediction UI
+  // ==========================================
 
-  // Auto-sync education-num when education_level changes
-  if (educationSelect && educationNumInput) {
-    educationSelect.addEventListener('change', (e) => {
-      const selectedLevel = e.target.value;
-      if (EDUCATION_MAP[selectedLevel] !== undefined) {
-        educationNumInput.value = EDUCATION_MAP[selectedLevel];
+  function showResult(message, type = "info") {
+    if (!resultsContainer) {
+      console.log(message);
+      return;
+    }
+
+    resultsContainer.replaceChildren();
+    resultsContainer.className = "results-container";
+    resultsContainer.hidden = false;
+
+    // Loading and error messages
+    if (type === "info" || type === "error") {
+      const alert = document.createElement("div");
+      alert.className = `prediction-alert ${type}`;
+
+      const icon = document.createElement("span");
+      icon.className = "prediction-alert-icon";
+      icon.textContent = type === "error" ? "⚠" : "⏳";
+
+      const text = document.createElement("p");
+      text.textContent = message;
+
+      alert.append(icon, text);
+      resultsContainer.appendChild(alert);
+      return;
+    }
+
+    // Prediction result
+    const isHighIncome = message.includes(">50K");
+    const category = isHighIncome ? "> $50K" : "≤ $50K";
+
+    const card = document.createElement("article");
+    card.className = `prediction-card ${
+      isHighIncome ? "high-income" : "standard-income"
+    }`;
+
+    // Card header
+    const header = document.createElement("div");
+    header.className = "prediction-card-header";
+
+    const icon = document.createElement("div");
+    icon.className = "prediction-icon";
+    icon.textContent = isHighIncome ? "↗" : "✓";
+
+    const headingGroup = document.createElement("div");
+
+    const eyebrow = document.createElement("p");
+    eyebrow.className = "prediction-eyebrow";
+    eyebrow.textContent = "PREDICTION COMPLETE";
+
+    const heading = document.createElement("h3");
+    heading.textContent = isHighIncome
+      ? "High Income Category"
+      : "Standard Income Category";
+
+    headingGroup.append(eyebrow, heading);
+    header.append(icon, headingGroup);
+
+    // Divider
+    const divider = document.createElement("div");
+    divider.className = "prediction-divider";
+
+    // Result label
+    const resultLabel = document.createElement("p");
+    resultLabel.className = "prediction-result-label";
+    resultLabel.textContent = "Predicted annual income";
+
+    // Result value
+    const resultValue = document.createElement("p");
+    resultValue.className = "prediction-result-value";
+    resultValue.textContent = category;
+
+    // Description
+    const description = document.createElement("p");
+    description.className = "prediction-description";
+    description.textContent = isHighIncome
+      ? "The model classified this profile in the income category above $50,000."
+      : "The model classified this profile in the income category of $50,000 or less.";
+
+    // Result badge
+    const footer = document.createElement("div");
+    footer.className = "prediction-footer";
+
+    const badge = document.createElement("span");
+    badge.className = "prediction-badge";
+    badge.textContent = isHighIncome
+      ? "High Income"
+      : "Standard Income";
+
+    footer.appendChild(badge);
+
+    // Assemble card
+    card.append(
+      header,
+      divider,
+      resultLabel,
+      resultValue,
+      description,
+      footer
+    );
+
+    resultsContainer.appendChild(card);
+
+    // Scroll smoothly to the result
+    resultsContainer.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  }
+
+  // ==========================================
+  // 2. Collect Form Data
+  // ==========================================
+
+  function getFormData() {
+    const formData = new FormData(form);
+    const payload = {};
+
+    formData.forEach((value, key) => {
+      payload[key] = value;
+    });
+
+    // Convert numeric fields to numbers
+    const integerFields = [
+      "age",
+      "education-num",
+      "hours-per-week"
+    ];
+
+    const decimalFields = [
+      "capital-gain",
+      "capital-loss"
+    ];
+
+    integerFields.forEach((field) => {
+      if (payload[field] !== undefined) {
+        payload[field] = Number(payload[field]);
+      }
+    });
+
+    decimalFields.forEach((field) => {
+      if (payload[field] !== undefined) {
+        payload[field] = Number(payload[field]);
+      }
+    });
+
+    return payload;
+  }
+
+  // ==========================================
+  // 3. Submit Form and Get Prediction
+  // ==========================================
+
+  if (form) {
+    form.addEventListener("submit", async (event) => {
+      // Prevent normal browser form submission
+      event.preventDefault();
+
+      // Validate required fields
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const submitButton = form.querySelector(
+        'button[type="submit"], input[type="submit"]'
+      );
+
+      const originalButtonText = submitButton
+        ? submitButton.textContent
+        : "";
+
+      try {
+        // Disable button while predicting
+        if (submitButton) {
+          submitButton.disabled = true;
+
+          if (submitButton.tagName === "BUTTON") {
+            submitButton.textContent = "Analyzing...";
+          }
+        }
+
+        showResult(
+          "Analyzing the donor profile. Please wait...",
+          "info"
+        );
+
+        const payload = getFormData();
+
+        // Send JSON to FastAPI
+        const response = await fetch("/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        // Read server response
+        const data = await response.json();
+
+        // Handle API errors
+        if (!response.ok) {
+          let errorMessage = "Prediction failed. Please try again.";
+
+          if (data.detail) {
+            if (Array.isArray(data.detail)) {
+              errorMessage = data.detail
+                .map((error) => error.msg)
+                .join(", ");
+            } else if (typeof data.detail === "string") {
+              errorMessage = data.detail;
+            }
+          }
+
+          throw new Error(errorMessage);
+        }
+
+        // Display prediction
+        if (!data.income_category) {
+          throw new Error(
+            "The server response does not contain an income category."
+          );
+        }
+
+        showResult(
+          `Predicted income category: ${data.income_category}`,
+          "success"
+        );
+      } catch (error) {
+        console.error("Prediction error:", error);
+
+        showResult(
+          error.message ||
+            "An unexpected error occurred. Please try again.",
+          "error"
+        );
+      } finally {
+        // Re-enable button
+        if (submitButton) {
+          submitButton.disabled = false;
+
+          if (submitButton.tagName === "BUTTON") {
+            submitButton.textContent =
+              originalButtonText || "Predict Income";
+          }
+        }
       }
     });
   }
 
-  // Pre-configured realistic sample profiles for easy testing
-  const PRESET_PROFILES = {
-    highIncome: {
-      'age': 45,
-      'workclass': 'Private',
-      'education_level': 'Bachelors',
-      'education-num': 13,
-      'marital-status': 'Married-civ-spouse',
-      'occupation': 'Exec-managerial',
-      'relationship': 'Husband',
-      'race': 'White',
-      'sex': 'Male',
-      'capital-gain': 7298,
-      'capital-loss': 0,
-      'hours-per-week': 48,
-      'native-country': 'United-States'
-    },
-    techSpecialist: {
-      'age': 38,
-      'workclass': 'Private',
-      'education_level': 'Masters',
-      'education-num': 14,
-      'marital-status': 'Married-civ-spouse',
-      'occupation': 'Prof-specialty',
-      'relationship': 'Wife',
-      'race': 'White',
-      'sex': 'Female',
-      'capital-gain': 5178,
-      'capital-loss': 0,
-      'hours-per-week': 45,
-      'native-country': 'United-States'
-    },
-    standardIncome: {
-      'age': 25,
-      'workclass': 'Private',
-      'education_level': 'Some-college',
-      'education-num': 10,
-      'marital-status': 'Never-married',
-      'occupation': 'Adm-clerical',
-      'relationship': 'Own-child',
-      'race': 'White',
-      'sex': 'Female',
-      'capital-gain': 0,
-      'capital-loss': 0,
-      'hours-per-week': 38,
-      'native-country': 'United-States'
-    }
-  };
+  // ==========================================
+  // 4. Reset Form and Results
+  // ==========================================
 
-  // Preset button listeners
-  const presetButtons = document.querySelectorAll('[data-preset]');
-  presetButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const presetName = btn.getAttribute('data-preset');
-      const profile = PRESET_PROFILES[presetName];
+  const resetButton = document.getElementById("reset-button");
 
-      if (!profile || !form) return;
+  if (resetButton) {
+    resetButton.addEventListener("click", () => {
+      if (form) {
+        form.reset();
+      }
 
-      Object.entries(profile).forEach(([key, val]) => {
-        const input = form.elements[key];
-        if (input) {
-          input.value = val;
+      if (resultsContainer) {
+        resultsContainer.replaceChildren();
+        resultsContainer.hidden = true;
+      }
+    });
+  }
+
+  // ==========================================
+  // 5. Preset Buttons
+  // ==========================================
+
+  const presetButtons = document.querySelectorAll("[data-preset]");
+
+  presetButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const presetName = button.dataset.preset;
+
+      const presets = {
+        low: {
+          age: 25,
+          workclass: "Private",
+          education_level: "HS-grad",
+          "education-num": 9,
+          "marital-status": "Never-married",
+          occupation: "Other-service",
+          relationship: "Not-in-family",
+          race: "White",
+          sex: "Male",
+          "capital-gain": 0,
+          "capital-loss": 0,
+          "hours-per-week": 35,
+          "native-country": "United-States"
+        },
+
+        high: {
+          age: 45,
+          workclass: "Private",
+          education_level: "Bachelors",
+          "education-num": 13,
+          "marital-status": "Married-civ-spouse",
+          occupation: "Exec-managerial",
+          relationship: "Husband",
+          race: "White",
+          sex: "Male",
+          "capital-gain": 15000,
+          "capital-loss": 0,
+          "hours-per-week": 50,
+          "native-country": "United-States"
+        }
+      };
+
+      const preset = presets[presetName];
+
+      if (!preset || !form) {
+        return;
+      }
+
+      Object.entries(preset).forEach(([name, value]) => {
+        const field = form.elements.namedItem(name);
+
+        if (field) {
+          field.value = value;
         }
       });
 
-      // Visual feedback
-      btn.style.transform = 'scale(0.95)';
-      setTimeout(() => {
-        btn.style.transform = '';
-      }, 150);
+      if (resultsContainer) {
+        resultsContainer.replaceChildren();
+        resultsContainer.hidden = true;
+      }
     });
   });
 
-  // Reset button listener
-  const resetBtn = document.getElementById('btn-reset');
-  if (resetBtn && form) {
-    resetBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      form.reset();
-      if (educationNumInput) educationNumInput.value = '10';
-    });
-  }
-
-  // Smooth scroll to results if present on load
-  if (resultsContainer && resultsContainer.children.length > 0) {
-    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
+  console.log("CharityML main.js loaded successfully.");
 });
