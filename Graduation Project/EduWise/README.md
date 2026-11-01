@@ -85,43 +85,51 @@ The system is designed for two main users:
 EduWise/
 │
 ├── data/
-│   ├── raw/
-│   ├── processed/
+│   ├── raw/                       # Original datasets
+│   ├── processed/                 # Cleaned datasets
 │   └── .gitkeep
 │
 ├── src/
+│   ├── config/
+│   │   ├── __init__.py
+│   │   └── settings.py             # Application configuration
+│   │
 │   ├── backend/
-│   │   ├── routes/
-│   │   ├── schemas/
-│   │   ├── services/
-│   │   ├── database/
-│   │   └── main.py
+│   │   ├── routes/                 # API endpoints
+│   │   ├── schemas/                # Request/response validation
+│   │   ├── services/               # Business logic
+│   │   ├── database/               # Database connection and queries
+│   │   └── main.py                 # FastAPI entry point
 │   │
 │   ├── machine_learning/
-│   │   ├── preprocessing/
-│   │   ├── models/
-│   │   ├── evaluation/
-│   │   └── training/
+│   │   ├── preprocessing/          # Data cleaning and preparation
+│   │   ├── models/                 # Model definitions and saved models
+│   │   ├── training/               # Model training scripts
+│   │   └── evaluation/             # Metrics and model evaluation
 │   │
 │   ├── rag/
-│   │   ├── ingestion/
-│   │   ├── retrieval/
-│   │   ├── generation/
+│   │   ├── ingestion/              # Document loading and chunking
+│   │   ├── retrieval/               # Document retrieval
+│   │   ├── generation/              # LLM response generation
 │   │   └── __init__.py
 │   │
 │   ├── ai_automation/
+│   │   ├── workflows/               # AI automation workflows
+│   │   └── integrations/            # External service integrations
 │   │
 │   └── shared/
-│       └── utils/
+│       ├── helpers/                 # Reusable helper functions
+│       └── utils/                   # General-purpose utilities
 │
-├── frontend/
+├── frontend/                        # Frontend application
 │
 ├── tests/
 │   ├── test_backend.py
 │   ├── test_ml.py
 │   └── test_rag.py
 │
-├── .env.example
+├── .env                             # Local secrets (not committed)
+├── .env.example                     # Environment variable template
 ├── .gitignore
 ├── README.md
 └── requirements.txt
