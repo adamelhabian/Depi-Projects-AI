@@ -1,4 +1,4 @@
-# Educational Management System
+# Educational Management System — EduWise
 
 ## 1. About the System
 
@@ -29,59 +29,123 @@ The system is designed for two main users:
 
 ## 3. System Features
 
-### 1. Student Management
+### 3.1 Student Management
 
 - Add, update, search, and manage student profiles.
 - Store student and parent contact information.
 - View student groups, attendance, exams, and payments.
 
-### 2. Group & Schedule Management
+### 3.2 Group & Schedule Management
 
 - Create and manage study groups.
 - Enroll students in groups.
 - Organize class schedules and sessions.
 
-### 3. Attendance Management
+### 3.3 Attendance Management
 
 - Record student attendance for each session.
 - Track absences and late attendance.
 - Identify students with repeated absences.
 
-### 4. Exams & Results
+### 3.4 Exams & Results
 
 - Create exams and assign them to groups.
 - Record and manage student marks.
 - Track student progress and academic performance.
 
-### 5. Financial Management
+### 3.5 Financial Management
 
 - Record student payments and outstanding fees.
 - Track expenses.
 - Generate basic financial summaries and reports.
 
-### 6. Parent Communication
+### 3.6 Parent Communication
 
 - Prepare messages for parents.
 - Send absence notifications and payment reminders.
 - Select individual students or entire groups.
 
-### 7. Machine Learning Features
+### 3.7 Machine Learning Features
 
 - **Student Segmentation:** Group students based on academic performance and attendance patterns.
 - **Academic Risk Prediction:** Identify students who may need additional academic support.
 - **Dropout Risk Prediction:** Identify students who may be at risk of leaving.
 - **Revenue Forecasting:** Estimate future revenue using historical financial data.
 
-### 8. AI Features
+### 3.8 AI Features
 
 - **AI Exam Generation:** Generate exam questions from teacher-uploaded educational PDFs.
 - **RAG (Retrieval-Augmented Generation):** Retrieve relevant information from uploaded educational materials to generate context-based responses.
 - **AI Chatbot:** Answer students' and parents' questions using approved system information, such as schedules and lesson details.
 - **Telegram AI Automation:** Integrate AI-powered Telegram bots to automate notifications, answer queries, and support communication and daily educational workflows.
 
-## 4. Development Team & Responsibilities
+## 4. Project Structure
 
-The project is divided into independent development components:
+```text
+EduWise/
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── .gitkeep
+│
+├── src/
+│   ├── backend/
+│   │   ├── routes/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── database/
+│   │   └── main.py
+│   │
+│   ├── machine_learning/
+│   │   ├── preprocessing/
+│   │   ├── models/
+│   │   ├── evaluation/
+│   │   └── training/
+│   │
+│   ├── rag/
+│   │   ├── ingestion/
+│   │   ├── retrieval/
+│   │   ├── generation/
+│   │   └── __init__.py
+│   │
+│   ├── ai_automation/
+│   │
+│   └── shared/
+│       └── utils/
+│
+├── frontend/
+│
+├── tests/
+│   ├── test_backend.py
+│   ├── test_ml.py
+│   └── test_rag.py
+│
+├── .env.example
+├── .gitignore
+├── README.md
+└── requirements.txt
+```
+
+### Directory Responsibilities
+
+| Directory               | Responsibility                                                               |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| `data/raw/`             | Store original datasets.                                                     |
+| `data/processed/`       | Store cleaned and processed datasets.                                        |
+| `src/backend/`          | Handle API endpoints, business logic, validation, and database operations.   |
+| `src/machine_learning/` | Handle data preprocessing, model training, prediction, and evaluation.       |
+| `src/rag/`              | Handle document ingestion, retrieval, and context-based response generation. |
+| `src/ai_automation/`    | Handle AI-powered automation workflows and integrations.                     |
+| `src/shared/utils/`     | Store reusable helper functions shared across components.                    |
+| `frontend/`             | Contain the user interface and frontend application.                         |
+| `tests/`                | Contain tests for backend, ML, and RAG components.                           |
+
+_Note: This structure represents the planned architecture. Directories and files can be added as implementation progresses._
+
+## 5. Development Team & Responsibilities
+
+The project is divided into independent development components.
 
 ### Frontend Development
 
@@ -110,14 +174,14 @@ The project is divided into independent development components:
 - Build AI exam generation.
 - Develop Telegram bots and automation workflows.
 
-## 5. Development Approach
+## 6. Development Approach
 
 - Each component will be developed independently.
 - Teams will work in parallel using agreed API contracts and data formats.
 - Components will be tested independently before integration.
 - Agile methodology will be used to organize tasks, track progress, and deliver features incrementally.
 
-## 6. Project Goal
+## 7. Project Goal
 
 The main goal is to reduce teachers' administrative workload, organize educational operations, monitor student progress, and provide useful insights through data analysis, Machine Learning, AI, and automation.
 
