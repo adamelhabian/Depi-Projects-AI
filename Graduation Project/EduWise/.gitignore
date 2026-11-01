@@ -1,0 +1,23 @@
+# Environment variables
+.env
+.env.*
+
+# Allow the example template
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+
+
+# Keep placeholder files
+!data/raw/.gitkeep
+!data/processed/.gitkeep
