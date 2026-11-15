@@ -1,0 +1,68 @@
+{
+  "scope": "Brand color pairs only; not a full WCAG audit.",
+  "pairs": [
+    {
+      "use": "Primary button",
+      "foreground": "#ffffff",
+      "background": "#315da8",
+      "ratio": 6.44,
+      "normalTextAA": true
+    },
+    {
+      "use": "Primary hover",
+      "foreground": "#ffffff",
+      "background": "#264e90",
+      "ratio": 8.16,
+      "normalTextAA": true
+    },
+    {
+      "use": "Ink on paper",
+      "foreground": "#14243b",
+      "background": "#f8f9ff",
+      "ratio": 14.86,
+      "normalTextAA": true
+    },
+    {
+      "use": "Apricot label",
+      "foreground": "#301400",
+      "background": "#f2b880",
+      "ratio": 9.74,
+      "normalTextAA": true
+    },
+    {
+      "use": "Blue container",
+      "foreground": "#001a41",
+      "background": "#d8e2ff",
+      "ratio": 13.27,
+      "normalTextAA": true
+    },
+    {
+      "use": "Muted body",
+      "foreground": "#555f74",
+      "background": "#f8f9ff",
+      "ratio": 6.1,
+      "normalTextAA": true
+    },
+    {
+      "use": "Success",
+      "foreground": "#123723",
+      "background": "#d5eddd",
+      "ratio": 10.64,
+      "normalTextAA": true
+    },
+    {
+      "use": "Warning",
+      "foreground": "#624100",
+      "background": "#ffedcf",
+      "ratio": 8.03,
+      "normalTextAA": true
+    },
+    {
+      "use": "Error",
+      "foreground": "#410002",
+      "background": "#ffdad6",
+      "ratio": 13.26,
+      "normalTextAA": true
+    }
+  ]
+}
