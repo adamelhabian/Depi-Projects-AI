@@ -11,6 +11,7 @@ const fonts = resolve(brand, 'fonts');
 await mkdir(fonts, { recursive: true });
 await copyFile(resolve(root, 'public/images/educator-blue.webp'), resolve(brand, 'educator-blue.webp'));
 await copyFile(resolve(root, 'public/images/materials-blue.webp'), resolve(brand, 'materials-blue.webp'));
+await copyFile(resolve(root, 'public/images/overview-teacher.webp'), resolve(brand, 'overview-teacher.webp'));
 await copyFile(resolve(root, 'public/images/ASSETS.md'), resolve(brand, 'IMAGE-CREDITS.md'));
 await copyFile(resolve(root, 'docs/BRAND-PHILOSOPHY.md'), resolve(brand, 'PHILOSOPHY.md'));
 const fontFiles = [
