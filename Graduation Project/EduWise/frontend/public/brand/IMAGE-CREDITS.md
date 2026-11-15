@@ -6,6 +6,10 @@
 
 These are illustrative scenes, not real customers, testimonials, document previews, or evidence of product use. Blue, navy, apricot and cream tie them to the current identity; plants, green clothing and green props were excluded deliberately.
 
+## Brand-guide portrait
+
+`overview-teacher.webp` is an existing local illustration of a male teacher preparing a lesson. The brand guide uses it once in its identity board and the export script copies it into `public/brand/`; it is not a customer photo, testimonial, or product-use evidence. Its original image-generation/source details are not recorded in this repository.
+
 ### Educator prompt
 
 > Use case: photorealistic-natural. Asset type: hero photograph for EduFlow AI, an Egyptian learning-center management and teacher preparation website. Create a premium editorial landscape photograph, 3:2 or wide landscape. An Egyptian woman teacher in her early thirties wearing a modest powder-blue blouse, dark navy trousers, preparing a lesson at a light oak desk in a bright contemporary learning-center studio. A cream notebook with blank pages, apricot pencil case, silver laptop, a small stack of blue and cream books. Natural warm daylight, restrained navy / learning blue / apricot / ivory palette, light blue wall and soft cream curtains. Candid focused expression, authentic skin and hands, professional but approachable. Teacher occupies right half with spacious softly blurred left half. Palette must have NO green: no plants, no foliage, no green clothing, no green objects, no green shelves. No text, brand logos, signage, watermark, robot, holograms or interface overlays. Natural editorial photography, refined quiet composition, not stock corporate handshake.
