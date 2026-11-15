@@ -1,6 +1,8 @@
 # EduFlow AI frontend
 
-A bilingual React/Vite/Tailwind workspace for an Egyptian education center. The EduFlow identity uses educational blue, apricot, IBM Plex Sans Arabic, and Material 3 roles. Local imagery and eight hash destinations are retained. This is an explicit **local demo**, not authenticated production software.
+A bilingual React/Vite/Tailwind demo for an Egyptian education center. The EduFlow identity uses educational blue, apricot, IBM Plex Sans Arabic, and Material 3 roles. Local imagery and eight hash destinations are retained. This is not authenticated production software.
+
+**Live demo:** [EduFlow AI](https://eduflow-ai-brand.vercel.app/#overview) · [Brand guide](https://eduflow-ai-brand.vercel.app/brand/)
 
 ## Brand identity
 

@@ -6,6 +6,10 @@ An intelligent educational management system that helps teachers manage students
 
 The system integrates Machine Learning, AI, and automation to improve educational management and support data-driven decisions.
 
+## Frontend Demo
+
+The EduFlow AI frontend demo is available at [EduFlow AI](https://eduflow-ai-brand.vercel.app/#overview). It uses sample data and is not authenticated production software.
+
 ## 2. System Users
 
 The system is designed for two main users:
