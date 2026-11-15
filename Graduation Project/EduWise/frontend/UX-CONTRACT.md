@@ -5,7 +5,8 @@ This contract records shared interface behavior. Domain policy remains in [DATA_
 ## Product context
 
 - Audience: center administrators, teachers, and secretaries.
-- Primary jobs: administer students and groups, record attendance and payments, prepare/review teaching content, and inspect operations.
+- Primary jobs: administer students and groups, record attendance and payments, prepare/review exams, and inspect operations.
+- The AI studio exposes exam drafting and teacher review only. Legacy worksheet, lesson and essay drafts remain stored for snapshot compatibility without a UI entry point.
 - Market: Egyptian learning centers, based on the project brief and repository domain rules.
 - Locales: Arabic and English. Dates use Africa/Cairo; currency is EGP.
 - Accessibility target: visible keyboard focus, semantic controls, accessible labels, and keyboard-operable Base UI dialogs. A full WCAG audit has not been completed.
