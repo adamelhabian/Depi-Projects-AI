@@ -1,0 +1,230 @@
+/* Material Design 3 role mapping. EduFlow's educational blue is the brand seed;
+   this file is the single runtime adapter from semantic roles to components. */
+:root {
+  color-scheme: light;
+  --md-sys-color-primary: #315da8;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #d8e2ff;
+  --md-sys-color-on-primary-container: #001a41;
+  --md-sys-color-secondary: #555f74;
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-secondary-container: #dce2f9;
+  --md-sys-color-on-secondary-container: #141c2b;
+  --md-sys-color-tertiary: #805334;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-tertiary-container: #ffdcc3;
+  --md-sys-color-on-tertiary-container: #301400;
+  --eduflow-accent: #f2b880;
+  --eduflow-success: #276443;
+  --eduflow-success-container: #d5eddd;
+  --eduflow-on-success-container: #123723;
+  --md-sys-color-error: #ba1a1a;
+  --md-sys-color-on-error: #ffffff;
+  --md-sys-color-error-container: #ffdad6;
+  --md-sys-color-on-error-container: #410002;
+  --md-sys-color-background: #f8f9ff;
+  --md-sys-color-on-background: #1a1c22;
+  --md-sys-color-surface: #f8f9ff;
+  --md-sys-color-on-surface: #1a1c22;
+  --md-sys-color-surface-variant: #e1e3ed;
+  --md-sys-color-on-surface-variant: #44474f;
+  --md-sys-color-surface-container-lowest: #ffffff;
+  --md-sys-color-surface-container-low: #f2f3fa;
+  --md-sys-color-surface-container: #eceef5;
+  --md-sys-color-surface-container-high: #e6e8ef;
+  --md-sys-color-surface-container-highest: #e1e2e9;
+  --md-sys-color-outline: #747780;
+  --md-sys-color-outline-variant: #c4c6d0;
+  --md-sys-color-inverse-surface: #2f3038;
+  --md-sys-color-inverse-on-surface: #f0f0f8;
+  --md-sys-color-inverse-primary: #adc6ff;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 999px;
+  --md-sys-state-hover: 0.08;
+  --md-sys-state-focus: 0.12;
+  --md-sys-state-pressed: 0.12;
+  --md-sys-elevation-1: 0 1px 2px rgb(25 29 25 / 10%), 0 1px 3px 1px rgb(25 29 25 / 5%);
+
+  --green: var(--md-sys-color-primary);
+  --border: var(--md-sys-color-outline-variant);
+  --muted: var(--md-sys-color-outline);
+  --soft: var(--md-sys-color-surface-container-low);
+  --eduflow-font-body: 'DM Sans', 'IBM Plex Sans Arabic', sans-serif;
+  --eduflow-font-display: 'Plus Jakarta Sans', 'IBM Plex Sans Arabic', sans-serif;
+  font-family: var(--eduflow-font-body);
+  color: var(--md-sys-color-on-background);
+  background: var(--md-sys-color-background);
+}
+
+body { color: var(--md-sys-color-on-background); background: var(--md-sys-color-background); }
+[dir="rtl"] { font-family: 'IBM Plex Sans Arabic', 'DM Sans', sans-serif; }
+.brand { font-family: var(--eduflow-font-display); font-size: 26px; letter-spacing: -1.3px; gap: 9px; color: #14243b; }
+.brand img { width: 38px; height: 36px; object-fit: contain; flex-shrink: 0; }
+.brand-ai { font-weight: 700; }
+.brand sup { letter-spacing: .3px; font-size: 8px; padding: 4px 5px; margin-inline-start: -3px; }
+.page-heading h1, .hero-copy h2, .stat-value, .creative-card h2, .modal-title,
+.analytics-highlight > strong, .payment-stats strong { font-family: var(--eduflow-font-display); }
+[dir="rtl"] :is(.page-heading h1, .hero-copy h2, .stat-value, .creative-card h2, .modal-title,
+.cover-title, .document-empty h2, .document-sheet > h2, .checkin-card h2, .empty-state h3) { font-family: 'IBM Plex Sans Arabic', sans-serif; }
+.hero-eyebrow { letter-spacing: .08em; }
+[dir="rtl"] .hero-eyebrow { letter-spacing: 0; font-size: 11px; }
+
+/* Navigation and app surfaces */
+.sidebar, .topbar { background: var(--md-sys-color-surface-container-low); border-color: var(--md-sys-color-outline-variant); }
+.topbar { height: 68px; }
+.main-content { padding-block: 32px 40px; }
+.nav-link { min-height: 48px; padding-inline: 16px; border-radius: var(--md-sys-shape-corner-full); color: var(--md-sys-color-on-surface-variant); font-size: 13px; font-weight: 500; }
+.nav-link svg { color: var(--md-sys-color-on-surface-variant); }
+.nav-link:hover { background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); }
+.nav-link.active, .nav-link.active:hover { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.nav-link.active svg { color: var(--md-sys-color-primary); }
+.nav-link .ai-badge, .nav-count { border-radius: var(--md-sys-shape-corner-full); background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); }
+.demo-toolbar { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); border-color: var(--md-sys-color-outline-variant); }
+
+/* M3 typography scale, adapted for IBM Plex Sans Arabic and Latin display faces */
+.page-heading h1 { font-size: 28px; line-height: 1.35; color: var(--md-sys-color-on-surface); }
+.hero-copy h2 { color: var(--md-sys-color-on-primary-container); }
+.page-description { color: var(--md-sys-color-on-surface-variant); font-size: 14px; line-height: 1.65; }
+.section-heading h2, .feature-card h2, .ledger-panel h2, .generator-panel h2 { color: var(--md-sys-color-on-surface); }
+.field { color: var(--md-sys-color-on-surface-variant); font-size: 13px; font-weight: 500; }
+.field small, .feature-card p, .feature-card small { color: var(--md-sys-color-on-surface-variant); }
+
+/* Cards, metrics, and content containers */
+.hero-banner { background: var(--md-sys-color-primary-container); border-radius: var(--md-sys-shape-corner-extra-large); }
+.hero-copy h2 > span { color: var(--md-sys-color-primary); }
+.hero-copy p { color: var(--md-sys-color-on-primary-container); font-size: 14px; }
+.hero-image-wrap::before { background: var(--md-sys-color-primary-container); }
+.photo-caption { border-radius: var(--md-sys-shape-corner-large); box-shadow: var(--md-sys-elevation-1); }
+.panel, .stat-card { background: var(--md-sys-color-surface-container-low); border: 1px solid transparent; border-radius: var(--md-sys-shape-corner-large); }
+.stat-card { padding: 20px; }
+.stat-card:hover, .metric-link:hover { border-color: var(--md-sys-color-outline-variant); }
+.stat-top { color: var(--md-sys-color-on-surface-variant); font-size: 13px; }
+.stat-top svg { color: var(--md-sys-color-primary); }
+.stat-value { color: var(--md-sys-color-primary); }
+.feature-card, .generator-panel, .editor-panel, .upload-panel { padding: 24px; }
+.info-note { color: var(--md-sys-color-on-secondary-container) !important; background: var(--md-sys-color-secondary-container); border: 0; border-radius: var(--md-sys-shape-corner-medium); }
+.recovery-note { border-radius: var(--md-sys-shape-corner-medium); }
+.material-book { border-radius: var(--md-sys-shape-corner-large); }
+
+/* M3 controls share shape, density, and focus behavior */
+.btn { min-height: 40px; padding: 9px 20px; border-radius: var(--md-sys-shape-corner-full); font-size: 14px; font-weight: 600; }
+.btn-primary { background: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.btn-primary:hover { background: #264e90; }
+.btn-secondary { background: var(--md-sys-color-secondary-container); border-color: transparent; color: var(--md-sys-color-on-secondary-container); }
+.btn-secondary:hover { background: #cdd5ee; }
+.btn-ghost { color: var(--md-sys-color-primary); }
+.btn-ghost:hover { background: var(--md-sys-color-surface-container-high); }
+.icon-button { width: 40px; height: 40px; border-radius: var(--md-sys-shape-corner-full); color: var(--md-sys-color-on-surface-variant); }
+.icon-button:hover { background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); }
+.field input, .field select, .field textarea, select { border: 1px solid var(--md-sys-color-outline); border-radius: var(--md-sys-shape-corner-extra-small); background: var(--md-sys-color-surface-container-lowest); color: var(--md-sys-color-on-surface); font-size: 14px; }
+.field input, .field select { min-height: 48px; }
+.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible, select:focus-visible { border-color: var(--md-sys-color-primary); outline: 2px solid var(--md-sys-color-primary); outline-offset: 1px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline-color: var(--md-sys-color-primary); }
+.segmented { padding: 4px; gap: 4px; border-radius: var(--md-sys-shape-corner-full); background: var(--md-sys-color-surface-container); }
+.segmented button { min-height: 40px; padding: 8px 18px; border: 1px solid transparent; border-radius: var(--md-sys-shape-corner-full); background: transparent; color: var(--md-sys-color-on-surface-variant); font-size: 13px; font-weight: 600; }
+.segmented button:hover { background: var(--md-sys-color-surface-container-high); }
+.segmented button.selected { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); border-color: transparent; }
+.record-status { border: 0; border-radius: var(--md-sys-shape-corner-small); background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); padding: 5px 10px; font-size: 12px; font-weight: 600; }
+.record-status[data-status="failed"], .record-status[data-status="absent"] { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); }
+.record-status[data-status="present"], .record-status[data-status="ready"], .record-status[data-status="reviewed"], .record-status[data-status="teacher-reviewed"], .record-status[data-status="succeeded"] { background: var(--eduflow-success-container); color: var(--eduflow-on-success-container); }
+.form-error { background: var(--md-sys-color-error-container); border-color: transparent; color: var(--md-sys-color-on-error-container); border-radius: var(--md-sys-shape-corner-medium); }
+.success-text { color: var(--eduflow-success); }
+.modal-panel { border: 0; border-radius: var(--md-sys-shape-corner-extra-large); background: var(--md-sys-color-surface-container-low); }
+.modal-title { color: var(--md-sys-color-on-surface); }
+
+/* Data surfaces */
+.data-table { font-size: 13px; }
+.data-table th { background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface-variant) !important; font-size: 12px; font-weight: 600; border-color: var(--md-sys-color-outline-variant); }
+.data-table td { border-color: var(--md-sys-color-surface-container-high); }
+.data-table tbody tr:hover { background: var(--md-sys-color-surface-container-low); }
+.table-scroll { scrollbar-color: var(--md-sys-color-outline) var(--md-sys-color-surface-container); }
+.flow-switch[data-checked] { background: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); }
+
+/* Legacy workspace details consume the same palette as the shared controls. */
+.brand-dot, .hero-secondary, .text-link, .tiny-spark, .note-flower,
+.group-summary > svg, .setting-row svg, .notification-list > button > svg,
+.document-stamp, .detail-stats strong { color: var(--md-sys-color-primary); }
+.brand sup, .photo-caption-icon, .creative-icon, .library-banner-icon,
+.automation-icon, .group-initial, .empty-icon, .welcome-symbol,
+.upload-card > span, .label-number, .avatar:not(.warm-avatar):not(.profile-avatar):not(.top-avatar) {
+  background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);
+}
+.brand-dot { color: var(--md-sys-color-tertiary); }
+.brand sup, .photo-caption-icon { background: var(--eduflow-accent); color: var(--md-sys-color-on-tertiary-container); }
+.workspace-picker, .global-search kbd, .date-chip, .input-search,
+.studio-tool-tabs, .material-card, .mobile-sidebar {
+  background: var(--md-sys-color-surface-container-lowest); border-color: var(--md-sys-color-outline-variant);
+}
+.workspace-avatar, .material-book:not(.sand):not(.clay), .book-cover.green,
+.session-time, .source-note, .source-connected, .document-check,
+.flow-illustration span, .lesson-timeline article > span {
+  background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); border-color: var(--md-sys-color-outline-variant);
+}
+.sidebar-note, .creative-card { background: var(--md-sys-color-tertiary-container); border-color: transparent; }
+.sidebar-note h3, .creative-card h2, .creative-card p, .creative-button,
+.creative-card .outline-tag, .sidebar-note p, .sidebar-note .note-flower { color: var(--md-sys-color-on-tertiary-container); }
+.creative-icon { background: var(--eduflow-accent); color: var(--md-sys-color-on-tertiary-container); }
+.creative-decoration { color: var(--md-sys-color-tertiary); opacity: .15; }
+.creative-button { border-color: var(--md-sys-color-tertiary); }
+.library-banner, .automation-intro, .checkin-card { background: var(--md-sys-color-primary-container); border-color: transparent; }
+.library-banner h2, .automation-intro h2, .document-empty h2,
+.document-sheet > h2, .empty-state h3 { color: var(--md-sys-color-on-primary-container); }
+.library-banner p, .automation-intro p, .checkin-card > p { color: var(--md-sys-color-on-primary-container); }
+.nav-group .nav-eyebrow, .breadcrumb strong, .bottom-link, .hero-eyebrow,
+.workspace-name small, .profile-button small, .global-search, .topbar .language-button,
+.section-heading p, .stat-card > p, .stat-value small, .stat-footnote,
+.cell-detail, .financial-summary small, .upload-panel p, .export-area p,
+.session-link small, .student-name small, .subtle-note, .microcopy,
+.material-details > p, .material-type, .app-footer, .empty-state p,
+.document-empty p, .source-snippet p, .source-snippet small, .setting-row small,
+.notification-list small, .modal-heading .muted { color: var(--md-sys-color-on-surface-variant); }
+.global-search input::placeholder, .input-search input::placeholder { color: var(--md-sys-color-outline); }
+.hero-eyebrow .small-dot, .notification-button i { background: var(--eduflow-accent); }
+.text-link:hover, .bottom-link:hover { color: var(--md-sys-color-on-primary-container); }
+.filter-tabs, .document-empty, .structural-loading > div, .progress-track,
+.schedule-note, .quiet-pill, .detail-stats > div { background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface-variant); }
+.filter-tabs button.selected, .studio-tool-tabs button.active, .ai-demo-label,
+.group-summary.selected-group { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); border-color: var(--md-sys-color-primary); }
+.progress-track > div, .roster-progress > div, .switch[data-checked] { background: var(--md-sys-color-primary); }
+.source-picker input { accent-color: var(--md-sys-color-primary); }
+.source-picker, .question-editor, .source-snippet, .upload-card { border-color: var(--md-sys-color-outline-variant); }
+.upload-card:hover { background: var(--md-sys-color-surface-container-low); }
+.toast, .slide-preview, .flow-illustration span.flow-ai { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); border-color: var(--md-sys-color-primary); }
+.toast .icon-button, .slide-preview p { color: var(--md-sys-color-primary-container); }
+.ready-label, .risk-badge.safe { color: var(--eduflow-success); }
+.risk-badge.safe, .checkin-success, .checkin-toggle.is-present { background: var(--eduflow-success-container); color: var(--eduflow-on-success-container); border-color: var(--eduflow-success-container); }
+.checkin-success span { color: var(--eduflow-on-success-container); }
+
+/* Optical sizing for the bilingual identity, including legacy dense labels. */
+[dir="rtl"] .page-heading h1 { font-size: 28px; line-height: 1.6; }
+[dir="rtl"] .hero-copy p { font-size: 14px; line-height: 1.95; }
+.hero-actions .btn { font-size: 14px; }
+.section-heading h2, .feature-card > h2 { font-size: 18px; }
+.feature-card p, .feature-card summary { font-size: 14px; line-height: 1.9; }
+.stat-card > p, .stat-footnote, .cell-detail, .session-link small { font-size: 12px; line-height: 1.8; }
+.session-link strong { font-size: 14px; }
+.photo-caption strong { font-size: 12px; line-height: 1.6; }
+.photo-caption small { font-size: 11px; line-height: 1.6; }
+.nav-group .nav-eyebrow, .workspace-name small { font-size: 11px; }
+.workspace-name strong { font-size: 12px; }
+.sidebar-note h3 { font-size: 15px; line-height: 1.7; }
+.sidebar-note p, .bottom-link, .breadcrumb, .language-button { font-size: 12px; }
+.app-footer { font-size: 11px; line-height: 1.8; }
+
+@media (max-width: 760px) {
+  .topbar { height: 64px; }
+  .main-content { padding: 24px 18px 32px; }
+  .page-heading h1 { font-size: 24px; }
+  [dir="rtl"] .page-heading h1 { font-size: 24px; }
+  .btn { min-height: 40px; padding-inline: 16px; }
+  .feature-card, .generator-panel, .editor-panel, .upload-panel { padding: 20px; }
+  .stat-card { padding: 16px; }
+}
+
+@media (forced-colors: active) {
+  .btn, .nav-link, .segmented button, .field input, .field select, .field textarea { border: 1px solid ButtonText; }
+}
