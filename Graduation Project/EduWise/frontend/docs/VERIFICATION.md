@@ -13,6 +13,10 @@ The main interface uses native links/buttons, Base UI modal focus management and
 
 Date: 2026-10-21. Local Windows workspace, Node 24.20.0, Playwright with installed Microsoft Edge. Browser checks ran against the built application at `http://127.0.0.1:4173`, in isolated contexts. The workspace has no Git repository, so this record identifies the working files rather than a commit.
 
+## README scope alignment — 2026-11-15
+
+The current Studio UI exposes exam preparation and teacher review only. Worksheet, slide-deck, lesson-planning, concept-note and essay-rubric screens were removed because they are not listed in the project README. Legacy domain records remain readable for existing local snapshots. No test suite was run for this scope update.
+
 ## Final results
 
 | Command | Actual result |

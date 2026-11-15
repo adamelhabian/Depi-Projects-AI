@@ -38,7 +38,7 @@ The browser suite uses installed Microsoft Edge on Windows, otherwise Playwright
 - Ready built-in physics material fixtures; 15 MB PDF extension/header validation. Uploaded entries are explicitly **metadata-only / indexing failed**, never ready. No original PDF bytes persist.
 - Material/subject/grade/topic/difficulty/type/count exam configuration, explicit failed generation jobs, editable saved drafts and a separate teacher-review step. MCQ only in the fixed demo bank; unsupported requests are not silently truncated.
 - A/B/C reuse questions: B/C reverse their order and rotate options. Stable choice IDs preserve answer mapping. Separate student and answer-key Word/PowerPoint/print documents; student projection excludes answers and explanations. Print PDF means the browser's “Save as PDF”, not a server-generated PDF download.
-- Worksheet/slide preparation from the same reviewed exam flow, source-linked lesson time-allocation templates, clearly illustrative concept notes, keyword-only essay rubric suggestions and independently stored teacher overrides. No final student grades are awarded.
+- The active AI studio exposes exam drafts and teacher review only. Worksheets, lesson plans, concept notes, essay rubrics, and slide-deck creation are excluded from the current project scope. Student marks/results named in the project README are not implemented in this local demo yet. Legacy draft types remain readable for existing snapshots.
 - Manual demo automation configuration/activation/run history/event deduplication/edit/review/approval. No scheduling or message delivery. Reports derive attendance and collection summaries from operational demo records and expose missing evidence instead of risk predictions.
 - Arabic/English, localized Cairo dates/EGP, RTL, isolated mixed-direction codes/phones, keyboard-operable Base UI dialogs and confirmation dialogs, scrollable tables, reduced-motion support, formula-safe UTF-8 CSV.
 
@@ -51,9 +51,9 @@ src/data/WorkspaceProvider.jsx async React orchestration and form action state
 src/data/service.js            asynchronous read/execute Interface and atomic commit
 src/data/persistence.js        versioning, migration, validation recovery
 src/domain/workspace.js        entities, permissions, operational rules/calculations
-src/domain/content.js          generation, review, variants, rubric and automation rules
+src/domain/content.js          exam and legacy content rules; automation rules
 src/features/Operations.jsx    students/groups, sessions/attendance, ledger
-src/features/Teaching.jsx      materials, preparation, exam/essay review
+src/features/Teaching.jsx      materials, exam preparation and review
 src/features/Management.jsx    role overview, automations, evidence-based reports
 src/components/                accessible shared UI and form/table helpers
 src/i18n.js                    errors, status terminology, date/money formatting

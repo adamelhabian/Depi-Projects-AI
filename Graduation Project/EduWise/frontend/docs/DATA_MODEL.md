@@ -19,7 +19,7 @@ This is the implemented frontend/demo contract, **not an agreed backend contract
 | Financial adjustment | paymentId, type, amountMinor | refund / void, reason, actor/time; cannot exceed unreversed amount |
 | Material | stable id, title, subject, grade, topic, storage | uploading / processing / ready / failed schema; demo has ready bank fixtures or failed metadata-only entries |
 | GenerationJob | request/config, createdBy, timestamps, provenance | queued / running / succeeded / failed / cancelled vocabulary; demo produces terminal succeeded/failed jobs immediately |
-| Draft | exam / worksheet via purpose / essay / lesson / automation | draft → reviewed; edits invalidate exam review; automation additionally approved; teacher essay review is not a final grade |
+| Draft | exam / automation in the current UI; worksheet / essay / lesson are legacy snapshot types | draft → reviewed; edits invalidate exam review; automation additionally approved; legacy essay reviews are not final grades |
 | AutomationRun | workflow, session, eventKey, actor/time, draftIds | failed / succeeded; one successful follow-up per workflow/session |
 
 `audit` stores mutation command, actor, time, target, and reasons. Idempotency entries retain command/input fingerprints and commit timestamps. These are demo-local, not tamper-evident audit logs.
