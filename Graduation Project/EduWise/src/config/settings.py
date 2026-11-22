@@ -30,6 +30,11 @@ class RAGSettings:
     embedding_model: str = field(
         default_factory=lambda: os.getenv("EMBEDDING_MODEL", "gemini-embedding-001")
     )
+    embedding_dimension: int = field(
+    default_factory=lambda: int(
+        os.getenv("EMBEDDING_DIMENSION", "3072")
+    )
+)
 
     # RAG Configuration
     chunk_size: int = field(
