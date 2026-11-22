@@ -198,3 +198,64 @@ The project is divided into independent development components.
 The main goal is to reduce teachers' administrative workload, organize educational operations, monitor student progress, and provide useful insights through data analysis, Machine Learning, AI, and automation.
 
 > AI-generated content and predictions are decision-support tools. Teachers remain responsible for reviewing generated exams and making final educational decisions.
+
+## Academic risk and parent alerts
+
+Run these commands from `Graduation Project/EduWise` using Python 3.13. The supplied CSVs, model, and report are ready to use. To reproduce them on Windows:
+
+```powershell
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m data.generate_academic_data
+python -m src.machine_learning.training.train_academic_risk
+python -m src.machine_learning.evaluation.evaluate_academic_risk
+$pytestBase = Join-Path (Resolve-Path .venv) ('pytest-' + [guid]::NewGuid())
+python -m pytest -q --basetemp $pytestBase
+```
+
+The seed-42 generator produces 3,000 fictional student snapshots. The binary label represents a simulated later assessment below 57/100. `data/processed/` contains validated, stratified train/test splits. Each training fold fits its own median imputer, scaler, and group encoder. Seven configurations across three classifier families compete on out-of-fold positive-class F1, with recall breaking ties. The holdout scores, selected threshold, package versions, and confusion matrix are in [metrics.json](src/machine_learning/evaluation/metrics.json). These scores measure performance on synthetic students. Validate against local outcomes before relying on them for educational decisions.
+
+### Backend integration
+
+Create one service per worker and load only a trusted, project-controlled joblib file. The load checks the recorded Python major/minor and model-library versions. Map `InvalidStudentData` to an input error and `ModelUnavailableError` to a service availability error.
+
+```python
+from src.backend.services.academic_risk_service import AcademicRiskService
+
+service = AcademicRiskService()
+result = service.predict({
+    "student_id": "EG-00001", "group_id": "G-01",
+    "attendance_rate": 0.55, "homework_completion_rate": 0.45,
+    "average_quiz_score": 48, "midterm_score": 50, "participation_score": 52,
+    "missed_sessions_count": 3,
+})
+```
+
+Rates are fractions, scores are 0–100, and the optional ordered quiz slots are `quiz_oldest`, `quiz_middle`, and `quiz_latest`. Omit unknown measurements or pass JSON null. Supply at least one observed measurement. Student identity, name, and fee delay do not enter the model. The absence count covers up to eight recent eligible sessions for this student and group. For raw attendance use `count_absences` with eligible sessions in chronological order, retaining excused and unrecorded slots in the window. Only confirmed unexcused absences increment the count.
+
+### Explainability (TreeSHAP) and What-If Simulation
+
+The service provides native TreeSHAP feature attributions and counterfactual simulation:
+
+```python
+# Explain model prediction
+explanation = service.explain(student_data)
+# explanation["top_risk_factors"]: list of factors increasing risk
+# explanation["top_protective_factors"]: list of protective factors
+# explanation["recommended_actions"]: pedagogical advice in Arabic & English
+
+# Simulate hypothetical improvement
+simulation = service.simulate_what_if(student_data, improvements={
+    "attendance_rate": 0.90,
+    "quiz_latest": 80,
+    "missed_sessions_count": 0,
+})
+# simulation["risk_reduction"]: drop in risk probability
+# simulation["rescued_from_risk"]: true if student leaves danger zone
+```
+
+### Automation Architecture Note (n8n Integration)
+
+Workflows for parent communication, absence alerts, and automated follow-ups are decoupled from the core ML model. They will be orchestrated via an external **n8n** automation workflow triggered by API webhooks upon student evaluation events.
+

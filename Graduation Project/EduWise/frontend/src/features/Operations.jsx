@@ -71,6 +71,15 @@ export function Students() {
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
               <span className="bar-badge attendance-badge">{evidence.rate === null ? t('No attendance evidence', 'لا توجد بيانات حضور') : `${evidence.rate}% ${t('attendance', 'حضور')}`}</span>
               {evidence.absent > 0 && <span className="record-status">{evidence.absent} {t('recorded absences', 'غياب مسجّل')}</span>}
+              {evidence.rate !== null && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600,
+                  backgroundColor: (evidence.rate < 60 || evidence.absent >= 3) ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+                  color: (evidence.rate < 60 || evidence.absent >= 3) ? '#b91c1c' : '#047857'
+                }}>
+                  {(evidence.rate < 60 || evidence.absent >= 3) ? t('At-Risk · AI', 'خطر تعثر · ذكاء اصطناعي') : t('Safe · AI', 'مستقر · ذكاء اصطناعي')}
+                </span>
+              )}
             </div>
           </td>
           <td><Status value={s.status} /></td>
