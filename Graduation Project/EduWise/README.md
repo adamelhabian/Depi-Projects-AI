@@ -10,6 +10,8 @@ The system integrates Machine Learning, AI, and automation to improve educationa
 
 The EduFlow AI frontend demo is available at [EduFlow AI](https://eduflow-ai-brand.vercel.app/#overview). It uses sample data and is not authenticated production software.
 
+The [n8n automation runbook](src/ai_automation/n8n_ai_automation_plan.md) explains how to configure and verify Telegram guardian alerts and Gemini-assisted homework grading.
+
 ## 2. System Users
 
 The system is designed for two main users:
