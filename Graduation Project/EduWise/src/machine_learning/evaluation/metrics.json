@@ -1,0 +1,131 @@
+{
+  "model_version": "academic-risk-v1-62739f26dddd",
+  "classifier": "XGBClassifier",
+  "provenance": "Synthetic Egyptian education-center cohort; target is simulated future assessment < 57/100.",
+  "test_count": 600,
+  "at_risk_count": 163,
+  "at_risk_prevalence": 0.27166666666666667,
+  "threshold": 0.36947691440582275,
+  "accuracy": 0.885,
+  "precision": 0.7732558139534884,
+  "recall": 0.8159509202453987,
+  "f1": 0.7940298507462686,
+  "roc_auc": 0.9411351799076245,
+  "class_order": [
+    0,
+    1
+  ],
+  "matrix_axes": [
+    "actual",
+    "predicted"
+  ],
+  "confusion_matrix": [
+    [
+      398,
+      39
+    ],
+    [
+      30,
+      133
+    ]
+  ],
+  "selection": {
+    "winner": {
+      "classifier": "XGBClassifier",
+      "parameters": {
+        "learning_rate": 0.07,
+        "max_depth": 4,
+        "n_estimators": 100
+      },
+      "oof_f1": 0.7872968980797636,
+      "oof_recall": 0.82,
+      "threshold": 0.36947691440582275
+    },
+    "candidates": [
+      {
+        "classifier": "LogisticRegression",
+        "parameters": {
+          "C": 0.1
+        },
+        "oof_f1": 0.7851851851851851,
+        "oof_recall": 0.8153846153846154,
+        "threshold": 0.38016552384797475
+      },
+      {
+        "classifier": "LogisticRegression",
+        "parameters": {
+          "C": 1.0
+        },
+        "oof_f1": 0.7792792792792793,
+        "oof_recall": 0.7984615384615384,
+        "threshold": 0.3974241763360741
+      },
+      {
+        "classifier": "LogisticRegression",
+        "parameters": {
+          "C": 10.0
+        },
+        "oof_f1": 0.7777777777777778,
+        "oof_recall": 0.8184615384615385,
+        "threshold": 0.36203577944934034
+      },
+      {
+        "classifier": "RandomForestClassifier",
+        "parameters": {
+          "max_depth": null,
+          "min_samples_leaf": 3,
+          "n_estimators": 120
+        },
+        "oof_f1": 0.7795031055900622,
+        "oof_recall": 0.7723076923076924,
+        "threshold": 0.4484623015873016
+      },
+      {
+        "classifier": "RandomForestClassifier",
+        "parameters": {
+          "max_depth": null,
+          "min_samples_leaf": 10,
+          "n_estimators": 120
+        },
+        "oof_f1": 0.7868852459016393,
+        "oof_recall": 0.8123076923076923,
+        "threshold": 0.40241833569959484
+      },
+      {
+        "classifier": "XGBClassifier",
+        "parameters": {
+          "learning_rate": 0.07,
+          "max_depth": 2,
+          "n_estimators": 100
+        },
+        "oof_f1": 0.7853403141361257,
+        "oof_recall": 0.8076923076923077,
+        "threshold": 0.39461377263069153
+      },
+      {
+        "classifier": "XGBClassifier",
+        "parameters": {
+          "learning_rate": 0.07,
+          "max_depth": 4,
+          "n_estimators": 100
+        },
+        "oof_f1": 0.7872968980797636,
+        "oof_recall": 0.82,
+        "threshold": 0.36947691440582275
+      }
+    ],
+    "folds": 5,
+    "seed": 42,
+    "train_sha256": "7b1ba3757c26972c2b0b682fa916d308347e0bf458cce2e3366f44b650f568ed"
+  },
+  "versions": {
+    "python": "3.13",
+    "numpy": "2.5.5",
+    "pandas": "3.1.1",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "joblib": "1.6.0",
+    "scipy": "1.18.1"
+  },
+  "test_sha256": "117baaa4e00495a1f2d2bf674a79d7dbd62f5dff22727ee87c4d0f434d901731"
+}
