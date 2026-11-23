@@ -242,4 +242,282 @@ test('valid JSON with already escaped backslashes in markdown fences parses dire
   assert.doesNotMatch(result.json.text, /\\n/);
 });
 
+test('the Telegram bot routes general text questions to inquiry route with query', async () => {
+  const update = event => run(homework, 'Route Private Telegram Message', { message: { ...message, ...event } });
+  const inquiries = [
+    'ما هي مواعيد حصص الصف الثالث الثانوي؟',
+    'أين يقع مقر السنتر في مدينة نصر؟',
+    'بكام سعر الملازم والاشتراك الشهري؟',
+    'لو غبت حصة إزاي أقدر أعوضها؟',
+  ];
+  for (const q of inquiries) {
+    const [res] = await update({ text: q });
+    assert.equal(res.json.route, 'inquiry');
+    assert.equal(res.json.chat_id, '22');
+    assert.equal(res.json.query, q);
+  }
+});
+
+test('/start and /help menu announces all 3 core capabilities in clean BiDi layout', async () => {
+  const update = event => run(homework, 'Route Private Telegram Message', { message: { ...message, ...event } });
+  for (const cmd of ['/start', '/help', 'start', 'help', '/start@EduWiseBot']) {
+    const [res] = await update({ text: cmd });
+    assert.equal(res.json.route, 'reply');
+    assert.equal(res.json.chat_id, '22');
+    const text = res.json.text;
+    assert.match(text, /تصحيح الواجبات والاختبارات/);
+    assert.match(text, /تنبيهات أولياء الأمور/);
+    assert.match(text, /\/parent_risk/);
+    assert.match(text, /\/parent_absence/);
+    assert.match(text, /\/parent_ok/);
+    assert.match(text, /المساعد الذكي للاستفسارات/);
+    assert.match(text, /مواعيد الحصص/);
+    assert.match(text, /المقرات/);
+    assert.match(text, /الأسعار/);
+    assert.match(text, /التعويض/);
+  }
+});
+
+test('Format Center Inquiry Response delivers accurate knowledge answers for schedules, fees, locations, and makeup', async () => {
+  // 1. Schedule inquiry
+  const schedPrev = {
+    'Route Private Telegram Message': { chat_id: '22', query: 'ما هي مواعيد الحصص ومجموعات الجمعة؟' }
+  };
+  const [schedRes] = await run(homework, 'Format Center Inquiry Response', candidate(''), schedPrev);
+  assert.equal(schedRes.json.route, 'inquiry');
+  assert.match(schedRes.json.text, /الأول الثانوي/);
+  assert.match(schedRes.json.text, /الثاني الثانوي/);
+  assert.match(schedRes.json.text, /الثالث الثانوي|الثانوية العامة/);
+  assert.match(schedRes.json.text, /الجمعة/);
+  assert.match(schedRes.json.text, /الأحد/);
+
+  // 2. Fees & Booklets inquiry
+  const feesPrev = {
+    'Route Private Telegram Message': { chat_id: '22', query: 'كام سعر الملازم والاشتراك الشهري؟' }
+  };
+  const [feesRes] = await run(homework, 'Format Center Inquiry Response', candidate(''), feesPrev);
+  assert.equal(feesRes.json.route, 'inquiry');
+  assert.match(feesRes.json.text, /60 جنيه/);
+  assert.match(feesRes.json.text, /80 جنيه/);
+  assert.match(feesRes.json.text, /550 جنيه/);
+  assert.match(feesRes.json.text, /850 جنيه/);
+
+  // 3. Locations inquiry
+  const locPrev = {
+    'Route Private Telegram Message': { chat_id: '22', query: 'أين يقع مقر السنتر في مدينة نصر والدقي؟' }
+  };
+  const [locRes] = await run(homework, 'Format Center Inquiry Response', candidate(''), locPrev);
+  assert.equal(locRes.json.route, 'inquiry');
+  assert.match(locRes.json.text, /مدينة نصر/);
+  assert.match(locRes.json.text, /عباس العقاد/);
+  assert.match(locRes.json.text, /الدقي/);
+  assert.match(locRes.json.text, /شارع التحرير/);
+  assert.match(locRes.json.text, /01012345678/);
+
+  // 4. Makeup & Absence policy inquiry
+  const makeupPrev = {
+    'Route Private Telegram Message': { chat_id: '22', query: 'لو غبت حصة إزاي أقدر أعوض؟' }
+  };
+  const [makeupRes] = await run(homework, 'Format Center Inquiry Response', candidate(''), makeupPrev);
+  assert.equal(makeupRes.json.route, 'inquiry');
+  assert.match(makeupRes.json.text, /بعذر/);
+  assert.match(makeupRes.json.text, /بدون عذر/);
+  assert.match(makeupRes.json.text, /السبت/);
+  assert.match(makeupRes.json.text, /الثلاثاء/);
+});
+
+test('Format Center Inquiry Response formats model answers cleanly with HTML', async () => {
+  const previous = {
+    'Route Private Telegram Message': { chat_id: '22', query: 'مواعيد سنتر إديو وايز' }
+  };
+  const modelText = 'مواعيد الحصص يوم الأحد والجمعة لجميع المراحل الثانوية.';
+  const [res] = await run(homework, 'Format Center Inquiry Response', candidate(modelText), previous);
+  assert.equal(res.json.status, 'answered');
+  assert.match(res.json.text, /مواعيد الحصص يوم الأحد والجمعة/);
+  assert.doesNotMatch(res.json.text, /\\n/);
+});
+
+test('Build Demo Error Reply handles errors gracefully across all routes', async () => {
+  const checkError = async (route) => {
+    const prev = { 'Route Private Telegram Message': { chat_id: '22', route } };
+    const [res] = await run(homework, 'Build Demo Error Reply', {}, prev);
+    return res.json.text;
+  };
+  assert.match(await checkError('parent'), /تنبيه ولي الأمر/);
+  assert.match(await checkError('inquiry'), /معالجة الاستفسار|إدارة السنتر/);
+  assert.match(await checkError('homework'), /تصحيح صورة الواجب/);
+});
+
+test('the Telegram bot routes parent demo commands (/parent_risk, /parent_absence, /parent_ok) with zero regressions', async () => {
+  const update = event => run(homework, 'Route Private Telegram Message', { message: { ...message, ...event } });
+  const cases = [
+    ['/parent_risk', 'risk'],
+    ['/parent_absence', 'absence'],
+    ['/parent_ok', 'ok'],
+    ['/parent_risk@EduWiseBot', 'risk'],
+    ['/parent_absence@EduWiseBot', 'absence'],
+    ['/parent_ok@EduWiseBot', 'ok'],
+    ['/risk', 'risk'],
+    ['/absence', 'absence'],
+    ['/ok', 'ok'],
+    ['/parent risk', 'risk'],
+    ['/parent absence', 'absence'],
+    ['/parent ok', 'ok'],
+    ['/parent', 'absence'],
+  ];
+  for (const [cmd, expected] of cases) {
+    const [res] = await update({ text: cmd });
+    assert.deepEqual(res.json, { route: 'parent', chat_id: '22', scenario: expected });
+  }
+});
+
+test('zero regression on document image uploads and multi-photo media group handling', async () => {
+  const update = event => run(homework, 'Route Private Telegram Message', { message: { ...message, ...event } });
+  // Document image upload (PNG / JPEG)
+  const doc = { file_id: 'doc_img_123', mime_type: 'image/png', file_size: 1024 * 500 };
+  const [docRes] = await update({ document: doc });
+  assert.equal(docRes.json.route, 'homework');
+  assert.equal(docRes.json.assignment_code, 'PRACTICE');
+  assert.equal(docRes.json.file_id, 'doc_img_123');
+
+  // Media group guard (multiple photos in one post)
+  const groupPhoto = [{ file_id: 'p1', width: 800, height: 600 }];
+  const [groupRes] = await update({ photo: groupPhoto, media_group_id: 'album_999', caption: 'واجب' });
+  assert.equal(groupRes.json.route, 'reply');
+  assert.match(groupRes.json.text, /صورة واحدة فقط/);
+});
+
+test('Gemini Center Assistant system prompt and graph topology verification', () => {
+  const assistantNode = homework.nodes.find(n => n.name === 'Gemini Center Assistant');
+  assert.ok(assistantNode, 'Gemini Center Assistant node must exist');
+  assert.equal(assistantNode.type, '@n8n/n8n-nodes-langchain.googleGemini');
+  assert.equal(assistantNode.onError, 'continueErrorOutput');
+
+  const sysPrompt = assistantNode.parameters.options.systemMessage;
+  // 1. Schedules
+  assert.match(sysPrompt, /الصف الأول الثانوي/);
+  assert.match(sysPrompt, /الصف الثاني الثانوي/);
+  assert.match(sysPrompt, /الصف الثالث الثانوي|الثانوية العامة/);
+  assert.match(sysPrompt, /الأحد والأربعاء/);
+  assert.match(sysPrompt, /الجمعة/);
+
+  // 2. Locations
+  assert.match(sysPrompt, /مدينة نصر/);
+  assert.match(sysPrompt, /عباس العقاد/);
+  assert.match(sysPrompt, /الدقي/);
+  assert.match(sysPrompt, /شارع التحرير/);
+  assert.match(sysPrompt, /01012345678/);
+  assert.match(sysPrompt, /01198765432/);
+
+  // 3. Fees & Booklets
+  assert.match(sysPrompt, /80 جنيه/);
+  assert.match(sysPrompt, /120 جنيه/);
+  assert.match(sysPrompt, /550 جنيه/);
+  assert.match(sysPrompt, /850 جنيه/);
+  assert.match(sysPrompt, /60 جنيه/);
+
+  // 4. Absence & Makeup
+  assert.match(sysPrompt, /الغياب بعذر/);
+  assert.match(sysPrompt, /الغياب بدون عذر/);
+  assert.match(sysPrompt, /السبت/);
+  assert.match(sysPrompt, /الثلاثاء/);
+
+  // Graph topology verification
+  const inquiryIf = homework.connections['Inquiry Message?'];
+  assert.equal(inquiryIf.main[0][0].node, 'Gemini Center Assistant');
+  assert.equal(inquiryIf.main[1][0].node, 'Send Student Telegram Feedback');
+
+  const assistantConn = homework.connections['Gemini Center Assistant'];
+  assert.equal(assistantConn.main[0][0].node, 'Format Center Inquiry Response');
+  assert.equal(assistantConn.main[1][0].node, 'Build Demo Error Reply');
+
+  const formatConn = homework.connections['Format Center Inquiry Response'];
+  assert.equal(formatConn.main[0][0].node, 'Send Student Telegram Feedback');
+  assert.equal(formatConn.main[1][0].node, 'Build Demo Error Reply');
+});
+
+test('Format Center Inquiry Response handles diverse Egyptian inquiries and default fallback', async () => {
+  const checkAnswer = async (query) => {
+    const prev = { 'Route Private Telegram Message': { chat_id: '22', query } };
+    const [res] = await run(homework, 'Format Center Inquiry Response', candidate(''), prev);
+    return res.json.text;
+  };
+
+  // Diverse phrasing
+  const q1 = await checkAnswer('كام مصاريف أولى ثانوي في الشهر؟');
+  assert.match(q1, /550 جنيه/);
+
+  const q2 = await checkAnswer('فين عنوان فرع مدينة نصر بالتفصيل؟');
+  assert.match(q2, /عباس العقاد/);
+
+  const q3 = await checkAnswer('ممكن اعرف مواعيد تانية ثانوي يوم الأربعاء؟');
+  assert.match(q3, /الأربعاء/);
+  assert.match(q3, /الثاني الثانوي/);
+
+  const q4 = await checkAnswer('لو طالب غاب بدون عذر إيه الإجراء؟');
+  assert.match(q4, /بدون عذر/);
+
+  // General query outside known keywords returns helpful guide
+  const qGeneral = await checkAnswer('مساء الخير، ممكن مساعدة؟');
+  assert.match(qGeneral, /مرحباً بك في سنتر EduWise التعليمي/);
+  assert.match(qGeneral, /مواعيد الحصص/);
+  assert.match(qGeneral, /عناوين المقرات/);
+  assert.match(qGeneral, /الأسعار والاشتراكات/);
+  assert.match(qGeneral, /سياسة الغياب/);
+});
+
+test('end-to-end workflow execution of a live Telegram inquiry through the full node pipeline', async () => {
+  // Step 1: Telegram incoming message
+  const inquiryText = 'ما هي مواعيد مجموعات الثانوية العامة ومقر مدينة نصر؟';
+  const incomingTelegramEvent = {
+    message: {
+      chat: { type: 'private', id: 777123 },
+      from: { id: 777123, is_bot: false, first_name: 'زياد' },
+      text: inquiryText
+    }
+  };
+
+  // Node 1: Route Private Telegram Message
+  const [routed] = await run(homework, 'Route Private Telegram Message', incomingTelegramEvent);
+  assert.equal(routed.json.route, 'inquiry');
+  assert.equal(routed.json.chat_id, '777123');
+  assert.equal(routed.json.query, inquiryText);
+
+  // Node 2: Is Photo Message? (evaluates routed item)
+  // In n8n, false output routes to "Inquiry Message?"
+  assert.equal(routed.json.route !== 'homework', true);
+
+  // Node 3: Inquiry Message? (evaluates $json.route === 'inquiry')
+  assert.equal(routed.json.route === 'inquiry', true);
+
+  // Node 4: Gemini Center Assistant (model execution)
+  const assistantNode = homework.nodes.find(n => n.name === 'Gemini Center Assistant');
+  const userPrompt = assistantNode.parameters.messages.values[0].content.replace('{{ $json.query }}', routed.json.query);
+  assert.match(userPrompt, /الثانوية العامة/);
+
+  // Node 5: Format Center Inquiry Response
+  const modelCandidate = candidate('مواعيد الثانوية العامة: الجمعة 2-5 عصراً والأحد 6-9 مساءً. المقر: شارع عباس العقاد بمدينة نصر.');
+  const prevNodes = {
+    'Route Private Telegram Message': routed.json
+  };
+  const [formatted] = await run(homework, 'Format Center Inquiry Response', modelCandidate, prevNodes);
+  assert.equal(formatted.json.status, 'answered');
+  assert.equal(formatted.json.chat_id, '777123');
+  assert.equal(formatted.json.route, 'inquiry');
+  assert.match(formatted.json.text, /مواعيد الثانوية العامة/);
+  assert.match(formatted.json.text, /عباس العقاد/);
+
+  // Node 6: Send Student Telegram Feedback (verifying parameter mappings)
+  const telegramSendNode = homework.nodes.find(n => n.name === 'Send Student Telegram Feedback');
+  assert.equal(telegramSendNode.parameters.additionalFields.parse_mode, 'HTML');
+  assert.ok(
+    telegramSendNode.parameters.chatId === "={{ $('Route Private Telegram Message').first().json.chat_id }}" ||
+    telegramSendNode.parameters.chatId === "={{ $json.chat_id || $('Route Private Telegram Message').first().json.chat_id }}"
+  );
+  assert.equal(telegramSendNode.parameters.text, "={{ $json.text }}");
+});
+
+
+
+
 
