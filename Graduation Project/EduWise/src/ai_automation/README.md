@@ -10,11 +10,12 @@ The system connects student submissions and teacher evaluations to automated fee
 
 The automation architecture combines asynchronous messaging, visual AI evaluation, and structured webhook dispatch:
 
-1. Student and parent interface: A Telegram bot (`@EduWiseBot`) receives homework images, test queries, and command requests from students and guardians.
+1. Student and parent interface: A Telegram bot (`@EduWiseBot`) receives homework images, test queries, commands, and conversational center questions from students and guardians.
 2. Workflow orchestrator: Two production workflows on n8n Cloud manage message routing, media downloads, model calls, and delivery state.
-3. Multimodal vision grading: Google Gemini 2.5 / 1.5 Flash processes handwritten or printed homework images, extracts answers, scores visible questions, and outputs Arabic feedback.
+3. Multimodal vision grading: Google Gemini processes handwritten or printed homework images, extracts answers, scores visible questions, and outputs Arabic feedback.
 4. Parental intervention alerts: Academic risk predictions and attendance thresholds trigger automated parent notifications with targeted coaching recommendations.
-5. Local persistence and API bridge: FastAPI endpoints and an SQLite database record delivery audit trails, manage rubric configurations, and enforce idempotency.
+5. Conversational center assistant: An integrated Gemini assistant handles 24/7 inquiries regarding schedules, center branches, tuition fees, and makeup sessions.
+6. Local persistence and API bridge: FastAPI endpoints and an SQLite database record delivery audit trails, manage rubric configurations, and enforce idempotency.
 
 ---
 
@@ -33,12 +34,13 @@ This workflow receives student risk evaluations and delivers tailored Arabic not
 
 ### 2. Vision AI homework and quiz assistant (`U0KUH311xbf2GLmZ`)
 
-This workflow processes incoming Telegram messages, handles student homework photos, and routes interactive commands.
+This workflow processes incoming Telegram messages, handles student homework photos, answers center inquiries, and routes interactive commands.
 
 - Trigger: Telegram trigger listening to private messages sent to `@EduWiseBot`.
-- Message router: Directs photo submissions to the vision grader and text commands (`/start`, `/help`, `/parent_risk`, `/parent_absence`, `/parent_ok`) to demo handlers.
+- Message router: Directs photo submissions to the vision grader, demo commands (`/parent_risk`, `/parent_absence`, `/parent_ok`) to demo handlers, menu commands (`/start`, `/help`) to the guidance menu, and natural text inquiries to the Center Assistant.
 - Media pipeline: Downloads submitted photos (JPEG, PNG, or WebP up to 10 MiB) via the Telegram Bot API and sends them to Gemini Vision.
 - Grading engine: Calculates dynamic question counts, scores student work against provided rubrics or open worksheets, and produces proportional marks ($X / N$).
+- Center inquiry engine: Gemini evaluates natural language inquiries using structured EduWise knowledge covering schedules, branch locations, fee structures, and makeup policies.
 - Sub-workflow link: Calls the parental intervention alert workflow via native sub-workflow execution when testing guardian alert commands.
 
 ---
@@ -56,6 +58,15 @@ Students and teachers interact with the bot through `@EduWiseBot`.
 | `/parent_risk` | Teacher Demo | Simulates an academic risk alert for a student requiring academic support. |
 | `/parent_absence` | Teacher Demo | Simulates a notification for a student with repeated absences (4 sessions). |
 | `/parent_ok` | Teacher Demo | Demonstrates a stable student scenario where no intervention alert is required. |
+
+### Conversational center inquiries
+
+Students and parents can ask general inquiries at any time in natural or colloquial Egyptian Arabic:
+
+- Schedules: Class times for 1st, 2nd, and 3rd secondary groups, including weekend intensive tracks.
+- Locations and contacts: Addresses and phone numbers for the Nasr City and Dokki branches.
+- Fees and subscriptions: Per-session fees, 8-session monthly packages, and booklet/worksheet prices.
+- Absence and makeup: Excused absence notice policies (24 hours prior) and weekly makeup session slots.
 
 ### Homework evaluation workflow
 
@@ -105,6 +116,7 @@ python -m pytest -q --basetemp=.pytest_temp/automation tests/test_n8n_automation
 
 Coverage includes:
 
+- Conversational inquiry routing, FAQ knowledge base retrieval, and HTML response formatting (22 node tests).
 - Token authentication and role separation for operator and workflow callers.
 - Idempotent alert dispatching and deduplication via SHA-256 payload fingerprints.
 - Rubric matching, score capping, unreadable image handling, and multi-part Telegram message splitting.
