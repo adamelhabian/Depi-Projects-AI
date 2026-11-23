@@ -18,6 +18,7 @@ from rag.ingestion.pdf_loader import load_pdf_pages
 from rag.ingestion.text_cleaner import clean_pages
 from rag.retrieval.semantic_retriever import SemanticRetriever
 from rag.vector_store.faiss_store import FaissVectorStore
+from hashlib import sha256
 
 
 def run_exam_pipeline(
@@ -51,28 +52,72 @@ def run_exam_pipeline(
     if active_count <= 0:
         raise ValueError("Questions per type must be positive.")
 
-    # 1. Ingestion & Chunking
-    raw_pages = load_pdf_pages(pdf_path)
-    cleaned_text = clean_pages(raw_pages)
+    # 1. Initialize Embedder
+    pdf_file = Path(pdf_path)
 
-    chunks = split_text_into_chunks(
-        cleaned_text,
-        chunk_size=cfg.chunk_size,
-        chunk_overlap=cfg.chunk_overlap,
-    )
+    if not pdf_file.is_file():
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
 
-    if not chunks:
-        raise ValueError("No text chunks were extracted from the PDF.")
-
-    # 2. Embeddings & FAISS Vector Store
     embedder = TextEmbedder(model_name=cfg.embedding_model)
 
-    chunk_vectors = embedder.encode(chunks)
+    # 2. Generate Unique Index Name
+    file_hash = sha256()
 
-    vector_store = FaissVectorStore(
-        dimension=chunk_vectors.shape[1]
+    with pdf_file.open("rb") as file:
+        for block in iter(lambda: file.read(1024 * 1024), b""):
+            file_hash.update(block)
+
+    file_hash.update(
+        (
+            f"{cfg.embedding_model}_"
+            f"{cfg.embedding_dimension}_"
+            f"{cfg.chunk_size}_"
+            f"{cfg.chunk_overlap}"
+        ).encode()
     )
-    vector_store.add(chunk_vectors, chunks)
+
+    index_name = f"{pdf_file.stem}_{file_hash.hexdigest()[:16]}"
+
+    index_dir = cfg.vector_indexes_dir
+    index_path = index_dir / f"{index_name}.faiss"
+    texts_path = index_dir / f"{index_name}.json"
+
+    # 3. Load Existing Index or Create a New One
+    if index_path.exists() and texts_path.exists():
+
+        print("Loading existing FAISS index...")
+
+        vector_store = FaissVectorStore.load(index_name)
+
+    else:
+        print("Creating a new FAISS index...")
+
+        # Ingestion & Chunking
+        raw_pages = load_pdf_pages(pdf_path)
+        cleaned_text = clean_pages(raw_pages)
+
+        chunks = split_text_into_chunks(
+            cleaned_text,
+            chunk_size=cfg.chunk_size,
+            chunk_overlap=cfg.chunk_overlap,
+        )
+
+        if not chunks:
+            raise ValueError("No text chunks were extracted from the PDF.")
+
+        # Generate Embeddings
+        chunk_vectors = embedder.encode(chunks)
+
+        vector_store = FaissVectorStore(
+            dimension=chunk_vectors.shape[1]
+        )
+
+        vector_store.add(chunk_vectors, chunks)
+
+        # Save FAISS Index
+        vector_store.save(index_name)
+
+    chunks_count = vector_store._index.ntotal
 
     # 3. Semantic Retrieval
     semantic_retriever = SemanticRetriever(
@@ -183,7 +228,7 @@ def run_exam_pipeline(
     )
 
     return {
-        "chunks_count": len(chunks),
+        "chunks_count": chunks_count,
         "rag_results": rag_results,
         "metrics": metrics,
         "files": {
