@@ -1,22 +1,22 @@
-# Centralized Configuration Management.
+# Centralized Configuration Management
+
 import os
 from dataclasses import dataclass, field
-# Handles filesystem paths
 from pathlib import Path
 from dotenv import load_dotenv
 
-# load variables from .env
+# Project root directory
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+# Load environment variables
 load_dotenv(PROJECT_ROOT / ".env")
 
-# 	Organizes configuration settings into a Python class.
-# Prevents accidental modification of settings.
 
 @dataclass(frozen=True)
 class RAGSettings:
+
     # API Configuration
     groq_api_key: str = field(
-        # Reads environment variables and provides default values.
         default_factory=lambda: os.getenv("GROQ_API_KEY", "")
     )
     gemini_api_key: str = field(
@@ -25,16 +25,20 @@ class RAGSettings:
 
     # Model Configuration
     groq_model: str = field(
-        default_factory=lambda: os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+        default_factory=lambda: os.getenv(
+            "GROQ_MODEL", "openai/gpt-oss-20b"
+        )
     )
     embedding_model: str = field(
-        default_factory=lambda: os.getenv("EMBEDDING_MODEL", "gemini-embedding-001")
+        default_factory=lambda: os.getenv(
+            "EMBEDDING_MODEL", "gemini-embedding-001"
+        )
     )
     embedding_dimension: int = field(
-    default_factory=lambda: int(
-        os.getenv("EMBEDDING_DIMENSION", "3072")
+        default_factory=lambda: int(
+            os.getenv("EMBEDDING_DIMENSION", "3072")
+        )
     )
-)
 
     # RAG Configuration
     chunk_size: int = field(
@@ -52,39 +56,47 @@ class RAGSettings:
         default_factory=lambda: int(os.getenv("QUESTIONS_PER_TYPE", "5"))
     )
     default_difficulty: str = field(
-        default_factory=lambda: os.getenv("DEFAULT_DIFFICULTY", "Difficult")
+        default_factory=lambda: os.getenv(
+            "DEFAULT_DIFFICULTY", "Difficult"
+        )
     )
 
-    # Output Configuration
+    # Storage Configuration
     documents_dir: Path = field(
-    default_factory=lambda: PROJECT_ROOT / "storage" / "documents"
+        default_factory=lambda: PROJECT_ROOT / "storage" / "documents"
     )
-
     generated_exams_dir: Path = field(
         default_factory=lambda: PROJECT_ROOT / "storage" / "generated_exams"
     )
-
     vector_indexes_dir: Path = field(
         default_factory=lambda: PROJECT_ROOT / "storage" / "vector_indexes"
     )
 
-
     # Question Types
-    question_types: list[str] = field(default_factory=lambda: [
-        "MCQ",
-        "True/False",
-        "Short Answer",
-        "Fill in the Blanks",
-        "Descriptive",
-    ])
+    question_types: list[str] = field(
+        default_factory=lambda: [
+            "MCQ",
+            "True/False",
+            "Short Answer",
+            "Fill in the Blanks",
+            "Descriptive",
+        ]
+    )
 
-    marks_per_type: dict[str, int] = field(default_factory=lambda: {
-        "MCQ": 1,
-        "True/False": 1,
-        "Short Answer": 3,
-        "Fill in the Blanks": 1,
-        "Descriptive": 5,
-    })
+    marks_per_type: dict[str, int] = field(
+        default_factory=lambda: {
+            "MCQ": 1,
+            "True/False": 1,
+            "Short Answer": 3,
+            "Fill in the Blanks": 1,
+            "Descriptive": 5,
+        }
+    )
+
+    def create_storage_directories(self) -> None:
+        self.documents_dir.mkdir(parents=True, exist_ok=True)
+        self.generated_exams_dir.mkdir(parents=True, exist_ok=True)
+        self.vector_indexes_dir.mkdir(parents=True, exist_ok=True)
 
     def validate(self) -> None:
         if not self.groq_api_key:
@@ -108,4 +120,8 @@ class RAGSettings:
             raise ValueError("QUESTIONS_PER_TYPE must be positive.")
 
 
+# Create the global settings instance
 settings = RAGSettings()
+
+# Create storage directories
+settings.create_storage_directories()

@@ -132,7 +132,7 @@ def run_exam_pipeline(
     }
 
     # 6. Export TXT, JSON & PDF
-    out_dir = Path(cfg.output_dir)
+    out_dir = Path(cfg.generated_exams_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     diff_slug = active_difficulty.lower().replace(" ", "_")
