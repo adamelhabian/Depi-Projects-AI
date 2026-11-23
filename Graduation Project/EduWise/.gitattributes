@@ -1,0 +1,3 @@
+# Holdout provenance uses SHA-256, so CSV line endings must survive checkout.
+data/**/*.csv text eol=lf
+*.joblib binary

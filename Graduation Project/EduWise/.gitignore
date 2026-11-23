@@ -21,3 +21,8 @@ venv/
 # Keep placeholder files
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+
+# Local alert consent and provider records
+/var/
+.pytest_cache/
+.pytest_temp/
