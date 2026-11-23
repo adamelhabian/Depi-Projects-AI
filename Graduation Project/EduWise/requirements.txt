@@ -20,4 +20,7 @@ joblib==1.6.0
 pydantic==2.14.4
 pytest==9.2.0
 scipy==1.18.1
-
+fastapi==0.165.0
+uvicorn==0.54.0
+requests==2.34.2
+httpx==0.28.1

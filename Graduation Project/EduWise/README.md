@@ -10,6 +10,8 @@ The system integrates Machine Learning, AI, and automation to improve educationa
 
 The EduFlow AI frontend demo is available at [EduFlow AI](https://eduflow-ai-brand.vercel.app/#overview). It uses sample data and is not authenticated production software.
 
+The [AI automation module documentation](src/ai_automation/README.md) and [n8n automation runbook](src/ai_automation/n8n_ai_automation_plan.md) explain how to configure and verify Telegram guardian alerts and Gemini-assisted homework grading.
+
 ## 2. System Users
 
 The system is designed for two main users:
@@ -146,9 +148,9 @@ EduWise/
 | `data/raw/`             | Store original datasets.                                                     |
 | `data/processed/`       | Store cleaned and processed datasets.                                        |
 | `src/backend/`          | Handle API endpoints, business logic, validation, and database operations.   |
-| `src/machine_learning/` | Handle data preprocessing, model training, prediction, and evaluation.       |
+| `src/machine_learning/` | Handle data preprocessing, model training, prediction, and evaluation ([Machine Learning README](src/machine_learning/README.md)). |
 | `src/rag/`              | Handle document ingestion, retrieval, and context-based response generation. |
-| `src/ai_automation/`    | Handle AI-powered automation workflows and integrations.                     |
+| `src/ai_automation/`    | Handle AI-powered automation workflows and integrations ([AI Automation README](src/ai_automation/README.md)). |
 | `src/shared/utils/`     | Store reusable helper functions shared across components.                    |
 | `frontend/`             | Contain the user interface and frontend application.                         |
 | `tests/`                | Contain tests for backend, ML, and RAG components.                           |
@@ -257,5 +259,5 @@ simulation = service.simulate_what_if(student_data, improvements={
 
 ### Automation Architecture Note (n8n Integration)
 
-Workflows for parent communication, absence alerts, and automated follow-ups are decoupled from the core ML model. They will be orchestrated via an external **n8n** automation workflow triggered by API webhooks upon student evaluation events.
+Workflows for parent communication, absence alerts, and automated follow-ups are decoupled from the core ML model. They are orchestrated via an external **n8n** automation workflow triggered by API webhooks upon student evaluation events. See the [AI automation module documentation](src/ai_automation/README.md) for endpoint contracts, SQLite audit tables, and Telegram bot commands.
 
