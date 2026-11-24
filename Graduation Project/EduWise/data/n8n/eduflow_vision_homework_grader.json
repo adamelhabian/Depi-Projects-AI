@@ -4,8 +4,8 @@
   "active": true,
   "publicationStatus": {
     "status": "published",
-    "versionId": "71c0a45b-ba8c-4a76-97c5-c88b7f8a4273",
-    "liveVersionId": "71c0a45b-ba8c-4a76-97c5-c88b7f8a4273",
+    "versionId": "bf65a8e2-79fe-4af9-b5f5-9afabec1763c",
+    "liveVersionId": "bf65a8e2-79fe-4af9-b5f5-9afabec1763c",
     "pendingVersionId": null,
     "triggers": [
       {
@@ -42,12 +42,12 @@
     "errorMessage": null
   },
   "isArchived": false,
-  "versionId": "71c0a45b-ba8c-4a76-97c5-c88b7f8a4273",
-  "activeVersionId": "71c0a45b-ba8c-4a76-97c5-c88b7f8a4273",
+  "versionId": "bf65a8e2-79fe-4af9-b5f5-9afabec1763c",
+  "activeVersionId": "bf65a8e2-79fe-4af9-b5f5-9afabec1763c",
   "triggerCount": 1,
   "nodeCount": 19,
   "createdAt": "2026-11-23T12:02:24.015Z",
-  "updatedAt": "2026-11-24T21:40:49.655Z",
+  "updatedAt": "2026-11-24T21:52:38.709Z",
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": true,
@@ -379,7 +379,7 @@
       "typeVersion": 1.5,
       "position": [
         -80,
-        272
+        384
       ],
       "webhookId": "9b88f865-f85d-4682-b334-d6787a897a05",
       "notes": "Bind the same Telegram bot credential to all Telegram nodes in this workflow.",
@@ -400,7 +400,7 @@
       "typeVersion": 2,
       "position": [
         144,
-        272
+        384
       ]
     },
     {
@@ -433,7 +433,7 @@
       "typeVersion": 2.2,
       "position": [
         368,
-        272
+        384
       ]
     },
     {
@@ -460,7 +460,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1616,
+        1840,
         -96
       ],
       "onError": "continueErrorOutput"
@@ -495,7 +495,7 @@
       "typeVersion": 2.2,
       "position": [
         592,
-        608
+        464
       ]
     },
     {
@@ -509,7 +509,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        816,
+        1040,
         240
       ],
       "webhookId": "f650e538-c2f1-41f5-ba0f-11395e97cf8e",
@@ -530,7 +530,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1040,
+        1264,
         320
       ],
       "onError": "continueErrorOutput"
@@ -541,8 +541,9 @@
         "operation": "analyze",
         "modelId": {
           "__rl": true,
+          "value": "models/gemini-3.5-flash-lite",
           "mode": "list",
-          "value": "models/gemini-3.5-flash"
+          "cachedResultName": "Gemini 3.5 Flash Lite"
         },
         "text": "={{ $json.prompt }}",
         "inputType": "binary",
@@ -556,7 +557,7 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.2,
       "position": [
-        1328,
+        1552,
         384
       ],
       "retryOnFail": false,
@@ -580,7 +581,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1616,
+        1840,
         464
       ],
       "onError": "continueErrorOutput"
@@ -594,8 +595,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1840,
-        240
+        2064,
+        224
       ]
     },
     {
@@ -613,8 +614,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2064,
-        576
+        2288,
+        192
       ],
       "webhookId": "1f8a9984-aaa2-4de8-b684-d592195a0649",
       "credentials": {
@@ -653,8 +654,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1040,
-        800
+        1264,
+        816
       ]
     },
     {
@@ -683,8 +684,8 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.2,
       "position": [
-        1264,
-        864
+        1488,
+        896
       ],
       "onError": "continueErrorOutput",
       "credentials": {
@@ -703,22 +704,20 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1616,
-        944
+        1840,
+        960
       ],
       "onError": "continueErrorOutput"
     },
     {
       "parameters": {
+        "chatId": "={{ $('Route Private Telegram Message').first().json.chat_id }}",
+        "text": "⏳ استلمت الصورة، جاري مراجعة الحل وتصحيحه...",
         "additionalFields": {
           "appendAttribution": false,
           "disable_web_page_preview": true,
           "parse_mode": "HTML"
-        },
-        "chatId": "={{ $('Route Private Telegram Message').first().json.chat_id }}",
-        "operation": "sendMessage",
-        "resource": "message",
-        "text": "⏳ استلمت الصورة، جاري مراجعة الحل وتصحيحه..."
+        }
       },
       "id": "79712cae-9a56-4912-b71c-ec12dda765f7",
       "name": "Send Processing Notice",
@@ -726,7 +725,7 @@
       "typeVersion": 1.2,
       "position": [
         816,
-        608
+        240
       ],
       "webhookId": "a801987d-d050-4481-bb5a-eb2e1daf06f0",
       "onError": "continueErrorOutput",
@@ -751,7 +750,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1840,
+        2064,
         512
       ],
       "webhookId": "b19ea8f8-a251-4ad4-95a8-82939b876de4",
@@ -764,14 +763,6 @@
       }
     },
     {
-      "id": "40ee03b6-7356-4163-9a5b-041d52394c57",
-      "name": "Should Delete Notice?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        2288,
-        512
-      ],
       "parameters": {
         "conditions": {
           "combinator": "and",
@@ -795,27 +786,34 @@
         },
         "options": {}
       },
+      "id": "40ee03b6-7356-4163-9a5b-041d52394c57",
+      "name": "Should Delete Notice?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2512,
+        336
+      ],
       "executeOnce": true
     },
     {
+      "parameters": {
+        "operation": "deleteMessage",
+        "chatId": "={{ $('Route Private Telegram Message').first().json.chat_id }}",
+        "messageId": "={{ String($('Send Processing Notice').first().json.result?.message_id ?? $('Send Processing Notice').first().json.message_id) }}"
+      },
       "id": "911d1fcb-68f7-421d-b5d9-37ae155be5f6",
       "name": "Delete Processing Notice",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2512,
-        496
+        2736,
+        336
       ],
-      "parameters": {
-        "chatId": "={{ $('Route Private Telegram Message').first().json.chat_id }}",
-        "messageId": "={{ String($('Send Processing Notice').first().json.result?.message_id ?? $('Send Processing Notice').first().json.message_id) }}",
-        "operation": "deleteMessage",
-        "resource": "message"
-      },
-      "notes": "Deletes the temporary reviewing-homework message after the grading result or error reply is delivered.",
-      "onError": "continueErrorOutput",
       "executeOnce": true,
       "webhookId": "71720c10-6208-4aa5-be6b-18c98621472d",
+      "onError": "continueErrorOutput",
+      "notes": "Deletes the temporary reviewing-homework message after the grading result or error reply is delivered.",
       "credentials": {
         "telegramApi": {
           "id": "J2Z5z5lY8QyDMO9p",
@@ -824,15 +822,15 @@
       }
     },
     {
+      "parameters": {},
       "id": "0cdaa240-16a5-4568-9b0e-dc80a3792f1f",
       "name": "Ignore Notice Cleanup Error",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        2736,
-        608
-      ],
-      "parameters": {}
+        2960,
+        336
+      ]
     }
   ],
   "nodeGroups": [],

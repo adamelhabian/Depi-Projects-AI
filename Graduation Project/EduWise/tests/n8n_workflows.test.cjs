@@ -591,8 +591,8 @@ test('Telegram processing notice runs strictly before image download and auto-de
   const noticeNode = homework.nodes.find(n => n.name === 'Send Processing Notice');
   assert.ok(noticeNode, 'Send Processing Notice node must exist');
   assert.equal(noticeNode.type, 'n8n-nodes-base.telegram');
-  assert.equal(noticeNode.parameters.resource, 'message');
-  assert.equal(noticeNode.parameters.operation, 'sendMessage');
+  assert.equal(noticeNode.parameters.resource ?? 'message', 'message');
+  assert.equal(noticeNode.parameters.operation ?? 'sendMessage', 'sendMessage');
   assert.match(noticeNode.parameters.text, /استلمت الصورة/);
   assert.equal(noticeNode.onError, 'continueErrorOutput');
 
