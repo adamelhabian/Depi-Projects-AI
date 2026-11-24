@@ -587,20 +587,66 @@ test('fast vision labels are accepted only when the earned mark agrees', async (
   await assert.rejects(grade(1), /per-question/);
 });
 
-test('Telegram immediate processing notice node is configured to sendMessage and runs parallel to image download', () => {
-  const draftNode = homework.nodes.find(n => n.name === 'Send Homework Processing Draft');
-  assert.ok(draftNode, 'Send Homework Processing Draft node must exist');
-  assert.equal(draftNode.type, 'n8n-nodes-base.telegram');
-  assert.equal(draftNode.parameters.resource, 'message');
-  assert.equal(draftNode.parameters.operation, 'sendMessage');
-  assert.match(draftNode.parameters.text, /استلمت الصورة/);
-  assert.equal(draftNode.onError, 'continueErrorOutput');
+test('Telegram processing notice runs strictly before image download and auto-deletes after feedback delivery', () => {
+  const noticeNode = homework.nodes.find(n => n.name === 'Send Processing Notice');
+  assert.ok(noticeNode, 'Send Processing Notice node must exist');
+  assert.equal(noticeNode.type, 'n8n-nodes-base.telegram');
+  assert.equal(noticeNode.parameters.resource, 'message');
+  assert.equal(noticeNode.parameters.operation, 'sendMessage');
+  assert.match(noticeNode.parameters.text, /استلمت الصورة/);
+  assert.equal(noticeNode.onError, 'continueErrorOutput');
 
-  // Verify parallel execution from Is Photo Message? (output 0)
-  const isPhotoConnections = homework.connections['Is Photo Message?'].main[0];
-  const targetNodes = isPhotoConnections.map(c => c.node);
-  assert.ok(targetNodes.includes('Download Homework Image'), 'Must connect to Download Homework Image');
-  assert.ok(targetNodes.includes('Send Homework Processing Draft'), 'Must connect in parallel to Send Homework Processing Draft');
+  // Verify sequential order: Is Photo Message? -> Send Processing Notice -> Download Homework Image
+  const isPhotoTargets = homework.connections['Is Photo Message?'].main[0].map(c => c.node);
+  assert.deepEqual(isPhotoTargets, ['Send Processing Notice'], 'Is Photo Message? must run notice strictly first (no parallel fan-out)');
+
+  const noticeOutputs = homework.connections['Send Processing Notice'].main;
+  assert.equal(noticeOutputs[0][0].node, 'Download Homework Image', 'Notice success must proceed to Download Homework Image');
+  assert.equal(noticeOutputs[1][0].node, 'Download Homework Image', 'Notice failure must still proceed to Download Homework Image');
+
+  // Verify cleanup nodes exist and run once without blocking on Telegram delete errors
+  const guardNode = homework.nodes.find(n => n.name === 'Should Delete Notice?');
+  const deleteNode = homework.nodes.find(n => n.name === 'Delete Processing Notice');
+  const ignoreNode = homework.nodes.find(n => n.name === 'Ignore Notice Cleanup Error');
+  assert.ok(guardNode && deleteNode && ignoreNode, 'Notice cleanup nodes must exist');
+  assert.equal(guardNode.executeOnce, true);
+  assert.equal(deleteNode.executeOnce, true);
+  assert.equal(deleteNode.parameters.operation, 'deleteMessage');
+  assert.equal(deleteNode.onError, 'continueErrorOutput');
+  assert.equal(homework.connections['Should Delete Notice?'].main[0][0].node, 'Delete Processing Notice');
+  assert.equal(homework.connections['Delete Processing Notice'].main[1][0].node, 'Ignore Notice Cleanup Error');
+  assert.equal(homework.connections['Send Student Telegram Feedback'].main[0][0].node, 'Should Delete Notice?');
+
+  // Evaluate expressions against strict n8n $-proxy (throws if an unexecuted node is referenced)
+  const evalExpr = (raw, ctx) => {
+    const code = raw.replace(/^=\{\{\s*|\s*\}\}$/g, '');
+    const fn = new Function('$', `return (${code});`);
+    return fn(name => {
+      if (!(name in ctx)) throw new Error(`Node '${name}' hasn't been executed`);
+      return { first: () => ctx[name] };
+    });
+  };
+  const guardExpr = guardNode.parameters.conditions.conditions[0].leftValue;
+
+  // Non-homework routes never execute Send Processing Notice and must evaluate safely to 'skip'
+  for (const route of ['reply', 'parent', 'inquiry']) {
+    assert.equal(evalExpr(guardExpr, { 'Route Private Telegram Message': { json: { route, chat_id: '22' } } }), 'skip');
+  }
+
+  // Failed Send Processing Notice (error output with no message_id) evaluates to 'skip'
+  assert.equal(evalExpr(guardExpr, {
+    'Route Private Telegram Message': { json: { route: 'homework', chat_id: '22' } },
+    'Send Processing Notice': undefined,
+  }), 'skip');
+
+  // Successful Send Processing Notice resolves message_id for deleteMessage
+  const hwCtx = {
+    'Route Private Telegram Message': { json: { route: 'homework', chat_id: '884290887' } },
+    'Send Processing Notice': { json: { ok: true, result: { message_id: 777888 } } },
+  };
+  assert.equal(evalExpr(guardExpr, hwCtx), 'delete');
+  assert.equal(evalExpr(deleteNode.parameters.chatId, hwCtx), '884290887');
+  assert.equal(evalExpr(deleteNode.parameters.messageId, hwCtx), '777888');
 });
 
 test('Telegram rich message node is configured with RTL and fallback error connection', () => {
@@ -617,9 +663,9 @@ test('Telegram rich message node is configured with RTL and fallback error conne
   const formatConnections = homework.connections['Format Feedback and Payload'].main[0];
   assert.equal(formatConnections[0].node, 'Send Rich Student Feedback');
 
-  // Verify duplicate prevention (output 0 is terminal)
+  // Verify duplicate prevention (output 0 goes only to notice cleanup, never to Send Student Telegram Feedback)
   const richOutputs = homework.connections['Send Rich Student Feedback'].main;
-  assert.ok(!richOutputs[0] || richOutputs[0].length === 0, 'Success branch must terminate to avoid duplicate message');
+  assert.deepEqual(richOutputs[0].map(c => c.node), ['Should Delete Notice?'], 'Success branch must only clean up the notice');
 
   // Verify fallback connection on error (output 1 connects to Send Student Telegram Feedback)
   assert.equal(richOutputs[1][0].node, 'Send Student Telegram Feedback', 'Error branch must route to fallback HTML node');

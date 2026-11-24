@@ -4,8 +4,8 @@
   "active": true,
   "publicationStatus": {
     "status": "published",
-    "versionId": "ed2a791a-c287-4a8f-b3ba-e13352f21ee9",
-    "liveVersionId": "ed2a791a-c287-4a8f-b3ba-e13352f21ee9",
+    "versionId": "71c0a45b-ba8c-4a76-97c5-c88b7f8a4273",
+    "liveVersionId": "71c0a45b-ba8c-4a76-97c5-c88b7f8a4273",
     "pendingVersionId": null,
     "triggers": [
       {
@@ -24,6 +24,11 @@
         "errorMessage": null
       },
       {
+        "nodeId": "911d1fcb-68f7-421d-b5d9-37ae155be5f6",
+        "status": "activated",
+        "errorMessage": null
+      },
+      {
         "nodeId": "9845b3fc-338a-41f5-b30c-098c5f2d7ff0",
         "status": "activated",
         "errorMessage": null
@@ -37,12 +42,12 @@
     "errorMessage": null
   },
   "isArchived": false,
-  "versionId": "ed2a791a-c287-4a8f-b3ba-e13352f21ee9",
-  "activeVersionId": "ed2a791a-c287-4a8f-b3ba-e13352f21ee9",
+  "versionId": "71c0a45b-ba8c-4a76-97c5-c88b7f8a4273",
+  "activeVersionId": "71c0a45b-ba8c-4a76-97c5-c88b7f8a4273",
   "triggerCount": 1,
-  "nodeCount": 16,
+  "nodeCount": 19,
   "createdAt": "2026-11-23T12:02:24.015Z",
-  "updatedAt": "2026-11-24T14:14:31.704Z",
+  "updatedAt": "2026-11-24T21:40:49.655Z",
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": true,
@@ -138,12 +143,7 @@
       "main": [
         [
           {
-            "node": "Download Homework Image",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send Homework Processing Draft",
+            "node": "Send Processing Notice",
             "type": "main",
             "index": 0
           }
@@ -296,10 +296,68 @@
     },
     "Send Rich Student Feedback": {
       "main": [
-        null,
+        [
+          {
+            "node": "Should Delete Notice?",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Send Student Telegram Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Processing Notice": {
+      "main": [
+        [
+          {
+            "node": "Download Homework Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Homework Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Student Telegram Feedback": {
+      "main": [
+        [
+          {
+            "node": "Should Delete Notice?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Delete Notice?": {
+      "main": [
+        [
+          {
+            "node": "Delete Processing Notice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Processing Notice": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Ignore Notice Cleanup Error",
             "type": "main",
             "index": 0
           }
@@ -663,7 +721,7 @@
         "text": "⏳ استلمت الصورة، جاري مراجعة الحل وتصحيحه..."
       },
       "id": "79712cae-9a56-4912-b71c-ec12dda765f7",
-      "name": "Send Homework Processing Draft",
+      "name": "Send Processing Notice",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
@@ -704,6 +762,77 @@
           "name": "Telegram account"
         }
       }
+    },
+    {
+      "id": "40ee03b6-7356-4163-9a5b-041d52394c57",
+      "name": "Should Delete Notice?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2288,
+        512
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "dd123456-4234-4234-b234-000000000301",
+              "leftValue": "={{ (() => {\n  if ($('Route Private Telegram Message').first().json.route !== 'homework') return 'skip';\n  try {\n    const msg = $('Send Processing Notice').first()?.json;\n    return (msg?.result?.message_id || msg?.message_id) ? 'delete' : 'skip';\n  } catch {\n    return 'skip';\n  }\n})() }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "delete"
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          }
+        },
+        "options": {}
+      },
+      "executeOnce": true
+    },
+    {
+      "id": "911d1fcb-68f7-421d-b5d9-37ae155be5f6",
+      "name": "Delete Processing Notice",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2512,
+        496
+      ],
+      "parameters": {
+        "chatId": "={{ $('Route Private Telegram Message').first().json.chat_id }}",
+        "messageId": "={{ String($('Send Processing Notice').first().json.result?.message_id ?? $('Send Processing Notice').first().json.message_id) }}",
+        "operation": "deleteMessage",
+        "resource": "message"
+      },
+      "notes": "Deletes the temporary reviewing-homework message after the grading result or error reply is delivered.",
+      "onError": "continueErrorOutput",
+      "executeOnce": true,
+      "webhookId": "71720c10-6208-4aa5-be6b-18c98621472d",
+      "credentials": {
+        "telegramApi": {
+          "id": "J2Z5z5lY8QyDMO9p",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "0cdaa240-16a5-4568-9b0e-dc80a3792f1f",
+      "name": "Ignore Notice Cleanup Error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2736,
+        608
+      ],
+      "parameters": {}
     }
   ],
   "nodeGroups": [],
