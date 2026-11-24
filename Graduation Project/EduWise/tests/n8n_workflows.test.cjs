@@ -701,3 +701,27 @@ test('Structured Output Parser format wrapping in output object is handled seaml
   assert.match(item.json.rich_text, /<details><summary>/);
 });
 
+test('Fourier transform and mixed Arabic-LaTeX solutions render equations in tg-math-block and restore missing backslashes', async () => {
+  const previous = { 'Build Gemini Vision Request': { rubric: [] }, 'Route Private Telegram Message': { chat_id: '99' } };
+  const rawFourier = 'تحويل فورييه لدالة المستطيل rect(t/T) يُعطى بالقانون: mathcal{F}\\{\\text{rect}(t/T)\\} = T \\text{sinc}(T f) أو \\frac{2\\sin(\\omega)}{\\omega}. بما أن T = 2، فإن التحويل هو: \\mathcal{F}(\\omega) = 2 \\text{sinc}(\\omega) = \\frac{2\\sin(\\omega)}{\\omega}.';
+  const question = {
+    question_id: '2',
+    status: 'scored',
+    earned: 0,
+    observed: 'Sinc Sinc(Sin - 1/2) = 0',
+    feedback_ar: 'خطأ في حساب تحويل فورييه لدالة المستطيل rec(t/2).',
+    solution_ar: rawFourier
+  };
+
+  const [item] = await run(homework, 'Format Feedback and Payload',
+    candidate(JSON.stringify({ questions: [question] })), previous);
+
+  const rich = item.json.rich_text;
+  assert.ok(rich.includes('<tg-math-block>\\mathcal{F}\\{\\text{rect}(t/T)\\} = T \\text{sinc}(T f)</tg-math-block>'));
+  assert.ok(rich.includes('<tg-math-block>\\frac{2\\sin(\\omega)}{\\omega}</tg-math-block>'));
+  assert.ok(rich.includes('<tg-math-block>\\mathcal{F}(\\omega) = 2 \\text{sinc}(\\omega) = \\frac{2\\sin(\\omega)}{\\omega}</tg-math-block>'));
+  assert.match(rich, /<details><summary><b>خطوات الحل والتصحيح<\/b><\/summary>/);
+  assert.ok(!rich.match(/(?<!\\)mathcal\{F\}/), 'Must not contain un-backslashed mathcal{F}');
+});
+
+
