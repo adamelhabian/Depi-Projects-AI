@@ -38,8 +38,10 @@ This workflow processes incoming Telegram messages, handles student homework pho
 
 - Trigger: Telegram trigger listening to private messages sent to `@EduWiseBot`.
 - Message router: Directs photo submissions to the vision grader, demo commands (`/parent_risk`, `/parent_absence`, `/parent_ok`) to demo handlers, menu commands (`/start`, `/help`) to the guidance menu, and natural text inquiries to the Center Assistant.
+- Parallel draft notification: Fires a native `sendMessageDraft` notification immediately upon photo detection ("استلمت الصورة، جاري التصحيح") within 1 second while image download and vision inference run in parallel.
 - Media pipeline: Downloads submitted photos (JPEG, PNG, or WebP up to 10 MiB) via the Telegram Bot API and sends them to Gemini Vision.
 - Grading engine: Calculates dynamic question counts, scores student work against provided rubrics or open worksheets, and produces proportional marks ($X / N$).
+- Dual-mode output delivery: Generates both rich messages (`sendRichMessage` with `is_rtl: true`, `<tg-math-block>` for LaTeX equations, and `<details><summary>` for collapsible solutions) and standard HTML fallback messages, preventing duplicate sends on delivery.
 - Center inquiry engine: Gemini evaluates natural language inquiries using structured EduWise knowledge covering schedules, branch locations, fee structures, and makeup policies.
 - Sub-workflow link: Calls the parental intervention alert workflow via native sub-workflow execution when testing guardian alert commands.
 
@@ -73,9 +75,11 @@ Students and parents can ask general inquiries at any time in natural or colloqu
 Students submit homework directly in private chat:
 
 1. Upload a clear photograph of the completed worksheet.
-2. Optional rubric tag: Adding `#HW-01` in the image caption binds the grading to the official answer key and rubric criteria.
-3. Open worksheet grading: Images submitted without a tag are dynamically evaluated. Gemini detects the total number of questions, checks each answer, and returns marks proportional to the detected question count.
-4. Response formatting: Feedback includes total score, question breakdown, identified errors, and model solutions in Arabic.
+2. Immediate acknowledgment: The bot displays an ephemeral draft message ("استلمت الصورة، جاري التصحيح") to provide feedback while analysis completes.
+3. Optional rubric tag: Adding `#HW-01` in the image caption binds the grading to the official answer key and rubric criteria.
+4. Open worksheet grading: Images submitted without a tag are dynamically evaluated. Gemini detects the total number of questions, checks each answer, and returns marks proportional to the detected question count.
+5. Rich response formatting: Feedback includes total score, percentage, question breakdown, identified errors, native LaTeX equation rendering inside `<tg-math-block>`, and expandable model solutions inside `<details><summary>`.
+6. Fault tolerance: If Telegram rejects rich formatting, the workflow automatically routes the response through the standard HTML node, preventing duplicate deliveries.
 
 ---
 
