@@ -4,8 +4,8 @@
   "active": true,
   "publicationStatus": {
     "status": "published",
-    "versionId": "9bfd2395-4782-4899-bdac-3e00669a92e2",
-    "liveVersionId": "9bfd2395-4782-4899-bdac-3e00669a92e2",
+    "versionId": "ed2a791a-c287-4a8f-b3ba-e13352f21ee9",
+    "liveVersionId": "ed2a791a-c287-4a8f-b3ba-e13352f21ee9",
     "pendingVersionId": null,
     "triggers": [
       {
@@ -37,12 +37,12 @@
     "errorMessage": null
   },
   "isArchived": false,
-  "versionId": "9bfd2395-4782-4899-bdac-3e00669a92e2",
-  "activeVersionId": "9bfd2395-4782-4899-bdac-3e00669a92e2",
+  "versionId": "ed2a791a-c287-4a8f-b3ba-e13352f21ee9",
+  "activeVersionId": "ed2a791a-c287-4a8f-b3ba-e13352f21ee9",
   "triggerCount": 1,
   "nodeCount": 16,
   "createdAt": "2026-11-23T12:02:24.015Z",
-  "updatedAt": "2026-11-24T12:49:00.747Z",
+  "updatedAt": "2026-11-24T14:14:31.704Z",
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": true,
@@ -321,7 +321,7 @@
       "typeVersion": 1.5,
       "position": [
         -80,
-        384
+        272
       ],
       "webhookId": "9b88f865-f85d-4682-b334-d6787a897a05",
       "notes": "Bind the same Telegram bot credential to all Telegram nodes in this workflow.",
@@ -342,7 +342,7 @@
       "typeVersion": 2,
       "position": [
         144,
-        384
+        272
       ]
     },
     {
@@ -375,7 +375,7 @@
       "typeVersion": 2.2,
       "position": [
         368,
-        384
+        272
       ]
     },
     {
@@ -437,7 +437,7 @@
       "typeVersion": 2.2,
       "position": [
         592,
-        464
+        608
       ]
     },
     {
@@ -501,11 +501,11 @@
         1328,
         384
       ],
-      "onError": "continueErrorOutput",
-      "notes": "Select the existing Google Gemini credential. The image is uploaded through the Gemini Files API.",
       "retryOnFail": false,
       "maxTries": 2,
       "waitBetweenTries": 1000,
+      "onError": "continueErrorOutput",
+      "notes": "Select the existing Google Gemini credential. The image is uploaded through the Gemini Files API.",
       "credentials": {
         "googlePalmApi": {
           "id": "RMPmOKz0h4BuOyZQ",
@@ -537,7 +537,7 @@
       "typeVersion": 2,
       "position": [
         1840,
-        272
+        240
       ]
     },
     {
@@ -596,7 +596,7 @@
       "typeVersion": 2.2,
       "position": [
         1040,
-        768
+        800
       ]
     },
     {
@@ -626,7 +626,7 @@
       "typeVersion": 1.2,
       "position": [
         1264,
-        848
+        864
       ],
       "onError": "continueErrorOutput",
       "credentials": {
@@ -646,31 +646,32 @@
       "typeVersion": 2,
       "position": [
         1616,
-        912
+        944
       ],
       "onError": "continueErrorOutput"
     },
     {
+      "parameters": {
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": true,
+          "parse_mode": "HTML"
+        },
+        "chatId": "={{ $('Route Private Telegram Message').first().json.chat_id }}",
+        "operation": "sendMessage",
+        "resource": "message",
+        "text": "⏳ استلمت الصورة، جاري مراجعة الحل وتصحيحه..."
+      },
       "id": "79712cae-9a56-4912-b71c-ec12dda765f7",
       "name": "Send Homework Processing Draft",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
         816,
-        480
+        608
       ],
-      "parameters": {
-        "additionalFields": {
-          "parse_mode": "HTML"
-        },
-        "chatId": "={{ $('Route Private Telegram Message').first().json.chat_id }}",
-        "draftId": "={{ $('Telegram Photo Trigger').first().json.message?.message_id || 1 }}",
-        "operation": "sendMessageDraft",
-        "resource": "message",
-        "text": "استلمت الصورة، جاري التصحيح"
-      },
-      "onError": "continueErrorOutput",
       "webhookId": "a801987d-d050-4481-bb5a-eb2e1daf06f0",
+      "onError": "continueErrorOutput",
       "credentials": {
         "telegramApi": {
           "id": "J2Z5z5lY8QyDMO9p",
@@ -679,26 +680,24 @@
       }
     },
     {
+      "parameters": {
+        "operation": "sendRichMessage",
+        "chatId": "={{ $json.chat_id || $('Route Private Telegram Message').first().json.chat_id }}",
+        "richMessageText": "={{ $json.rich_text || $json.text }}",
+        "additionalFields": {
+          "is_rtl": true
+        }
+      },
       "id": "5150d946-065b-4c98-95af-66797c6e99e9",
       "name": "Send Rich Student Feedback",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
         1840,
-        464
+        512
       ],
-      "parameters": {
-        "additionalFields": {
-          "is_rtl": true
-        },
-        "chatId": "={{ $json.chat_id || $('Route Private Telegram Message').first().json.chat_id }}",
-        "operation": "sendRichMessage",
-        "resource": "message",
-        "richFormat": "html",
-        "richMessageText": "={{ $json.rich_text || $json.text }}"
-      },
-      "onError": "continueErrorOutput",
       "webhookId": "b19ea8f8-a251-4ad4-95a8-82939b876de4",
+      "onError": "continueErrorOutput",
       "credentials": {
         "telegramApi": {
           "id": "J2Z5z5lY8QyDMO9p",

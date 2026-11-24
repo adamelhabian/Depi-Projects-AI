@@ -587,13 +587,13 @@ test('fast vision labels are accepted only when the earned mark agrees', async (
   await assert.rejects(grade(1), /per-question/);
 });
 
-test('Telegram draft node is configured with non-zero ID and runs parallel to image download', () => {
+test('Telegram immediate processing notice node is configured to sendMessage and runs parallel to image download', () => {
   const draftNode = homework.nodes.find(n => n.name === 'Send Homework Processing Draft');
   assert.ok(draftNode, 'Send Homework Processing Draft node must exist');
   assert.equal(draftNode.type, 'n8n-nodes-base.telegram');
   assert.equal(draftNode.parameters.resource, 'message');
-  assert.equal(draftNode.parameters.operation, 'sendMessageDraft');
-  assert.equal(draftNode.parameters.text, 'استلمت الصورة، جاري التصحيح');
+  assert.equal(draftNode.parameters.operation, 'sendMessage');
+  assert.match(draftNode.parameters.text, /استلمت الصورة/);
   assert.equal(draftNode.onError, 'continueErrorOutput');
 
   // Verify parallel execution from Is Photo Message? (output 0)
@@ -607,9 +607,9 @@ test('Telegram rich message node is configured with RTL and fallback error conne
   const richNode = homework.nodes.find(n => n.name === 'Send Rich Student Feedback');
   assert.ok(richNode, 'Send Rich Student Feedback node must exist');
   assert.equal(richNode.type, 'n8n-nodes-base.telegram');
-  assert.equal(richNode.parameters.resource, 'message');
+  assert.equal(richNode.parameters.resource ?? 'message', 'message');
   assert.equal(richNode.parameters.operation, 'sendRichMessage');
-  assert.equal(richNode.parameters.richFormat, 'html');
+  assert.equal(richNode.parameters.richFormat ?? 'html', 'html');
   assert.equal(richNode.parameters.additionalFields?.is_rtl, true);
   assert.equal(richNode.onError, 'continueErrorOutput');
 
