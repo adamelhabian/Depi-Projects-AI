@@ -26,7 +26,7 @@ test('prototype graphs use native providers and a single Telegram trigger', () =
     assert.ok(workflow.nodes.every(node => !node.type.endsWith('.httpRequest')));
     for (const [name, connection] of Object.entries(workflow.connections)) {
       assert.ok(nodes.has(name));
-      for (const edge of connection.main.flat()) assert.ok(nodes.has(edge.node));
+      for (const edge of (connection.main ?? []).flat().filter(Boolean)) assert.ok(nodes.has(edge.node));
     }
     for (const node of workflow.nodes) {
       if (node.parameters.jsCode) assert.doesNotThrow(() => new AsyncFunction(node.parameters.jsCode));
@@ -163,7 +163,7 @@ test('edge case: English high-school sheet (4 questions, 4 correct -> 4/4 100%)'
   assert.equal(result.json.max_score, 4);
   assert.equal(result.json.percentage, 100);
   assert.match(result.json.text, /4 من 4 \(100٪\)/);
-  assert.match(result.json.text, /Algebra & Calculus/);
+  assert.match(result.json.text, /Algebra &amp; Calculus/);
   assert.match(result.json.text, /✅/);
   assert.doesNotMatch(result.json.text, /\\n/);
   assert.doesNotMatch(result.json.text, /"questions":/);
@@ -220,11 +220,11 @@ test('Telegram message formatting has proper emojis, line breaks, and no raw JSO
   ];
   const payload = candidate(JSON.stringify({ student_name: 'عمر', assignment_title: 'جبر', feedback_ar: 'استمر في التفوق!', questions }));
   const [result] = await run(homework, 'Format Feedback and Payload', payload, previous);
-  assert.match(result.json.text, /📝/);
+  assert.match(result.json.text, /^📊 <b>النتيجة/);
   assert.match(result.json.text, /👤/);
   assert.match(result.json.text, /📊/);
   assert.match(result.json.text, /✅/);
-  assert.match(result.json.text, /💡/);
+  assert.match(result.json.text, /<code>/);
   assert.doesNotMatch(result.json.text, /\\n/);
   assert.doesNotMatch(result.json.text, /{"/);
 });
@@ -278,11 +278,14 @@ test('/start and /help menu announces all 3 core capabilities in clean BiDi layo
   }
 });
 
+async function routeInquiry(query) {
+  const [item] = await run(homework, 'Route Private Telegram Message', { message: { ...message, text: query } });
+  return { 'Route Private Telegram Message': item.json };
+}
+
 test('Format Center Inquiry Response delivers accurate knowledge answers for schedules, fees, locations, and makeup', async () => {
   // 1. Schedule inquiry
-  const schedPrev = {
-    'Route Private Telegram Message': { chat_id: '22', query: 'ما هي مواعيد الحصص ومجموعات الجمعة؟' }
-  };
+  const schedPrev = await routeInquiry('ما هي مواعيد الحصص ومجموعات الجمعة؟');
   const [schedRes] = await run(homework, 'Format Center Inquiry Response', candidate(''), schedPrev);
   assert.equal(schedRes.json.route, 'inquiry');
   assert.match(schedRes.json.text, /الأول الثانوي/);
@@ -292,9 +295,7 @@ test('Format Center Inquiry Response delivers accurate knowledge answers for sch
   assert.match(schedRes.json.text, /الأحد/);
 
   // 2. Fees & Booklets inquiry
-  const feesPrev = {
-    'Route Private Telegram Message': { chat_id: '22', query: 'كام سعر الملازم والاشتراك الشهري؟' }
-  };
+  const feesPrev = await routeInquiry('كام سعر الملازم والاشتراك الشهري؟');
   const [feesRes] = await run(homework, 'Format Center Inquiry Response', candidate(''), feesPrev);
   assert.equal(feesRes.json.route, 'inquiry');
   assert.match(feesRes.json.text, /60 جنيه/);
@@ -303,9 +304,7 @@ test('Format Center Inquiry Response delivers accurate knowledge answers for sch
   assert.match(feesRes.json.text, /850 جنيه/);
 
   // 3. Locations inquiry
-  const locPrev = {
-    'Route Private Telegram Message': { chat_id: '22', query: 'أين يقع مقر السنتر في مدينة نصر والدقي؟' }
-  };
+  const locPrev = await routeInquiry('أين يقع مقر السنتر في مدينة نصر والدقي؟');
   const [locRes] = await run(homework, 'Format Center Inquiry Response', candidate(''), locPrev);
   assert.equal(locRes.json.route, 'inquiry');
   assert.match(locRes.json.text, /مدينة نصر/);
@@ -315,9 +314,7 @@ test('Format Center Inquiry Response delivers accurate knowledge answers for sch
   assert.match(locRes.json.text, /01012345678/);
 
   // 4. Makeup & Absence policy inquiry
-  const makeupPrev = {
-    'Route Private Telegram Message': { chat_id: '22', query: 'لو غبت حصة إزاي أقدر أعوض؟' }
-  };
+  const makeupPrev = await routeInquiry('لو غبت حصة إزاي أقدر أعوض؟');
   const [makeupRes] = await run(homework, 'Format Center Inquiry Response', candidate(''), makeupPrev);
   assert.equal(makeupRes.json.route, 'inquiry');
   assert.match(makeupRes.json.text, /بعذر/);
@@ -438,7 +435,7 @@ test('Gemini Center Assistant system prompt and graph topology verification', ()
 
 test('Format Center Inquiry Response handles diverse Egyptian inquiries and default fallback', async () => {
   const checkAnswer = async (query) => {
-    const prev = { 'Route Private Telegram Message': { chat_id: '22', query } };
+    const prev = await routeInquiry(query);
     const [res] = await run(homework, 'Format Center Inquiry Response', candidate(''), prev);
     return res.json.text;
   };
@@ -466,7 +463,7 @@ test('Format Center Inquiry Response handles diverse Egyptian inquiries and defa
   assert.match(qGeneral, /سياسة الغياب/);
 });
 
-test('end-to-end workflow execution of a live Telegram inquiry through the full node pipeline', async () => {
+test('Telegram inquiry pipeline with a simulated Gemini response', async () => {
   // Step 1: Telegram incoming message
   const inquiryText = 'ما هي مواعيد مجموعات الثانوية العامة ومقر مدينة نصر؟';
   const incomingTelegramEvent = {
@@ -517,7 +514,190 @@ test('end-to-end workflow execution of a live Telegram inquiry through the full 
   assert.equal(telegramSendNode.parameters.text, "={{ $json.text }}");
 });
 
+test('scoring ignores praise, checks the complete rubric and escapes Telegram HTML', async () => {
+  const prior = {
+    'Route Private Telegram Message': { chat_id: '22' },
+    'Build Gemini Vision Request': { rubric: ['1', '2', '3', '4'].map(question_id => ({ question_id })) },
+  };
+  const questions = ['1', '2', '3', '4'].map((question_id, i) => ({
+    question_id, status: 'scored', earned: i === 0 ? 0 : 1,
+    observed: 'x_1 < 2 & x > 0', feedback_ar: 'راجع المقارنة', solution_ar: 'المساحة 154',
+  }));
+  const grade = async qs => (await run(homework, 'Format Feedback and Payload',
+    candidate(JSON.stringify({ questions: qs, feedback_ar: 'جميع الإجابات صحيحة' })), prior))[0].json;
+  const valid = await grade(questions);
+  assert.equal(valid.score, 3);
+  assert.equal(valid.max_score, 4);
+  assert.doesNotMatch(valid.text, /جميع الإجابات صحيحة/);
+  assert.match(valid.text, /x_1 &lt; 2 &amp; x &gt; 0/);
+  for (const invalid of [questions.slice(0, 1), [...questions.slice(0, 3), questions[0]],
+    [...questions.slice(0, 3), { ...questions[3], question_id: '5' }]]) {
+    const result = await grade(invalid);
+    assert.equal(result.status, 'needs_review');
+    assert.equal(result.score, null);
+    assert.equal(result.max_score, 4);
+  }
+});
 
+test('provider errors and truncated replies use the same local center answer', async () => {
+  const previous = await routeInquiry('مصاريف الاشتراك كام؟');
+  const [failure] = await run(homework, 'Build Demo Error Reply', { error: 'Unavailable' }, previous);
+  const [partial] = await run(homework, 'Format Center Inquiry Response', candidate('partial', 'MAX_TOKENS'), previous);
+  assert.equal(failure.json.text, partial.json.text);
+  assert.equal(failure.json.source, 'local');
+  assert.match(failure.json.text, /550 جنيه/);
+  const [ok] = await run(homework, 'Format Center Inquiry Response', candidate('<3 & >'), previous);
+  assert.equal(ok.json.source, 'gemini');
+  assert.equal(ok.json.text, '&lt;3 &amp; &gt;');
+});
 
+test('Laplace math keeps shifts and denominators grouped in left-to-right Telegram code', async () => {
+  const previous = { 'Build Gemini Vision Request': { rubric: [] }, 'Route Private Telegram Message': { chat_id: '22' } };
+  const formula = 'F(s) = e^{-(s+3)} \\left(\\frac{2}{(s+3)^{3}} + \\frac{2}{(s+3)^{2}} + \\frac{1}{s+3}\\right)';
+  const question = { question_id: '1', status: 'scored', earned: 0, observed: 'x < 3', feedback_ar: 'راجع الإزاحة.',
+    solution_ar: 'نطبّق الإزاحة الزمنية.\n$' + formula + '$' };
+  const [item] = await run(homework, 'Format Feedback and Payload', candidate(JSON.stringify({questions:[question]})), previous);
+  const message = item.json.text;
+  assert.match(message, /^📊 <b>النتيجة/);
+  assert.match(message, /<code>\u2066F\(s\) = e\^\(-\(s\+3\)\)/);
+  assert.match(message, /2\/\(\(s\+3\)³\)/);
+  assert.match(message, /1\/\(s\+3\)/);
+  assert.match(message, /x &lt; 3/);
+  assert.doesNotMatch(message, /\\(?:frac|left|right)|[$═─]/);
+});
 
+test('fixed rubric supplies a worked result when the model only returns marks', async () => {
+  const route = {assignment_code:'HW-01', chat_id:'22'};
+  const [built] = await run(homework, 'Build Gemini Vision Request', {}, {'Route Private Telegram Message':route},
+    { getBinaryDataBuffer: async () => Buffer.from([255,216,255]) }, {data:{}});
+  const questions = [1,1,0,1].map((earned,i) => ({question_id:String(i+1),status:'scored',earned,observed:'44',feedback_ar:'',solution_ar:''}));
+  const [item] = await run(homework, 'Format Feedback and Payload', candidate(JSON.stringify({questions})), {
+    'Build Gemini Vision Request': built.json, 'Route Private Telegram Message':route});
+  assert.equal(item.json.score, 3);
+  assert.match(item.json.text, /A = 154 cm²/);
+});
+
+test('fast vision labels are accepted only when the earned mark agrees', async () => {
+  const previous = { 'Build Gemini Vision Request': {rubric: []}, 'Route Private Telegram Message': {chat_id: '22'} };
+  const q = {question_id:'1', status:'incorrect', earned:0, observed:'x = 2', feedback_ar:'راجع الإشارة.', solution_ar:'باستخدام x = 1 نحصل على الناتج.\ny = 2'};
+  const grade = earned => run(homework, 'Format Feedback and Payload', candidate(JSON.stringify({questions:[{...q, earned}]})), previous);
+  const [result] = await grade(0);
+  assert.equal(result.json.score, 0);
+  assert.match(result.json.text, /باستخدام <code>\u2066x = 1\u2069<\/code> نحصل/);
+  await assert.rejects(grade(1), /per-question/);
+});
+
+test('Telegram draft node is configured with non-zero ID and runs parallel to image download', () => {
+  const draftNode = homework.nodes.find(n => n.name === 'Send Homework Processing Draft');
+  assert.ok(draftNode, 'Send Homework Processing Draft node must exist');
+  assert.equal(draftNode.type, 'n8n-nodes-base.telegram');
+  assert.equal(draftNode.parameters.resource, 'message');
+  assert.equal(draftNode.parameters.operation, 'sendMessageDraft');
+  assert.equal(draftNode.parameters.text, 'استلمت الصورة، جاري التصحيح');
+  assert.equal(draftNode.onError, 'continueErrorOutput');
+
+  // Verify parallel execution from Is Photo Message? (output 0)
+  const isPhotoConnections = homework.connections['Is Photo Message?'].main[0];
+  const targetNodes = isPhotoConnections.map(c => c.node);
+  assert.ok(targetNodes.includes('Download Homework Image'), 'Must connect to Download Homework Image');
+  assert.ok(targetNodes.includes('Send Homework Processing Draft'), 'Must connect in parallel to Send Homework Processing Draft');
+});
+
+test('Telegram rich message node is configured with RTL and fallback error connection', () => {
+  const richNode = homework.nodes.find(n => n.name === 'Send Rich Student Feedback');
+  assert.ok(richNode, 'Send Rich Student Feedback node must exist');
+  assert.equal(richNode.type, 'n8n-nodes-base.telegram');
+  assert.equal(richNode.parameters.resource, 'message');
+  assert.equal(richNode.parameters.operation, 'sendRichMessage');
+  assert.equal(richNode.parameters.richFormat, 'html');
+  assert.equal(richNode.parameters.additionalFields?.is_rtl, true);
+  assert.equal(richNode.onError, 'continueErrorOutput');
+
+  // Verify Format Feedback connects to Send Rich Student Feedback
+  const formatConnections = homework.connections['Format Feedback and Payload'].main[0];
+  assert.equal(formatConnections[0].node, 'Send Rich Student Feedback');
+
+  // Verify duplicate prevention (output 0 is terminal)
+  const richOutputs = homework.connections['Send Rich Student Feedback'].main;
+  assert.ok(!richOutputs[0] || richOutputs[0].length === 0, 'Success branch must terminate to avoid duplicate message');
+
+  // Verify fallback connection on error (output 1 connects to Send Student Telegram Feedback)
+  assert.equal(richOutputs[1][0].node, 'Send Student Telegram Feedback', 'Error branch must route to fallback HTML node');
+});
+
+test('rich formatting produces tg-math-block and collapsible details for homework report', async () => {
+  const route = { assignment_code: 'HW-01', chat_id: '884290887' };
+  const [built] = await run(homework, 'Build Gemini Vision Request', {}, { 'Route Private Telegram Message': route },
+    { getBinaryDataBuffer: async () => Buffer.from([255, 216, 255]) }, { data: {} });
+
+  const questions = [
+    { question_id: '1', status: 'scored', earned: 1, observed: 'x = 4', feedback_ar: '', solution_ar: '' },
+    { question_id: '2', status: 'scored', earned: 1, observed: '6x + 5', feedback_ar: '', solution_ar: '' },
+    { question_id: '3', status: 'scored', earned: 0, observed: '44', feedback_ar: 'الناتج 44 هو المحيط وليس المساحة.', solution_ar: '' },
+    { question_id: '4', status: 'scored', earned: 1, observed: '45°', feedback_ar: '', solution_ar: '' }
+  ];
+
+  const [item] = await run(homework, 'Format Feedback and Payload',
+    candidate(JSON.stringify({ student_name: 'زياد', assignment_title: 'واجب التفاضل #HW-01', questions })),
+    { 'Build Gemini Vision Request': built.json, 'Route Private Telegram Message': route });
+
+  assert.equal(item.json.score, 3);
+  assert.equal(item.json.max_score, 4);
+  assert.equal(item.json.percentage, 75);
+
+  // Standard fallback text assertions
+  assert.match(item.json.text, /📊 <b>النتيجة: 3 من 4 \(75٪\)<\/b>/);
+  assert.match(item.json.text, /A = 154 cm²/);
+
+  // Rich message assertions
+  const rich = item.json.rich_text;
+  assert.ok(rich, 'rich_text must be present on output');
+  assert.match(rich, /📊 <b>النتيجة: 3 من 4 \(75٪\)<\/b>/);
+  assert.match(rich, /👤 زياد/);
+  assert.match(rich, /<details><summary><b>الحل النموذجي<\/b><\/summary>/);
+  assert.match(rich, /<details><summary><b>خطوات الحل والتصحيح<\/b><\/summary>/);
+  assert.match(rich, /<tg-math-block>/);
+});
+
+test('Laplace formula renders in native tg-math-block with shift and cubic denominator preserved', async () => {
+  const previous = { 'Build Gemini Vision Request': { rubric: [] }, 'Route Private Telegram Message': { chat_id: '99' } };
+  const formula = 'F(s) = e^{-(s+3)} \\left(\\frac{2}{(s+3)^{3}} + \\frac{2}{(s+3)^{2}} + \\frac{1}{s+3}\\right)';
+  const question = {
+    question_id: '1',
+    status: 'scored',
+    earned: 0,
+    observed: 'F(s) = \\frac{1}{s}',
+    feedback_ar: 'راجع قانون الإزاحة الزمنية.',
+    solution_ar: 'نطبّق الإزاحة الزمنية:\n$' + formula + '$'
+  };
+
+  const [item] = await run(homework, 'Format Feedback and Payload',
+    candidate(JSON.stringify({ questions: [question] })), previous);
+
+  const rich = item.json.rich_text;
+  assert.ok(rich.includes('<tg-math-block>' + formula + '</tg-math-block>'));
+  assert.match(rich, /<details><summary><b>خطوات الحل والتصحيح<\/b><\/summary>/);
+  assert.match(rich, /نطبّق الإزاحة الزمنية:/);
+});
+
+test('Structured Output Parser format wrapping in output object is handled seamlessly', async () => {
+  const previous = { 'Build Gemini Vision Request': { rubric: [] }, 'Route Private Telegram Message': { chat_id: '99' } };
+  const mockStructuredOutput = {
+    output: {
+      student_name: 'أحمد',
+      assignment_title: 'اختبار الجبر',
+      questions: [
+        { question_id: '1', status: 'scored', earned: 1, observed: 'x = 2', feedback_ar: '', solution_ar: 'x = 2' },
+        { question_id: '2', status: 'scored', earned: 0.5, observed: 'y < 5', feedback_ar: 'راجع علامة المتباينة', solution_ar: 'y <= 5' }
+      ]
+    }
+  };
+
+  const [item] = await run(homework, 'Format Feedback and Payload', mockStructuredOutput, previous);
+  assert.equal(item.json.score, 1.5);
+  assert.equal(item.json.max_score, 2);
+  assert.equal(item.json.percentage, 75);
+  assert.match(item.json.rich_text, /📊 <b>النتيجة: 1\.5 من 2 \(75٪\)<\/b>/);
+  assert.match(item.json.rich_text, /<details><summary>/);
+});
 

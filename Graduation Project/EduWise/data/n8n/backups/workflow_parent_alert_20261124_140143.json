@@ -1,0 +1,473 @@
+{
+  "id": "C04gl8dLAMCxy4Zm",
+  "name": "Smart Parental Intervention Alert",
+  "active": true,
+  "publicationStatus": {
+    "status": "published",
+    "versionId": "732480b0-d67f-44a3-85d5-b359a5036ef2",
+    "liveVersionId": "732480b0-d67f-44a3-85d5-b359a5036ef2",
+    "pendingVersionId": null,
+    "triggers": [
+      {
+        "nodeId": "5fea6060-45ed-4b87-a1a1-396b9ab93c64",
+        "status": "activated",
+        "errorMessage": null
+      },
+      {
+        "nodeId": "6fd9da91-0f63-414e-b837-8be5eee24c2c",
+        "status": "activated",
+        "errorMessage": null
+      },
+      {
+        "nodeId": "84f36552-7ecb-4446-a5f4-de84b92ef86a",
+        "status": "activated",
+        "errorMessage": null
+      },
+      {
+        "nodeId": "db4c641d-69ae-4870-b318-4019ad080c35",
+        "status": "activated",
+        "errorMessage": null
+      }
+    ],
+    "errorMessage": null
+  },
+  "isArchived": false,
+  "versionId": "732480b0-d67f-44a3-85d5-b359a5036ef2",
+  "activeVersionId": "732480b0-d67f-44a3-85d5-b359a5036ef2",
+  "triggerCount": 1,
+  "nodeCount": 13,
+  "createdAt": "2026-11-23T12:02:01.270Z",
+  "updatedAt": "2026-11-23T19:36:57.896Z",
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 180
+  },
+  "tags": [],
+  "parentFolderId": "KgFYqfF2KSHdvRUU",
+  "description": "Dispatches empathetic Arabic Telegram alerts to parents when a student is at-risk or has >= 3 absences.",
+  "scopes": [
+    "execution:delete",
+    "execution:list",
+    "execution:read",
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true,
+  "connections": {
+    "Preview Demo Manually": {
+      "main": [
+        [
+          {
+            "node": "Validate Alert Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Demo Scenario": {
+      "main": [
+        [
+          {
+            "node": "Validate Alert Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Preview Webhook Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preview Webhook Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond to Demo Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Alert Input": {
+      "main": [
+        [
+          {
+            "node": "At Risk or Missed 3 Sessions?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "At Risk or Missed 3 Sessions?": {
+      "main": [
+        [
+          {
+            "node": "Generate Arabic Parent Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip No Intervention Needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Arabic Parent Message": {
+      "main": [
+        [
+          {
+            "node": "Format Parent Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Parent Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "Has Private Telegram Chat?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip No Intervention Needed": {
+      "main": [
+        [
+          {
+            "node": "Has Private Telegram Chat?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Private Telegram Chat?": {
+      "main": [
+        [
+          {
+            "node": "Send Parent Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Parent Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "Record Telegram Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "5fea6060-45ed-4b87-a1a1-396b9ab93c64",
+      "name": "Preview Demo Manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "6fd9da91-0f63-414e-b837-8be5eee24c2c",
+      "name": "Receive Demo Scenario",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "student-eval",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "84f36552-7ecb-4446-a5f4-de84b92ef86a",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        464
+      ],
+      "webhookId": "deaf38db-49f4-45c7-a5bd-21cc70f831bb",
+      "notes": "Return a generic prototype preview. Telegram delivery is handled by the private bot conversation."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body=$input.first().json.body;\n  if (!body || typeof body!=='object') return [{json:{status:'invalid_payload',preview_only:true}}];\n  const missed=Number(body.missed_sessions_count ?? 0);\n  if (!Number.isSafeInteger(missed) || missed<0 || missed>1000) return [{json:{status:'invalid_attendance',preview_only:true}}];\n  const risk=body.is_at_risk===true || body.is_at_risk===1 || body.is_at_risk==='1';\n  const should_alert=risk || missed>=3;\n  const message=should_alert\n    ? '🔔 EduWise Demo | الطالب التجريبي يحتاج متابعة بسبب '+(risk ? 'مؤشرات الأداء.' : 'الغياب المتكرر.')\n    : '✅ EduWise Demo | البيانات التجريبية لا تستدعي تنبيهاً.';\n  return [{json:{status:'preview',preview_only:true,should_alert,message}}];"
+      },
+      "id": "cfc29021-4cae-4c10-8329-454b72b3d9d1",
+      "name": "Preview Webhook Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": "={{ $json.status === 'preview' ? 200 : 400 }}"
+        }
+      },
+      "id": "4281374c-83c4-4bdc-ac68-d1080f04cb6b",
+      "name": "Respond to Demo Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        448,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst scenarios = {\n  absence: { topic: 'attendance', missed: 4, risk: false },\n  risk: { topic: 'academic', missed: 1, risk: true },\n  ok: { topic: 'general', missed: 1, risk: false },\n};\nconst scenario = Object.hasOwn(scenarios, input.scenario) ? input.scenario : 'absence';\nconst selected = scenarios[scenario];\nconst chatId = input.route === 'parent' && typeof input.chat_id === 'string' && /^[1-9][0-9]{0,15}$/.test(input.chat_id) ? input.chat_id : null;\nreturn [{ json: { ...selected, scenario, chat_id: chatId, route: selected.risk || selected.missed >= 3 ? 'alert' : 'skip' } }];"
+      },
+      "id": "6db56fa2-7342-4e80-8919-58e55cb48c63",
+      "name": "Validate Alert Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dd123456-4234-4234-b234-000000000204",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "alert",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f72dacf3-7eab-4240-8939-cf1b7f748a75",
+      "name": "At Risk or Missed 3 Sessions?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-3.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Support category: {{ $json.topic }}"
+            }
+          ]
+        },
+        "simplify": false,
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "Select one approved parent coaching tip for this synthetic demo. Reply with exactly ATTENDANCE for attendance or STUDY_PLAN for academic difficulty. Reply with CHECK_IN for any other category. Return only the code.",
+          "maxOutputTokens": 512
+        }
+      },
+      "id": "70e10603-fc85-4988-88d1-24b44f6903e5",
+      "name": "Generate Arabic Parent Message",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        -48
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RMPmOKz0h4BuOyZQ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const demo = $('Validate Alert Input').first().json;\nconst candidate = $input.first().json.candidates?.[0];\nconst code = candidate?.finishReason === 'STOP'\n  ? candidate.content?.parts?.filter(part => !part.thought && typeof part.text === 'string').map(part => part.text).join('').trim()\n  : '';\nconst tips = {\n  ATTENDANCE: 'اتفقوا مع الطالب على تذكير بمواعيد الحصص.',\n  STUDY_PLAN: 'ابدؤوا بموضوع واحد للمراجعة لمدة قصيرة يومياً.',\n  CHECK_IN: 'اسألوا الطالب عن نوع المساعدة اللي يحتاجها.',\n};\nconst expected = demo.topic === 'attendance' ? 'ATTENDANCE' : 'STUDY_PLAN';\nconst usedGemini = code === expected || code === 'CHECK_IN';\nconst reason = demo.risk\n  ? 'مؤشرات الأداء في المثال بتشير إن الطالب يحتاج مراجعة ودعم.'\n  : 'سجّلنا في المثال غياب ' + demo.missed + ' حصص.';\nconst text = [\n  '🔔 تنبيه ولي أمر | EduWise Demo',\n  'الطالب: طالب تجريبي',\n  reason,\n  'خطوة مقترحة: ' + tips[usedGemini ? code : expected],\n].join('\\n');\nreturn [{ json: { text, chat_id: demo.chat_id, status: 'intervention', source: usedGemini ? 'gemini' : 'fallback' } }];"
+      },
+      "id": "c9a7c809-ff45-457d-a9c1-6445d01eb54f",
+      "name": "Format Parent Telegram Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { status: 'skipped', chat_id: $('Validate Alert Input').first().json.chat_id, text: '✅ EduWise Demo | مفيش تنبيه. الطالب التجريبي غاب حصة واحدة ومؤشرات الأداء مستقرة.' } }];"
+      },
+      "id": "2a5f56c4-8480-4c16-86ae-522d61835065",
+      "name": "Skip No Intervention Needed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dd123456-4234-4234-b234-000000000255",
+              "leftValue": "={{ $json.chat_id ? 'telegram' : 'preview' }}",
+              "rightValue": "telegram",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b35bd2ee-68f1-4bae-8a99-3d060463c5ea",
+      "name": "Has Private Telegram Chat?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const result=$input.first().json;\n   const id=result.ok===true && Number.isSafeInteger(result.result?.message_id) ? result.result.message_id : null;\n   return [{json:{status:id ? 'telegram_accepted' : 'delivery_unconfirmed',message_id:id}}];"
+      },
+      "id": "4223f1dc-090c-49cf-9715-205d6d6d5e07",
+      "name": "Record Telegram Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        48
+      ]
+    },
+    {
+      "id": "db4c641d-69ae-4870-b318-4019ad080c35",
+      "name": "Send Parent Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        48
+      ],
+      "parameters": {
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": true,
+          "parse_mode": "HTML"
+        },
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.text }}"
+      },
+      "webhookId": "91d26aba-b937-4870-9c8d-2a9ff6c3a32d",
+      "credentials": {
+        "telegramApi": {
+          "id": "J2Z5z5lY8QyDMO9p",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "nodeGroups": [],
+  "activeVersion": {
+    "sameAsDraft": true
+  },
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true
+  }
+}
