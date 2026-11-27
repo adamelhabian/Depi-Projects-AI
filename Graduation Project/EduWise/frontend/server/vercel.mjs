@@ -1,5 +1,5 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
-import { BlobPreconditionFailedError, del, get, put } from '@vercel/blob';
+import { BlobPreconditionFailedError, del, get, head, put } from '@vercel/blob';
 import { DomainError, validateWorkspace } from '../src/domain/workspace.js';
 import { createHandler } from './http.mjs';
 import { applyWorkspaceCommand, freshWorkspace, workspaceResponse, workspaceUser } from './workspace.mjs';
@@ -12,7 +12,7 @@ const privateAccess = { access: 'private' };
 const jsonOptions = { ...privateAccess, contentType: 'application/json', addRandomSuffix: false };
 
 async function readBlob(path) {
-  const blob = await get(path, { ...privateAccess, useCache: false });
+  const blob = await get(path, { ...privateAccess, useCache: false, headers: { 'Accept-Encoding': 'identity' } });
   if (!blob) return null;
   return { etag: blob.blob.etag, data: await new Response(blob.stream).json() };
 }
@@ -44,8 +44,12 @@ const workspace = {
       const { etag, data } = await loadWorkspace();
       const next = applyWorkspaceCommand(data, user, command, input, options);
       if (next === data) return workspaceResponse(next, user);
+      const current = await head(workspacePath);
+      // CDN responses can quote the tag or mark the representation weak.
+      // Only use the storage API's exact tag after matching it to the body we read.
+      if (!etag || normalizeEtag(etag) !== normalizeEtag(current.etag)) continue;
       try {
-        await put(workspacePath, JSON.stringify(next), { ...jsonOptions, allowOverwrite: true, ifMatch: etag });
+        await put(workspacePath, JSON.stringify(next), { ...jsonOptions, allowOverwrite: true, ifMatch: current.etag });
         return workspaceResponse(next, user);
       } catch (error) {
         if (!(error instanceof BlobPreconditionFailedError)) throw error;
@@ -54,6 +58,10 @@ const workspace = {
     throw new DomainError('CONFLICT');
   },
 };
+
+function normalizeEtag(value) {
+  return value?.replace(/^W\//i, '').replace(/^"|"$/g, '');
+}
 
 function blobSessions(secret) {
   const sign = id => createHmac('sha256', secret).update(`${prefix}:${id}`).digest('hex');

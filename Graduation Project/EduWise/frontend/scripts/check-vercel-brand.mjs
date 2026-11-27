@@ -38,7 +38,7 @@ try{
  await page.screenshot({path:resolve(root,'test-results/vercel-brand-mobile.png'),fullPage:true});
  await page.setViewportSize({width:1440,height:1000});await page.evaluate(()=>scrollTo(0,0));
  await page.screenshot({path:resolve(root,'test-results/vercel-brand-desktop.png')});
- await page.goto(origin+'/',{waitUntil:'networkidle'});
+ await page.goto(origin+'/?mode=demo',{waitUntil:'networkidle'});
  await page.locator('.brand img').first().waitFor({state:'attached'});
  if(!await page.locator('.brand img').first().getAttribute('src').then(x=>x.includes('forward-pages')))throw Error('Live demo logo is incorrect.');
  if(errors.length)throw Error(errors.join('\n'));

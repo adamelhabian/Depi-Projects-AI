@@ -44,7 +44,7 @@ for (const button of document.querySelectorAll('[data-product-view]')) {
     const image = document.querySelector('#product-preview-image');
     image.src = `./preview-${view}.png`;
     image.alt = view === 'overview' ? 'لقطة من لوحة اليوم في الديمو العربي' : 'لقطة من مكتبة المصادر في الديمو العربي';
-    document.querySelector('#product-preview-link').href = view === 'overview' ? '/#overview' : '/#materials';
+    document.querySelector('#product-preview-link').href = view === 'overview' ? '/?mode=demo#overview' : '/?mode=demo#materials';
     document.querySelector('#product-preview-status').textContent = view === 'overview' ? 'معاينة لوحة اليوم.' : 'معاينة مكتبة المصادر.';
   });
 }

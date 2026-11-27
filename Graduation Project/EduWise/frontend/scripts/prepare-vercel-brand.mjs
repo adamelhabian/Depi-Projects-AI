@@ -55,7 +55,7 @@ try{
  await page.setViewportSize({width:390,height:844});
  await page.evaluate(()=>document.fonts.ready);
  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Brand page overflows on mobile.');
- await page.goto(origin+'/',{waitUntil:'networkidle'});
+ await page.goto(origin+'/?mode=demo',{waitUntil:'networkidle'});
  await page.locator('.brand img').first().waitFor({state:'attached'});
  if(!await page.locator('.brand img').first().getAttribute('src').then(s=>s.includes('forward-pages')))throw Error('Demo uses a different logo.');
  if(errors.length)throw Error(errors.join('\n'));
