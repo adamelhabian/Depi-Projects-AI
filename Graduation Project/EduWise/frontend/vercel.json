@@ -1,9 +1,7 @@
 {
-  "redirects": [
-    {
-      "source": "/brand",
-      "destination": "/brand/",
-      "permanent": true
-    }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "outputDirectory": "dist",
+  "redirects": [{ "source": "/brand", "destination": "/brand/", "permanent": true }],
+  "rewrites": [{ "source": "/brand/", "destination": "/brand/index.html" }]
 }

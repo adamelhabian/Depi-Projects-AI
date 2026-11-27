@@ -1,12 +1,26 @@
 # Integration readiness
 
-## Confirmed versus proposed
+## Local API
 
-**Confirmed from repository inspection:** React frontend, local assets/fonts, installed export libraries, local demo storage. No implemented backend, API schema, auth session, model provider, file storage/indexing endpoint, scheduler or delivery provider was found. No HTTP path below is confirmed or called by the app.
+The Vite development and preview proxies forward `/api` to the Node server. Axios calls the following same-origin endpoints.
 
-**Implemented local Interface:** `createDemoService({storage, now, uuid, contentOperation})`; `await read(role, {signal})` returns `{data, notice, readOnly}`; `await execute(command, input, {role, idempotencyKey, expectedRevision})` returns that same envelope after an atomic validated commit. `failNextMutation()` is an explicitly labelled diagnostic. Injected time/identity/storage make tests deterministic. The command vocabulary and data shapes are in `domain/workspace.js`, `domain/content.js` and DATA_MODEL.md.
+| Method and path | Request and response |
+| --- | --- |
+| `POST /api/session` | Accepts `{email,password}` and returns `{user}` with an HttpOnly session cookie. |
+| `GET /api/session` | Returns the current `{user}` or HTTP 401. |
+| `DELETE /api/session` | Ends the session and expires its cookie. |
+| `GET /api/workspace` | Returns `{data,notice,readOnly,questionBankCount}`, scoped to the signed-in user. |
+| `POST /api/workspace/commands` | Accepts `{command,input,expectedRevision}` and an `Idempotency-Key` header. Returns the updated workspace envelope. |
 
-**Proposed HTTP design for agreement:** implement a live adapter only after server responses and policies are confirmed. The adapter must map validated responses to these same entities rather than importing network calls into pages. Demo/live mode must be explicit in the shell. Never catch live errors by returning demo records. A switch into demo must be a deliberate user action using a separate data namespace.
+The workspace endpoints optionally accept `X-Workspace-Account` to detect account changes in another tab. The session determines the actual user and role. Errors use `{error:{code}}`. Stale revisions and conflicting retries return HTTP 409.
+
+The local profile uses a single Node process and atomic JSON-file replacement under `server/.data/`. Workspace records survive restarts. In-memory sessions expire after eight hours or when the API restarts. For a local HTTPS reverse proxy, set `EDUFLOW_ORIGIN` to the public origin and `EDUFLOW_SECURE_COOKIE=1`. The browser-local demo is available at `/?mode=demo`.
+
+On Vercel, Node Functions serve the same endpoints and use private Blob storage for workspace records and sessions. The workspace uses ETag-conditional writes so a second Function instance cannot overwrite concurrent changes. HTTPS sessions expire after eight hours and logout revokes the server session. Preview data lives under a separate storage path. See [deployment setup](VERCEL-DEPLOYMENT.md).
+
+## Future production contract
+
+The following resource-based `/v1` endpoints are proposals for a later server. The active Axios adapter uses the local `/api` contract above. The command vocabulary and data shapes are in `src/domain/workspace.js`, `src/domain/content.js` and DATA_MODEL.md.
 
 ## Proposed read resources
 

@@ -1,5 +1,5 @@
 import { examBank } from '../data/mockData.js';
-import { can, requireRule, calendarDate } from './workspace.js';
+import { can, requireRule, calendarDate, resolveActor } from './workspace.js';
 
 export function buildQuestions(state, input) {
   requireRule(Array.isArray(input.materialIds) && input.materialIds.length > 0, 'SOURCE_REQUIRED');
@@ -29,7 +29,7 @@ export function applyContent(current, command, input, context) {
   const permission = command.startsWith('automation.') ? 'automation.write' : 'content.write';
   requireRule(can(context.role, permission), 'FORBIDDEN');
   const s = structuredClone(current), { id, now, role } = context;
-  const actor = s.users.find(u => u.role === role);
+  const actor = resolveActor(s, role, context.actorId);
   const draft = () => { const d = s.drafts.find(x => x.id === input.draftId); requireRule(d, 'NOT_FOUND'); requireRule(role === 'admin' || d.createdBy === actor.id, 'FORBIDDEN'); return d; };
   if (command === 'content.material') {
     requireRule(input.size > 0 && input.size <= 15 * 1024 * 1024 && /\.pdf$/i.test(input.name), 'PDF_LIMIT');

@@ -7,8 +7,8 @@ import { Inbox, Search, X, LoaderCircle } from 'lucide-react';
 export function Heading({ title, description, children }) { return <div className="page-heading"><div><h1>{title}</h1><p className="page-description">{description}</p></div><div className="page-heading-actions">{children}</div></div>; }
 export function Field({ label, children, hint }) { const id = useId(); return <div className="field"><label htmlFor={id}>{label}</label>{cloneElement(children, { id })}{hint && <small>{hint}</small>}</div>; }
 export function Feedback({ action }) {
-  const { t, errorText, refresh } = useWorkspace();
-  return <div aria-live="polite">{action.error && <div role="alert" className="form-error">{errorText(action.error)}{action.error.code === 'CONFLICT' && <Button variant="secondary" onClick={refresh}>{t('Refresh data', 'تحديث البيانات')}</Button>}</div>}{action.success && <p className="success-text feedback">{t('Saved locally in this demo.', 'تم الحفظ محلياً في الديمو.')}</p>}</div>;
+  const { t, isDemo, errorText, refresh } = useWorkspace();
+  return <div aria-live="polite">{action.error && <div role="alert" className="form-error">{errorText(action.error)}{action.error.code === 'CONFLICT' && <Button variant="secondary" onClick={refresh}>{t('Refresh data', 'تحديث البيانات')}</Button>}</div>}{action.success && <p className="success-text feedback">{isDemo ? t('Saved locally in this demo.', 'تم الحفظ محلياً في الديمو.') : t('Saved to the workspace.', 'تم الحفظ في مساحة العمل.')}</p>}</div>;
 }
 export function Submit({ action, children }) { const { t, readOnly } = useWorkspace(); return <Button type="submit" className="submit-control" aria-busy={action.busy} disabled={action.busy || readOnly}><span className={action.busy ? 'submit-copy is-pending' : 'submit-copy'}>{children || t('Save', 'حفظ')}</span>{action.busy && <span className="submit-pending"><LoaderCircle size={17} className="ux-spinner" />{t('Saving…', 'جارٍ الحفظ…')}</span>}</Button>; }
 export function SearchField({ label, value, onChange, placeholder, inputRef, ...props }) {

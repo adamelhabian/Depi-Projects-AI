@@ -7,14 +7,15 @@ import { applyContent } from '../src/domain/content.js';
 const output = path.resolve('test-results'); mkdirSync(output, { recursive: true });
 const executablePath = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 const browser = await chromium.launch({ headless: true, ...(existsSync(executablePath) ? { executablePath } : {}) });
-const base = process.argv[2] || process.env.DEMO_URL || 'http://127.0.0.1:5173';
+const base = new URL(process.argv[2] || process.env.DEMO_URL || 'http://127.0.0.1:5173');
+base.searchParams.set('mode', 'demo');
 const results = [];
 async function check(name, fn, seed) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1080 }, reducedMotion: 'reduce', acceptDownloads: true });
   const page = await context.newPage(), errors = []; page.on('pageerror', e => errors.push(e.message));
   if (seed) await context.addInitScript(value => { if (!localStorage.getItem('seeded')) { localStorage.setItem('eduflow.workspace.v3', JSON.stringify(value)); localStorage.setItem('seeded', 'yes'); } }, seed);
   await context.tracing.start({ screenshots: true, snapshots: true });
-  try { await page.goto(base); await visible(page.getByRole('heading', { name: 'Good morning, Youssef' })); await fn(page, context); assert.deepEqual(errors, []); results.push(name); console.log(`PASS ${name}`); }
+  try { await page.goto(base.href); await visible(page.getByRole('heading', { name: 'Good morning, Youssef' })); await fn(page, context); assert.deepEqual(errors, []); results.push(name); console.log(`PASS ${name}`); }
   catch (error) { await page.screenshot({ path: path.join(output, `failure-${results.length}.png`), fullPage: true }); await context.tracing.stop({ path: path.join(output, `failure-${results.length}.zip`) }); console.error(errors); throw error; }
   finally { await context.close(); }
 }

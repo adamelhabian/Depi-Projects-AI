@@ -24,9 +24,9 @@ export function minorUnits(value) {
 export const normalized = value => String(value ?? '').normalize('NFKC').trim().toLocaleUpperCase('en');
 const text = (value, max = 200) => { requireRule(typeof value === 'string' && value.trim().length > 0 && value.length <= max); return value.trim(); };
 const validDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(`${value}T12:00:00Z`).toISOString().startsWith(value);
-export function createWorkspace(now = new Date().toISOString()) {
+export function createWorkspace(now = new Date().toISOString(), { sample = true } = {}) {
   const date = calendarDate(new Date(now));
-  const students = studentsSeed.map((s, i) => ({ id: `student-${i + 1}`, centerId: 'nile', code: s.id, name: s.name, phone: '', status: 'active' }));
+  const students = sample ? studentsSeed.map((s, i) => ({ id: `student-${i + 1}`, centerId: 'nile', code: s.id, name: s.name, phone: '', status: 'active' })) : [];
   const groups = ['A', 'B', 'C'].map((letter, i) => ({ id: `group-${i + 1}`, centerId: 'nile', name: [`Physics · Group ${letter}`, `الفيزياء · مجموعة ${['أ', 'ب', 'ج'][i]}`], subject: 'physics', grade: '12', status: 'active', teacherId: i < 2 ? 'user-teacher' : null }));
   // These are explicit demonstration transactions, not historical observations.
   const charges = students.map(s => ({ id: `charge-${s.id}`, studentId: s.id, centerId: 'nile', description: ['Demo subscription', 'اشتراك توضيحي'], grossMinor: 90000, discountMinor: 0, discountReason: '', currency: 'EGP', dueDate: date, createdAt: now, createdBy: 'user-admin', origin: 'demo-seed' }));
@@ -37,7 +37,7 @@ export function createWorkspace(now = new Date().toISOString()) {
     users: ROLES.map(role => ({ id: `user-${role}`, centerId: 'nile', role, name: ['Youssef Mohamed', 'يوسف محمد'], groupIds: role === 'teacher' ? ['group-1', 'group-2'] : groups.map(g => g.id) })),
     students, groups,
     enrollments: students.map((s, i) => ({ id: `enrollment-${i + 1}`, studentId: s.id, groupId: `group-${i % 3 + 1}`, startDate: '2020-01-01', endDate: null, status: 'active' })),
-    sessions: groups.map((g, i) => ({ id: `session-${i + 1}`, groupId: g.id, date, startTime: `${14 + i}:00`, title: ['Practice & discussion', 'تطبيق ومناقشة'], status: 'scheduled' })),
+    sessions: sample ? groups.map((g, i) => ({ id: `session-${i + 1}`, groupId: g.id, date, startTime: `${14 + i}:00`, title: ['Practice & discussion', 'تطبيق ومناقشة'], status: 'scheduled' })) : [],
     attendance: [], charges, payments,
     allocations: payments.map(p => ({ id: `allocation-${p.id}`, paymentId: p.id, chargeId: `charge-${p.studentId}`, amountMinor: p.amountMinor })), adjustments: [],
     materials: materialsSeed.map(m => ({ ...m, status: 'ready', storage: 'demo-bank', subject: 'physics', grade: m.id === 'm3' ? '11' : '12', topic: m.id, citationType: 'demo', createdAt: now })),
@@ -59,11 +59,11 @@ export function chargeBalance(state, charge) {
   return charge.grossMinor - charge.discountMinor - allocated;
 }
 export const outstanding = (state, studentId) => state.charges.filter(c => !studentId || c.studentId === studentId).reduce((n, c) => n + chargeBalance(state, c), 0);
-export function projectWorkspace(state, role) {
+export function projectWorkspace(state, role, actorId) {
   requireRule(can(role, 'overview'), 'FORBIDDEN');
   if (role === 'secretary') return { ...state, materials: [], jobs: [], drafts: [], automationRuns: [], workflows: [], idempotency: {} };
   if (role !== 'teacher') return state;
-  const user = state.users.find(u => u.role === role);
+  const user = resolveActor(state, role, actorId);
   const groups = state.groups.filter(g => user.groupIds.includes(g.id));
   const enrollments = state.enrollments.filter(e => groups.some(g => g.id === e.groupId));
   const studentIds = new Set(enrollments.map(e => e.studentId));
@@ -74,6 +74,11 @@ export function projectWorkspace(state, role) {
     automationRuns: state.automationRuns.filter(r => r.createdBy === user.id), audit: state.audit.filter(a => a.actorId === user.id), legacy: null, idempotency: {},
   };
 }
+export function resolveActor(state, role, actorId) {
+  const actor = state.users.find(u => u.role === role && (actorId === undefined || u.id === actorId));
+  requireRule(actor?.centerId === state.center.id, 'FORBIDDEN');
+  return actor;
+}
 const commands = {
   'student.save': 'roster.write', 'student.archive': 'roster.write', 'group.save': 'roster.write', 'group.archive': 'roster.write', 'enrollment.save': 'roster.write',
   'session.save': 'attendance.write', 'attendance.record': 'attendance.write', 'charge.create': 'finance.write', 'payment.record': 'finance.write', 'payment.adjust': 'finance.write',
@@ -81,8 +86,7 @@ const commands = {
 export function applyOperation(current, command, input, context) {
   requireRule(can(context.role, commands[command]), 'FORBIDDEN');
   const state = structuredClone(current);
-  const actor = state.users.find(u => u.role === context.role);
-  requireRule(actor?.centerId === state.center.id, 'FORBIDDEN');
+  const actor = resolveActor(state, context.role, context.actorId);
   const id = context.id, now = context.now;
   const student = () => { const s = state.students.find(s => s.id === input.studentId); requireRule(s, 'NOT_FOUND'); return s; };
   const groupAccess = groupId => { const g = state.groups.find(g => g.id === groupId); requireRule(g, 'NOT_FOUND'); requireRule(context.role !== 'teacher' || actor.groupIds.includes(groupId), 'FORBIDDEN'); return g; };

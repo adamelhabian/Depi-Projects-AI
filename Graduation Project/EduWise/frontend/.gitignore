@@ -4,3 +4,4 @@ dist/
 test-results/
 .deploy/
 .vercel/
+server/.data/

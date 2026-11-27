@@ -1,4 +1,9 @@
 export const messages = {
+  AUTH_REQUIRED: ['Sign in to continue.', 'سجّل الدخول عشان تكمّل.'],
+  INVALID_CREDENTIALS: ['The email or password is incorrect.', 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'],
+  API_UNAVAILABLE: ['The workspace server is unavailable. Check the connection and try again.', 'سيرفر مساحة العمل غير متاح. راجع الاتصال وجرّب تاني.'],
+  TOO_MANY_ATTEMPTS: ['Too many sign-in attempts. Try again in a minute.', 'محاولات تسجيل دخول كتير. جرّب بعد دقيقة.'],
+  PAYLOAD_TOO_LARGE: ['The entries exceed the server’s request size limit.', 'البيانات أكبر من الحد المسموح للطلب.'],
   VALIDATION: ['Check the required fields.', 'راجع البيانات المطلوبة.'], NOT_FOUND: ['The record is no longer available. Refresh the workspace.', 'السجل لم يعد متاحاً. حدّث مساحة العمل.'],
   FORBIDDEN: ['This role cannot perform this action.', 'الصلاحية الحالية لا تسمح بالعملية.'], CONFLICT: ['Data changed in another action or tab. Refresh, check your entries and submit again.', 'البيانات اتغيرت في عملية أو تبويب آخر. حدّث وراجع مدخلاتك ثم احفظ مجدداً.'],
   DUPLICATE_CODE: ['Student codes must be unique in this center, including archived students.', 'كود الطالب لازم يكون فريداً داخل السنتر، حتى للطلاب المؤرشفين.'],

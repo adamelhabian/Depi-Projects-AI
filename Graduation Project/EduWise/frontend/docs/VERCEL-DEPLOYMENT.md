@@ -11,18 +11,17 @@
 
 The snapshot contains the built application and public assets. It includes the approved option 05 logo, 4096px PNG exports, fonts, interactive brand guide and download archives. The application remains a local-data demo; this deployment adds static hosting.
 
-## Publish a later version
+## Publish the authenticated application
 
-Run these from the frontend directory. Choose a new release directory name for every snapshot so old release files remain recoverable.
+Run from `frontend`. The existing `eduflow-ai-brand` project builds the Vite app and the functions in `api/`. The `/brand/` guide and browser-local demo at `/?mode=demo` are included in the same build.
+
+- Connect a private Blob store to this project for preview and production with OIDC. Vercel supplies `BLOB_STORE_ID`.
+- Set the sensitive `EDUFLOW_AUTH` environment variable in each target to a JSON object with `accounts` (the hashed entries produced by `npm run accounts:setup`) and a random 32-byte hex `sessionSecret`. Keep passwords, hashes, and secrets outside the Git checkout and deployment upload.
+- Deploy and verify sign-in, workspace reads and writes, and the brand page in preview before deploying to production. Preview and production store their records separately.
 
 ```powershell
-npm run build
-node scripts/prepare-vercel-brand.mjs eduflow-ai-brand-r2
-vercel project inspect eduflow-ai-brand --scope youssef-mms-projects --non-interactive
-vercel deploy --cwd .deploy/eduflow-ai-brand-r2 --prebuilt --prod --project eduflow-ai-brand --scope youssef-mms-projects --yes --non-interactive
-node scripts/check-vercel-brand.mjs https://eduflow-ai-brand.vercel.app
+vercel deploy --project eduflow-ai-brand --scope youssef-mms-projects --yes --non-interactive
+vercel deploy --prod --project eduflow-ai-brand --scope youssef-mms-projects --yes --non-interactive
 ```
 
-The prepare script verifies relative links, image loading, logo variants, product previews, the mobile layout and the linked demo. The live check opens a fresh browser without a Vercel login and verifies public page access, downloads and the approved SVG checksum. Reports are saved to `test-results/vercel-brand-live-check.json` and screenshots to `test-results/vercel-brand-*.png`.
-
-`.deploy/` and `.vercel/` are ignored. This is a snapshot deployment; saving local source changes does not update the public website until a new deployment is made.
+The initial prebuilt snapshot remains recorded above. Authenticated deployments require a source build so Vercel can build the API functions.

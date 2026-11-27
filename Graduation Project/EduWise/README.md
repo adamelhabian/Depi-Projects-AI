@@ -6,9 +6,9 @@ An intelligent educational management system that helps teachers manage students
 
 The system integrates Machine Learning, AI, and automation to improve educational management and support data-driven decisions.
 
-## Frontend Demo
+## EduFlow AI frontend
 
-The EduFlow AI frontend demo is available at [EduFlow AI](https://eduflow-ai-brand.vercel.app/#overview). It uses sample data and is not authenticated production software.
+[Sign in to EduFlow AI](https://eduflow-ai-brand.vercel.app/) to access the shared workspace. The [sample workspace](https://eduflow-ai-brand.vercel.app/?mode=demo#overview) runs with sample data in the browser.
 
 The [AI automation module documentation](src/ai_automation/README.md) and [n8n automation runbook](src/ai_automation/n8n_ai_automation_plan.md) explain how to configure and verify Telegram guardian alerts and Gemini-assisted homework grading.
 

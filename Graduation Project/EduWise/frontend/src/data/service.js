@@ -1,7 +1,9 @@
-import { applyOperation, DomainError, projectWorkspace, validateWorkspace } from '../domain/workspace.js';
+import { DomainError, projectWorkspace, validateWorkspace } from '../domain/workspace.js';
+import { examBank } from './mockData.js';
+import { commitWorkspaceCommand } from './commands.js';
 import { openPersistence, STORAGE_KEY } from './persistence.js';
 
-// Same asynchronous Interface for reads and atomic commands; no unconfirmed HTTP implementation.
+// Browser-only persistence for the explicitly selected demo.
 export function createDemoService({ storage, now = () => new Date().toISOString(), uuid = () => crypto.randomUUID(), contentOperation } = {}) {
   let opened = openPersistence(storage, now()), state = opened.state, failNext = false;
   let queue = Promise.resolve();
@@ -12,7 +14,7 @@ export function createDemoService({ storage, now = () => new Date().toISOString(
       let raw; try { raw = storage.getItem(STORAGE_KEY); } catch { throw new DomainError('STORAGE'); }
       if (raw && !opened.readOnly) { try { state = validateWorkspace(JSON.parse(raw)); } catch { throw new DomainError('CORRUPT'); } }
       signal?.throwIfAborted();
-      return { data: structuredClone(projectWorkspace(state, role)), notice: opened.notice, readOnly: opened.readOnly };
+      return { data: structuredClone(projectWorkspace(state, role)), notice: opened.notice, readOnly: opened.readOnly, questionBankCount: examBank.length };
     },
     failNextMutation() { failNext = true; },
     execute(command, input, { role, idempotencyKey, expectedRevision }) {
@@ -21,15 +23,8 @@ export function createDemoService({ storage, now = () => new Date().toISOString(
         if (failNext) { failNext = false; throw new DomainError('REQUEST_FAILED'); }
         let persisted; try { persisted = validateWorkspace(JSON.parse(storage.getItem(STORAGE_KEY))); } catch { throw new DomainError('STORAGE'); }
         state = persisted;
-        const fingerprint = JSON.stringify({ command, input, role });
-        const previous = Object.hasOwn(state.idempotency, idempotencyKey) && state.idempotency[idempotencyKey];
-        if (previous) { if (previous.fingerprint !== fingerprint) throw new DomainError('IDEMPOTENCY_CONFLICT'); return this.read(role); }
-        if (!idempotencyKey || expectedRevision !== state.revision) throw new DomainError('CONFLICT');
-        const context = { role, id: uuid(), now: now() };
-        const next = command.startsWith('content.') || command.startsWith('automation.') ? contentOperation(state, command, input, context) : applyOperation(state, command, input, context);
-        next.revision++; next.updatedAt = context.now;
-        next.idempotency[idempotencyKey] = { fingerprint, at: context.now };
-        validateWorkspace(next);
+        const next = commitWorkspaceCommand(state, command, input, { role, idempotencyKey, expectedRevision, now, uuid, contentOperation });
+        if (next === state) return this.read(role);
         try { storage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { throw new DomainError('STORAGE'); }
         state = next;
         return this.read(role);

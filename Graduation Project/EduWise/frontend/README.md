@@ -1,8 +1,6 @@
 # EduFlow AI frontend
 
-A bilingual React/Vite/Tailwind demo for an Egyptian education center. The EduFlow identity uses educational blue, apricot, IBM Plex Sans Arabic, and Material 3 roles. Local imagery and eight hash destinations are retained. This is not authenticated production software.
-
-**Live demo:** [EduFlow AI](https://eduflow-ai-brand.vercel.app/#overview) · [Brand guide](https://eduflow-ai-brand.vercel.app/brand/)
+A bilingual React/Vite/Tailwind workspace for an Egyptian education center, with account sign-in and a local JSON API.
 
 ## Brand identity
 
@@ -16,10 +14,19 @@ Use Node 22.12+ (verified here with Node 24.20) and npm:
 
 ```powershell
 npm ci
+npm run accounts:setup
+npm run api
+```
+
+The setup command prints generated passwords once for `admin@eduflow.test`, `teacher@eduflow.test` and `secretary@eduflow.test`. Save the credentials for the accounts you need. Start Vite in a second terminal from this directory.
+
+```powershell
 npm run dev
 ```
 
-Open [development](http://127.0.0.1:5173). `npm run build` creates `dist`; `npm run preview` serves [production preview](http://127.0.0.1:4173). Scripts call Vite through Node so Windows paths containing `&` work.
+Open [the sign-in page](http://127.0.0.1:5173/). The API listens on loopback port 8787 by default and the Vite proxy forwards same-origin `/api` requests. The API stores account hashes and workspace records under the ignored `server/.data/` directory. An absolute `EDUFLOW_DATA_DIR` overrides that directory for both setup and the API. Set `EDUFLOW_API_PORT` for a different API port and set `EDUFLOW_API_TARGET` to the matching origin when running Vite.
+
+`npm run build` creates `dist`. `npm run preview` serves [the build preview](http://127.0.0.1:4173/) with the same API proxy. Open [the sample workspace](http://127.0.0.1:5173/?mode=demo) to use browser-local sample records without running the API. A static host can serve this demo at `/?mode=demo`. Account mode needs a same-origin `/api` route.
 
 ```powershell
 npm test
@@ -31,12 +38,12 @@ The browser suite uses installed Microsoft Edge on Windows, otherwise Playwright
 
 ## Local capabilities
 
-- Role-aware overview, grouped navigation, explicit administrator/teacher/secretary **preview**. Old links (`#overview`, `#students`, `#attendance`, `#payments`, `#studio`, `#materials`, `#automations`, `#analytics`) still work. Detail filters use hash query parameters.
+- The API assigns the account role and filters records accordingly. The sample workspace includes a role preview. Section links and detail filters use hash URLs.
 - Student creation/editing, center-unique codes, multi-group dated enrollment, groups and audited archiving without deleting references.
 - Session creation and per-session attendance (present/late/absent/excused). Unrecorded is separate; corrections require a reason and retain actor/time/history.
 - Integer-piastre EGP charges, discounts, partial allocated receipts, reference deduplication, reasoned refund/void adjustments and derived balances. Financial records remain available for archived students.
-- Asynchronous demo Interface, serialized mutations, revision conflicts, idempotent retries, disabled repeated submits, inline errors and preserved inputs on failure. Settings can deliberately fail the next save once.
-- Version-3 atomic snapshots, graph validation, migration from existing v1 keys, recoverable backups and read-only protection for future versions. Settings downloads all workspace/legacy/recovery data. Browser storage is neither encrypted nor suitable for production PII.
+- Serialized mutations, revision conflicts, idempotent retries, inline errors and preserved inputs on failure. In demo mode, Settings can deliberately fail the next save once.
+- Account mode starts with a fresh workspace and stores records server-side. Demo mode keeps its existing browser snapshots, v1 migration, recovery downloads and read-only protection for future schema versions.
 - Ready built-in physics material fixtures; 15 MB PDF extension/header validation. Uploaded entries are explicitly **metadata-only / indexing failed**, never ready. No original PDF bytes persist.
 - Material/subject/grade/topic/difficulty/type/count exam configuration, explicit failed generation jobs, editable saved drafts and a separate teacher-review step. MCQ only in the fixed demo bank; unsupported requests are not silently truncated.
 - A/B/C reuse questions: B/C reverse their order and rotate options. Stable choice IDs preserve answer mapping. Separate student and answer-key Word/PowerPoint/print documents; student projection excludes answers and explanations. Print PDF means the browser's “Save as PDF”, not a server-generated PDF download.
@@ -48,9 +55,11 @@ The browser suite uses installed Microsoft Edge on Windows, otherwise Playwright
 
 ```text
 src/App.jsx                    small entry / compatibility export
-src/WorkspaceApp.jsx           shell, hash navigation, preview/settings
+src/WorkspaceApp.jsx           shell, hash navigation, login gate and settings
 src/data/WorkspaceProvider.jsx async React orchestration and form action state
-src/data/service.js            asynchronous read/execute Interface and atomic commit
+src/data/api.js                Axios client for session and workspace requests
+src/data/service.js            browser-local demo service
+server/                        local Node API, account setup and JSON persistence
 src/data/persistence.js        versioning, migration, validation recovery
 src/domain/workspace.js        entities, permissions, operational rules/calculations
 src/domain/content.js          exam and legacy content rules; automation rules
@@ -68,6 +77,6 @@ Arabic UI uses locally bundled Cairo weights 400/500/600/700, replacing Noto San
 
 ## External dependencies / deliberate backlog
 
-There are **no confirmed HTTP endpoints, auth sessions, storage/indexing service, model integration, scheduler or delivery provider in this repository**. There is consequently no invented live adapter or automatic live-to-demo fallback. Those systems require server-side authorization, tenant isolation, validation, transactional uniqueness/idempotency, durable jobs and source provenance. See integration documentation before wiring them.
+The account API targets a single local center with three provisioned accounts and an in-memory session store. The document storage/indexing service, model provider, scheduler and delivery provider remain future integrations. See [the integration contract](docs/INTEGRATION.md) for the available endpoints and deployment boundaries.
 
 OCR receipt extraction, OMR/bubble-sheet scanning, voice commands, Tauri/desktop packaging, external messaging, real predictive learning-gap models and additional integrations remain deferred. Real Office/LibreOffice visual rendering and a full WCAG/screen-reader/cross-browser audit require separate manual validation; structural export tests do not claim those results.

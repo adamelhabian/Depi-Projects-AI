@@ -11,7 +11,6 @@ import {
 import {
   TrendingUp, UsersRound, Wallet, BookOpen, BarChart3, ArrowUpRight
 } from 'lucide-react';
-import { examBank } from '../../data/mockData';
 
 export function OverviewEvidence() {
   const { data, t } = useWorkspace();
@@ -26,7 +25,7 @@ export function OverviewEvidence() {
 }
 
 export default function OperationalAnalytics() {
-  const { data, t, pick, date, money, can, dateRangeError } = useWorkspace();
+  const { data, isDemo, questionBankCount, t, pick, date, money, can, dateRangeError } = useWorkspace();
   const today = calendarDate();
   const [periodPreset, setPeriodPreset] = useState('month');
   const [selectedGroup, setSelectedGroup] = useState('');
@@ -160,13 +159,10 @@ export default function OperationalAnalytics() {
               </div>
               <div className="kpi-value-row">
                 <strong className="stat-value kpi-value"><AnimatedCounter value={totalStudentsCount} /></strong>
-                <span className="kpi-badge positive">100% {t('active', 'نشط')}</span>
-              </div>
-              <div className="kpi-progress-bar">
-                <div className="kpi-progress-fill" style={{ width: '100%' }} />
+                <span className="kpi-badge positive">{t('active', 'نشط')}</span>
               </div>
               <span className="kpi-subtext">
-                {t(`Distributed across ${data.groups.length} academic groups`, `موزعون على ${data.groups.length} مجموعات تعليمية`)}
+                {t('Across your workspace', 'في مساحة العمل')}
               </span>
             </InteractiveItem>
 
@@ -180,9 +176,6 @@ export default function OperationalAnalytics() {
                   <strong className="stat-value kpi-value">{money(report.netMinor)}</strong>
                   <span className="kpi-badge positive">{report.receipts.length} {t('receipts', 'إيصالات')}</span>
                 </div>
-                <div className="kpi-progress-bar">
-                  <div className="kpi-progress-fill" style={{ width: '75%' }} />
-                </div>
                 <span className="kpi-subtext">
                   {t('Receipts minus adjustments in period', 'إيصالات الفترة ناقص تعديلات الفترة')}
                 </span>
@@ -194,13 +187,9 @@ export default function OperationalAnalytics() {
                   <span className="kpi-icon-wrap"><BookOpen size={18} /></span>
                 </div>
                 <div className="kpi-value-row">
-                  <strong className="stat-value kpi-value"><AnimatedCounter value={examBank.length} /></strong>
-                  <span className="kpi-badge positive">{t('Ready', 'جاهزة')}</span>
+                  <strong className="stat-value kpi-value"><AnimatedCounter value={questionBankCount} /></strong>
                 </div>
-                <div className="kpi-progress-bar">
-                  <div className="kpi-progress-fill" style={{ width: '100%' }} />
-                </div>
-                <span className="kpi-subtext">{t('Verified across 3 physics modules', 'موثقة عبر 3 فصول فيزيائية')}</span>
+                <span className="kpi-subtext">{t('Built-in practice questions', 'أسئلة تدريبية مدمجة')}</span>
               </InteractiveItem>
             )}
 
@@ -222,20 +211,17 @@ export default function OperationalAnalytics() {
             </InteractiveItem>
           </div>
 
-          {/* Visual SVG Charts Grid */}
-          <div className="analytics-charts-grid">
-            <AttendanceTrendChart period={periodPreset} customSessions={report.sessions} />
-            <GroupComparisonBars />
-          </div>
-
-          {/* Student Retention Gauge & Syllabus Coverage */}
-          <div className="analytics-charts-grid">
-            <StudentRetentionGauge />
-            <SyllabusCoverageCards />
-          </div>
-
-          {/* AI Operational Insights & Recommendations */}
-          <AiInsightsPanel />
+          {isDemo && <>
+            <div className="analytics-charts-grid">
+              <AttendanceTrendChart period={periodPreset} customSessions={report.sessions} />
+              <GroupComparisonBars />
+            </div>
+            <div className="analytics-charts-grid">
+              <StudentRetentionGauge />
+              <SyllabusCoverageCards />
+            </div>
+            <AiInsightsPanel />
+          </>}
 
           {/* Session Evidence Table */}
           <section className="panel ledger-panel">
